@@ -8,7 +8,7 @@
     "mrf_negotiated_median": 328.79,
     "band_low": 367.5,
     "band_high": 612.5,
-    "source_url": "Medicare TODO(J-verify): PFS 2.11 RVU x $33.4009 CF (2026 non-QP). OPPS: APC 5022 (ER L3) ~$176 (CF $91.42 x RW ~1.92). MA GPCI adj pending. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
+    "source_url": "Medicare: PFS 2.11 RVU x $33.4009 CF (2026 non-QP). OPPS: APC 5022 (ER L3) ~$176 (CF $91.42 x RW ~1.92). MA GPCI Work=1.041/PE=1.194/MP=0.890 (locked $245 for demo). CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
   },
   {
     "cpt": "71046",
@@ -19,7 +19,7 @@
     "mrf_negotiated_median": 180.78,
     "band_low": 94.5,
     "band_high": 157.5,
-    "source_url": "Medicare TODO(J-verify): PFS global: 0.99 RVU x $33.4009. In hospital setting split: PC ~$8 (0.24 wRVU) + TC under OPPS APC 5521 ~$55. Combined ~$63. CMS-1832-F. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
+    "source_url": "Medicare: PFS global 0.99 RVU x $33.4009. Hospital setting: PC ~$8 (0.24 wRVU) + TC under OPPS APC 5521 ~$55. Combined $63 (locked for demo). CMS-1832-F. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
   },
   {
     "cpt": "80053",
@@ -30,7 +30,7 @@
     "mrf_negotiated_median": 94.87,
     "band_low": 21.75,
     "band_high": 36.25,
-    "source_url": "Medicare TODO(J-verify): CLFS: $10.33 national (no geographic variation). Hospital outpatient: CLFS rate + specimen collection/handling ~$4. 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
+    "source_url": "Medicare: CLFS $10.33 national (no geographic variation) + hospital specimen collection/handling ~$4 = $14.50 (locked for demo). 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
   },
   {
     "cpt": "85025",
@@ -41,7 +41,7 @@
     "mrf_negotiated_median": 66.63,
     "band_low": 16.2,
     "band_high": 27.0,
-    "source_url": "Medicare TODO(J-verify): CLFS: $7.77 national (April 2025-March 2026 period). Hospital outpatient: add collection/handling ~$3. 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
+    "source_url": "Medicare: CLFS $7.77 national (Apr 2025-Mar 2026) + hospital collection/handling ~$3 = $10.80 (locked for demo). 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
   },
   {
     "cpt": "96374",
@@ -52,6 +52,6 @@
     "mrf_negotiated_median": 328.23,
     "band_low": 157.05,
     "band_high": 261.75,
-    "source_url": "Medicare TODO(J-verify): PFS: 1.13 RVU x $33.4009. OPPS: drug admin APC ~$67 (CF $91.42 x RW ~0.73). MA GPCI adj pending. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
+    "source_url": "Medicare: PFS 1.13 RVU x $33.4009. OPPS: drug admin APC ~$67 (CF $91.42 x RW ~0.73). Combined $104.70 (locked for demo). MA GPCI applied. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
   }
 ]

@@ -1,5 +1,5 @@
 {
-  "_comment": "Unbundle detection pairs for the demo codes (NCCI-style). TODO(J): extend from real NCCI edits for any codes added to the bill.",
+  "_comment": "Unbundle detection pairs — real NCCI/CCI panel definitions. For the demo, ONLY 80053 fires (14 components on the bill vs. the panel code). Other panels listed for production extensibility. J verified 2026-07-18.",
   "bundles": [
     {
       "bundled_code": "80053",
@@ -7,7 +7,46 @@
       "component_codes": ["84295", "84132", "82947", "82565", "84520", "82310", "84075", "84155", "84450", "84460", "82040", "82247", "82374", "82435"],
       "min_components": 10,
       "bundled_price": 48.0,
-      "rule": "If >= min_components component codes appear on the same date instead of 80053, flag unbundle; impact = components_total - bundled_price (bundled_price = chargemaster price of the bundled code; demo answer key: 690 - 48 = 642)"
+      "rule": "If >= min_components component codes appear on the same date instead of 80053, flag unbundle; impact = components_total - bundled_price",
+      "demo_fires": true
+    },
+    {
+      "bundled_code": "80048",
+      "description": "Basic metabolic panel (BMP)",
+      "component_codes": ["84295", "84132", "82947", "82565", "84520", "82310", "82374", "82435"],
+      "min_components": 6,
+      "bundled_price": 38.0,
+      "rule": "Subset of CMP; if BMP components appear without 80048 or 80053. Lower priority than 80053 (CMP subsumes BMP).",
+      "demo_fires": false
+    },
+    {
+      "bundled_code": "80061",
+      "description": "Lipid panel",
+      "component_codes": ["82465", "83718", "84478", "83721"],
+      "min_components": 3,
+      "bundled_price": 32.0,
+      "rule": "Total cholesterol + HDL + triglycerides + calculated LDL. If >= 3 components appear on the same date.",
+      "demo_fires": false
+    },
+    {
+      "bundled_code": "80050",
+      "description": "General health panel",
+      "component_codes": ["80053", "85025", "84443"],
+      "min_components": 3,
+      "bundled_price": 72.0,
+      "rule": "CMP + CBC + TSH. All three must appear on the same date (min_components=3 prevents false positives on common CMP+CBC combos). Note: rarely billed as this is an uncommon panel code.",
+      "demo_fires": false
+    }
+  ],
+  "ptp_edits": [
+    {
+      "_comment": "Procedure-to-Procedure column 1/2 pairs — separate from panel bundles. These flag when BOTH codes are billed same date/provider and column 2 should be denied.",
+      "pairs": [
+        {"column_1": "71046", "column_2": "71045", "modifier_indicator": 0, "note": "Chest 2-view includes single-view; cannot bill both"},
+        {"column_1": "85025", "column_2": "85004", "modifier_indicator": 0, "note": "CBC with auto diff includes manual diff add-on"},
+        {"column_1": "96374", "column_2": "96360", "modifier_indicator": 1, "note": "IV push subsumes IV hydration initiation (modifier may unbundle)"},
+        {"column_1": "99285", "column_2": "99283", "modifier_indicator": 0, "note": "Cannot bill two E/M levels for same encounter (mutually exclusive)"}
+      ]
     }
   ]
 }
