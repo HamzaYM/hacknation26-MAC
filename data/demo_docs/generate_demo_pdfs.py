@@ -25,9 +25,9 @@ def generate_bill():
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 10, "MERCY GENERAL HOSPITAL", ln=True, align="C")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 5, "1200 Medical Center Drive, Charlotte, NC 28203", ln=True, align="C")
-    pdf.cell(0, 5, "Tax ID: 56-1234567  |  CCN: 340078  |  501(c)(3) Nonprofit", ln=True, align="C")
-    pdf.cell(0, 5, "Phone: (704) 555-0100  |  Fax: (704) 555-0101", ln=True, align="C")
+    pdf.cell(0, 5, "55 Beacon Street, Boston, MA 02108", ln=True, align="C")
+    pdf.cell(0, 5, "Tax ID: 04-2697983  |  CCN: 220071  |  501(c)(3) Nonprofit", ln=True, align="C")
+    pdf.cell(0, 5, "Phone: (617) 555-0100  |  Fax: (617) 555-0101", ln=True, align="C")
     pdf.ln(5)
 
     # Statement info
@@ -44,7 +44,7 @@ def generate_bill():
         ("Statement Date:", "06/15/2026"),
         ("Admit Type:", "Emergency - Outpatient"),
         ("Primary Dx:", "J06.9 - Acute upper respiratory infection, unspecified"),
-        ("Attending:", "Dr. R. Patel, MD (ER Physician Group of Charlotte)"),
+        ("Attending:", "Dr. R. Patel, MD (Bay State Emergency Physicians)"),
     ]
     for label, val in info:
         pdf.set_font("Helvetica", "B", 9)
@@ -58,7 +58,7 @@ def generate_bill():
     pdf.cell(0, 6, "INSURANCE INFORMATION", ln=True)
     pdf.set_font("Helvetica", "", 9)
     ins_info = [
-        ("Primary Insurer:", "BlueCross BlueShield of North Carolina"),
+        ("Primary Insurer:", "Blue Cross Blue Shield of Massachusetts"),
         ("Member ID:", "XWB-9284751-01"),
         ("Group #:", "EMP-44021"),
         ("Plan:", "PPO Select 2500"),
@@ -140,8 +140,8 @@ def generate_bill():
     pdf.ln(5)
     pdf.set_font("Helvetica", "", 8)
     pdf.cell(0, 4, "Payment due within 30 days. Financial assistance may be available.", ln=True)
-    pdf.cell(0, 4, "For questions: (704) 555-0100 or billing@mercygeneral.org", ln=True)
-    pdf.cell(0, 4, "To apply for Financial Assistance: mercygeneral.org/fap or call (704) 555-0105", ln=True)
+    pdf.cell(0, 4, "For questions: (617) 555-0100 or billing@mercygeneral.org", ln=True)
+    pdf.cell(0, 4, "To apply for Financial Assistance: mercygeneral.org/fap or call (617) 555-0105", ln=True)
 
     out_path = OUT_DIR / "mercy_general_bill.pdf"
     pdf.output(str(out_path))
@@ -158,9 +158,9 @@ def generate_eob():
     pdf.set_font("Helvetica", "B", 14)
     pdf.cell(0, 10, "EXPLANATION OF BENEFITS", ln=True, align="C")
     pdf.set_font("Helvetica", "B", 11)
-    pdf.cell(0, 6, "BlueCross BlueShield of North Carolina", ln=True, align="C")
+    pdf.cell(0, 6, "Blue Cross Blue Shield of Massachusetts", ln=True, align="C")
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 5, "P.O. Box 2291, Durham, NC 27702", ln=True, align="C")
+    pdf.cell(0, 5, "101 Huntington Avenue, Suite 1300, Boston, MA 02199", ln=True, align="C")
     pdf.cell(0, 5, "THIS IS NOT A BILL", ln=True, align="C")
     pdf.ln(5)
 
@@ -170,9 +170,9 @@ def generate_eob():
         ("Member:", "Maya Chen"),
         ("Member ID:", "XWB-9284751-01"),
         ("Group:", "EMP-44021 (PPO Select 2500)"),
-        ("Claim #:", "2026-NC-7841923"),
+        ("Claim #:", "2026-MA-7841923"),
         ("Date Processed:", "06/02/2026"),
-        ("Provider:", "Mercy General Hospital / ER Physician Group of Charlotte"),
+        ("Provider:", "Mercy General Hospital / Bay State Emergency Physicians"),
         ("Date of Service:", "05/12/2026"),
     ]
     for label, val in info:

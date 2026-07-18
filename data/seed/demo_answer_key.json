@@ -1,8 +1,11 @@
 {
-  "_comment": "Single source of truth for the demo's numbers. PRD §10.3 and §14, the synthetic bill/EOB PDFs, benchmarks, and persona concession configs must ALL reconcile with this file. Change nothing here without changing all of them.",
+  "_comment": "Single source of truth for the demo's numbers. PRD §10.3 and §14, the synthetic bill/EOB PDFs, benchmarks, and persona concession configs must ALL reconcile with this file. Change nothing here without changing all of them. DECISION 2026-07-18: real MGH numbers adopted, demo relocated to Boston MA.",
   "case": {
     "patient": "Maya Chen",
-    "facility": "Mercy General Hospital (nonprofit)",
+    "facility": "Mercy General Hospital, Boston (nonprofit)",
+    "location": "Boston, MA",
+    "insurer": "Blue Cross Blue Shield of Massachusetts",
+    "er_group": "Bay State Emergency Physicians",
     "total_billed": 8432.0,
     "patient_balance": 4287.0,
     "eob_patient_responsibility": 3875.0,
@@ -12,15 +15,15 @@
   "demo_cpt_list": ["99283", "71046", "80053", "85025", "96374"],
   "seeded_flags": [
     { "type": "duplicate", "cpt": "71046", "dollar_impact": 412.0, "note": "billed twice same date; ALSO explains the EOB mismatch (4287 - 412 = 3875)" },
-    { "type": "upcode", "cpt": "99285", "supported": "99283", "dollar_impact": 890.0 },
+    { "type": "upcode", "cpt": "99285", "supported": "99283", "dollar_impact": 2011.21, "note": "billed 99285 ($2340) - real MGH negotiated median for 99283 ($328.79) = $2011.21" },
     { "type": "unbundle", "cpt": "80053", "dollar_impact": 642.0, "note": "components billed $690 vs bundled ~$48" },
     { "type": "eob_mismatch", "dollar_impact": 412.0, "note": "same root cause as the duplicate" }
   ],
   "expected_totals": {
     "medicare_total": 438.0,
     "self_pay_band_150_200pct": [657.0, 876.0],
-    "mrf_cash_total": 1890.0,
-    "mrf_negotiated_median_total": 2600.0
+    "mrf_cash_total": 2633.25,
+    "mrf_negotiated_median_total": 999.30
   },
   "negotiation_arc": {
     "balance": 4287.0,
@@ -29,6 +32,15 @@
     "settlement": 1650.0,
     "reduction_pct": 61.5,
     "say_as": "-62%",
-    "human_rep_floor": 1500.0
+    "human_rep_floor": 1500.0,
+    "anchor": 657.0,
+    "target": 876.0,
+    "floor": 1700.0
+  },
+  "data_provenance": {
+    "mrf_source": "042697983_Massachusetts-General-Hospital_StandardCharges.csv (real, CMS v3.0.0, 159k rows)",
+    "mrf_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip",
+    "medicare_source": "synthetic (locked at $438 total pending MA-locality verification)",
+    "talking_point": "Commercial insurers pay below the cash price here ($999.30 vs $2,633.25)"
   }
 }

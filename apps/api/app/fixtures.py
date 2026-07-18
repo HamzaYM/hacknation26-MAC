@@ -25,7 +25,7 @@ def demo_benchmarks() -> dict[str, dict]:
 _DOS = "2026-06-02"
 DEMO_LINE_ITEMS: list[dict] = [
     # (b) upcode candidate: level-5 E/M with a low-acuity dx (J06.9, acute URI);
-    #     impact = 2340 - mrf_negotiated_median(99283)=1450 → $890
+    #     impact = 2340 - mrf_negotiated_median(99283)=328.79 → $2011.21
     {"cpt": "99285", "description": "Emergency department visit, high severity (level 5)",
      "date_of_service": _DOS, "billed_amount": 2340.00, "dx_codes": ["J06.9"]},
     # (a) duplicate: chest X-ray billed twice same date → impact $412
@@ -60,7 +60,7 @@ DEMO_LINE_ITEMS: list[dict] = [
 DEMO_JOB_SPEC: dict = {
     "case_id": DEMO_CASE_ID,
     "patient": {"legal_name": "Maya Chen", "dob": "1995-03-14"},
-    "insurance": {"payer_name": "BlueCross NC", "member_id": "XYZ123456", "plan_type": "PPO"},
+    "insurance": {"payer_name": "Blue Cross Blue Shield of Massachusetts", "member_id": "XYZ123456", "plan_type": "PPO"},
     "financial_profile": {
         "household_income": 39000,
         "household_size": 2,
@@ -89,13 +89,13 @@ DEMO_JOB_SPEC: dict = {
     },
     "derived_flags": [
         {"type": "duplicate", "cpt": "71046", "evidence": {"dates": ["2026-06-02", "2026-06-02"]}, "dollar_impact": 412.00},
-        {"type": "upcode", "cpt": "99285", "evidence": {"supported": "99283"}, "dollar_impact": 890.00},
+        {"type": "upcode", "cpt": "99285", "evidence": {"supported": "99283"}, "dollar_impact": 2011.21},
         {"type": "unbundle", "cpt": "80053", "evidence": {"components_billed": 690.00, "bundled": 48.00}, "dollar_impact": 642.00},
         {"type": "eob_mismatch", "cpt": None, "evidence": {"bill": 4287.00, "eob": 3875.00}, "dollar_impact": 412.00},
     ],
     "entities": [
         {"name": "Mercy General Hospital", "kind": "facility", "balance": 4287.00},
-        {"name": "Carolina Emergency Physicians", "kind": "er_physician_group", "balance": 640.00},
+        {"name": "Bay State Emergency Physicians", "kind": "er_physician_group", "balance": 640.00},
         {"name": "Meridian Recovery Services", "kind": "collections", "balance": 980.00},
     ],
 }
