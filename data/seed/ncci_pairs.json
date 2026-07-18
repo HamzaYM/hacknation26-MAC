@@ -5,7 +5,9 @@
       "bundled_code": "80053",
       "description": "Comprehensive metabolic panel",
       "component_codes": ["84295", "84132", "82947", "82565", "84520", "82310", "84075", "84155", "84450", "84460", "82040", "82247", "82374", "82435"],
-      "rule": "If >= 10 component codes appear on the same date instead of 80053, flag unbundle; impact = components_total - bundled_price"
+      "min_components": 10,
+      "bundled_price": 48.0,
+      "rule": "If >= min_components component codes appear on the same date instead of 80053, flag unbundle; impact = components_total - bundled_price (bundled_price = chargemaster price of the bundled code; demo answer key: 690 - 48 = 642)"
     }
   ]
 }

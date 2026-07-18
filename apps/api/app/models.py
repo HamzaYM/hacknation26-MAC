@@ -21,6 +21,7 @@ class LineItem(BaseModel):
     plan_paid: Optional[float] = None
     patient_responsibility: Optional[float] = None
     billing_entity: Optional[str] = None
+    dx_codes: list[str] = Field(default_factory=list)  # ICD-10; feeds the upcode dx rule
 
 
 class DerivedFlag(BaseModel):
