@@ -1,0 +1,11 @@
+{
+  "_comment": "Unbundle detection pairs for the demo codes (NCCI-style). TODO(J): extend from real NCCI edits for any codes added to the bill.",
+  "bundles": [
+    {
+      "bundled_code": "80053",
+      "description": "Comprehensive metabolic panel",
+      "component_codes": ["84295", "84132", "82947", "82565", "84520", "82310", "84075", "84155", "84450", "84460", "82040", "82247", "82374", "82435"],
+      "rule": "If >= 10 component codes appear on the same date instead of 80053, flag unbundle; impact = components_total - bundled_price"
+    }
+  ]
+}

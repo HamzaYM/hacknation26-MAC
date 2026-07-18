@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "job_spec.schema.json",
+  "title": "JobSpec",
+  "description": "The single structured job spec (challenge Estimator requirement). Built by document parsing + voice interview, confirmed by the user on the Spec Confirm screen, and reused VERBATIM in every call prompt. FROZEN at H2 — additive changes only after that.",
+  "type": "object",
+  "required": ["case_id", "patient", "bill", "eob", "derived_flags", "entities"],
+  "properties": {
+    "case_id": { "type": "string", "format": "uuid" },
+    "patient": {
+      "type": "object",
+      "required": ["legal_name", "dob"],
+      "properties": {
+        "legal_name": { "type": "string" },
+        "dob": { "type": "string", "format": "date" },
+        "address": { "type": "object" },
+        "relationship_to_patient": { "enum": ["self", "guardian", "poa"] },
+        "ssn_last4": { "type": "string", "pattern": "^[0-9]{4}$" }
+      }
+    },
+    "insurance": {
+      "type": "object",
+      "properties": {
+        "payer_name": { "type": "string" },
+        "member_id": { "type": "string" },
+        "group_number": { "type": "string" },
+        "member_services_phone": { "type": "string" },
+        "plan_type": { "type": "string" }
+      }
+    },
+    "financial_profile": {
+      "type": "object",
+      "description": "Voice-interview territory — the fields documents can't answer. Each unlocks a lever (see PRD §10/§8).",
+      "properties": {
+        "household_income": { "type": ["number", "null"] },
+        "household_size": { "type": ["integer", "null"] },
+        "fpl_percent": { "type": ["number", "null"], "description": "Computed by code from income+size, never by LLM" },
+        "employment_status": { "type": "string" },
+        "lump_sum_available": { "type": ["number", "null"] },
+        "max_monthly_payment": { "type": ["number", "null"] },
+        "other_medical_debt": { "type": ["number", "null"] }
+      }
+    },
+    "authorizations": {
+      "type": "object",
+      "description": "Mocked in hackathon scope — status fields only (PRD §4).",
+      "additionalProperties": { "enum": ["not_started", "submitted", "confirmed"] }
+    },
+    "bill": {
+      "type": "object",
+      "required": ["facility_name", "account_number", "line_items"],
+      "properties": {
+        "facility_name": { "type": "string" },
+        "nonprofit_status": { "type": "boolean", "description": "Gates the §501(r) lever" },
+        "statement_date": { "type": "string", "format": "date" },
+        "due_date": { "type": "string", "format": "date" },
+        "account_number": { "type": "string" },
+        "is_itemized": { "type": "boolean" },
+        "total_billed": { "type": "number" },
+        "patient_balance": { "type": "number" },
+        "line_items": { "type": "array", "items": { "$ref": "#/$defs/line_item" } }
+      }
+    },
+    "eob": {
+      "type": "object",
+      "properties": {
+        "claim_number": { "type": "string" },
+        "patient_responsibility_total": { "type": "number" },
+        "denial_codes": { "type": "array", "items": { "type": "string" } },
+        "line_items": { "type": "array", "items": { "$ref": "#/$defs/line_item" } }
+      }
+    },
+    "derived_flags": {
+      "type": "array",
+      "description": "Computed by CODE at parse time (PRD §7), never by the LLM.",
+      "items": {
+        "type": "object",
+        "required": ["type", "dollar_impact"],
+        "properties": {
+          "type": { "enum": ["duplicate", "upcode", "unbundle", "phantom", "eob_mismatch", "nsa", "markup"] },
+          "cpt": { "type": "string" },
+          "evidence": { "type": "object" },
+          "dollar_impact": { "type": "number" }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Separately-billed entities detected from the bill — this vertical's 'call list' (PRD §4 R2a).",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind"],
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "enum": ["facility", "er_physician_group", "radiology", "anesthesia", "pathology", "collections"] },
+          "balance": { "type": "number" },
+          "phone": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "line_item": {
+      "type": "object",
+      "required": ["cpt"],
+      "properties": {
+        "cpt": { "type": "string" },
+        "description": { "type": "string" },
+        "date_of_service": { "type": "string", "format": "date" },
+        "units": { "type": "integer", "default": 1 },
+        "billed_amount": { "type": ["number", "null"] },
+        "allowed_amount": { "type": ["number", "null"] },
+        "plan_paid": { "type": ["number", "null"] },
+        "patient_responsibility": { "type": ["number", "null"] },
+        "billing_entity": { "type": "string" }
+      }
+    }
+  }
+}

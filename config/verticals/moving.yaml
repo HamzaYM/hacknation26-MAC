@@ -1,0 +1,12 @@
+# Stub — proof that verticals are config, not code (PRD §4).
+# Not wired to data; exists to show the swap story to judges.
+vertical: moving
+red_flags:
+  lowball: { flag_below_market_pct: 30 }     # 30%+ below market = warning, not a win
+benchmark: { sources: [fmcsa, movebuddha] }
+ladder:
+  default: [describe_job_verbatim, itemized_quote_ask, fee_probe, competing_bid_leverage, close_or_decline]
+personas:
+  - { key: hard_sell_upseller }
+  - { key: lowballer_hidden_fees }
+disclosure: { opening_line: "Hi — I'm an AI assistant calling to get a moving quote on behalf of my client…" }

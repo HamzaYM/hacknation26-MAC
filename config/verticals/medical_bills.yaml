@@ -1,0 +1,91 @@
+# The Negotiator — medical-bills vertical config
+# Challenge requirement: vertical-specific parameters are CONFIG, NOT CODE.
+# Swapping this file (see moving.yaml stub) retargets the whole system.
+# Owners: structure = Hamza · contents (benchmarks, statutes, flags) = J · personas/voice = Kar Shin
+
+vertical: medical_bills
+
+# ── Red-flag detection parameters (deterministic engine, apps/api) ────────
+red_flags:
+  duplicate:
+    match_on: [cpt, date_of_service]        # same code + same day
+    min_amount: 25
+  upcode:
+    em_pairs:                                # billed vs. records-supported E/M candidates
+      - { billed: "99285", suspect_if_supported: ["99282", "99283"] }
+      - { billed: "99215", suspect_if_supported: ["99212", "99213"] }
+  unbundle:
+    ncci_table: data/seed/ncci_pairs.json    # J ships pairs for the demo codes
+  eob_mismatch:
+    tolerance_usd: 1.00                      # bill balance vs EOB patient responsibility
+  markup:
+    flag_above_band_multiple: 1.0            # any line above band_high
+
+# ── Fair-price band (deterministic math) ─────────────────────────────────
+benchmark:
+  band_low_multiple: 1.5                     # x Medicare — fair-band bottom
+  band_high_multiple: 2.5                    # x Medicare — fair-band top (RAND commercial norm ~2.54x)
+  self_pay_target_multiple_low: 1.5          # anchor zone for self-pay asks (150–200% of Medicare)
+  self_pay_target_multiple_high: 2.0
+
+# ── Routing thresholds (decision table from Research.md) ─────────────────
+thresholds:
+  collections_route: { when: "entity.kind == 'collections'" }
+  charity_lead:      { max_fpl_percent: 400, requires: "bill.nonprofit_status" }
+  nsa_do_not_negotiate: { when: "flag.nsa", action: "cite_statute_and_file_complaint" }
+  low_priority_usd: 500                      # already off credit reports — deprioritize
+
+# ── Negotiation ladder (the Closer state machine walks this) ─────────────
+ladder:
+  provider:
+    - open_and_hold_account                  # + request itemized bill/UB-04 if missing
+    - reach_authority                        # supervisor / financial counselor / patient advocate
+    - financial_assistance_screen            # charity care FIRST — reframes the call
+    - line_item_disputes                     # walk armed error flags one at a time
+    - benchmark_anchor                       # Medicare + hospital's own MRF cash price
+    - self_pay_prompt_pay_ask
+    - lump_sum_settlement
+    - payment_plan_fallback
+    - escalate_or_exit
+  collections:
+    - diagnostic_questions                   # interest? own the debt? settlement floor?
+    - debt_validation_posture
+    - lump_sum_anchor                        # 20–30% of balance
+    - settle                                 # accept 25–50% with written paid-in-full
+    - exit_with_written_confirmation
+
+escalation_triggers:                         # stonewall phrases → reach_authority move
+  - "that's our policy"
+  - "we don't negotiate"
+  - "there's nothing i can do"
+  - "you need to talk to your insurance"
+
+# ── Personas roster (agents created in ElevenLabs; hidden params in DB) ──
+personas:
+  - { key: stonewaller,   file: prompts/personas/stonewaller.md }
+  - { key: policy_citer,  file: prompts/personas/policy_citer.md }
+  - { key: no_authority,  file: prompts/personas/no_authority.md }
+  - { key: collections,   file: prompts/personas/collections.md }
+
+# ── Voice (ElevenLabs settings, from operational-call-flow-spec.md) ──────
+voice:
+  model: eleven_flash_v2_5                   # ~75ms; do NOT use v3 for live calls
+  stability: 0.55
+  speed: 1.0                                 # keep within 0.9–1.1
+  target_wpm: 150
+  endpointing_ms: 400                        # bias toward waiting; barge-in on
+  delivery_notes: prompts/verbalization_guide.md
+
+# ── Disclosure & honesty (non-negotiable) ────────────────────────────────
+disclosure:
+  opening_line: >-
+    Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient
+    {{patient_name}}, who has authorized me to discuss account {{account_number}}.
+    This call may be recorded on both ends.
+  if_asked_are_you_a_robot: >-
+    You are — I'm an AI advocate authorized by the patient, and I have the
+    account details ready whenever you are.
+  never_deny_ai: true
+honesty:
+  citable_sources_only: [dossier, get_benchmark]   # the agent may not speak a number from anywhere else
+  forbidden: [invented_bids, invented_inventory, misrepresenting_the_job]

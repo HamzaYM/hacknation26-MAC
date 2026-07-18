@@ -1,33 +1,54 @@
-# The Negotiator
+# The Negotiator — Medical Bills
 
-Hack-Nation 6th Global AI Hackathon — Challenge 01, powered by [ElevenLabs](https://elevenlabs.io).
+Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs) · Team: Suzy · J · Hamza · Kar Shin
 
-Voice agents that call, compare, and haggle — pick your market, never overpay again.
+*An AI advocate that reads your hospital bill, finds the errors and the law on your side, calls the billing office, and talks the price down on a live call.*
 
-## The challenge
+**Start here → [`PRD.md`](PRD.md), then your own file in [`docs/workplans/`](docs/workplans/).**
 
-Build an end-to-end MVP of a voice-agent system that, for a phone-priced vertical of our
-choice (moving, medical bills, car buying, contractor bids, freight, equipment rental, etc.),
-gathers real prices by phone, reports them in comparable form, and negotiates the best deal.
+## Architecture (PRD §6)
 
-Three required modules:
+Next.js (UI) ↔ FastAPI (state machine · webhook tools · post-call webhooks) ↔ Supabase (Postgres · Storage · **Realtime → live War Room**) ↔ **ElevenLabs Agents** (voice loop, brain LLM billed in-platform) ↔ **Twilio** (every call is a real PSTN call) — plus OpenAI for offline text/vision. Negotiation *policy* is deterministic server-side code; the LLM is the mouth, not the brain-stem (PRD §7).
 
-1. **The Estimator** — intake by voice interview (ElevenLabs Agents) and/or document parsing,
-   producing one structured job spec confirmed by the user and reused verbatim across every call.
-2. **The Caller** — parallel outbound calls (real businesses, human role-play, or counter-agents)
-   that describe the job consistently and extract itemised, comparable quotes.
-3. **The Closer** — negotiation using leveraged competing bids and red-flag rules, plus a final
-   ranked report with transcript/recording evidence and a plain-language recommendation.
+## Repo map & ownership
 
-Full brief: see `Challenge.pdf` in the parent folder.
+| Path | What | Owner |
+|---|---|---|
+| `PRD.md` | The plan. Read it first. | everyone |
+| `apps/web/` | Next.js frontend — six screens (PRD §11) | **Suzy** |
+| `apps/api/` | FastAPI — engine, tools, webhooks, state machine | **Hamza** |
+| `contracts/` | Frozen JSON Schemas (job_spec, benchmark_row, dossier, call_outcome) | Hamza |
+| `config/verticals/` | The config-not-code boundary (levers, flags, thresholds, voice) | Hamza keys / **J** values |
+| `data/pipeline/` + `data/seed/` | CMS/MRF pipeline → benchmarks; demo answer key | **J** |
+| `prompts/` | Negotiator/intake prompts, personas, imperfection + verbalization guides | **Kar Shin** (+ Hamza) |
+| `supabase/migrations/` | DB schema | Hamza |
+| `docs/workplans/` | Per-person marching orders | everyone (theirs) |
 
-## Setup
+## Quickstart (each teammate)
 
 ```bash
-cp .env.example .env
-# then fill in .env with your ElevenLabs API key (see .env.example for details)
+cp .env.example .env    # fill in — see comments; Supabase keys from the project dashboard
+
+# Frontend (Suzy)
+cd apps/web && npm install && npm run dev          # → http://localhost:3000
+
+# Backend (Hamza; works with zero external services — fixture data built in)
+cd apps/api && python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000          # → http://localhost:8000/health
+curl localhost:8000/cases/demo                     # Maya's fixture JobSpec
+
+# Data (J)
+cd data/pipeline && python3 transform.py --check   # validates seed vs demo answer key
+
+# DB (once): run supabase/migrations/0001_init.sql in the Supabase SQL editor
 ```
 
-## Stack
+## Demo-critical gotchas (web-verified 2026-07)
+- **Twilio trial can't call unverified numbers** (error 21608, ≤5 verified) — upgrade to paid at H0.
+- **Agent-vs-agent over PSTN is undocumented** — H4 test is the go/no-go; fallback = persona calls as recorded browser/widget sessions, PSTN for the live human call.
+- **Supabase free tier**: 1GB storage / 7-day auto-pause — provision at H0, ping it demo-day morning.
+- **Cost saver**: offline prose can run on Claude Max subscriptions via headless `claude -p` — see `docs/claude-headless-notes.md`. Vision parsing stays on OpenAI.
 
-TBD.
+## Source research (repo root)
+`Challenge.pdf` · `Research.md` · `conversational-tactics-and-psychology.md` · `operational-call-flow-spec.md` · `negotiator-intake-data-schema.md` · `The Negotiator - Visual Brief.dc.html`

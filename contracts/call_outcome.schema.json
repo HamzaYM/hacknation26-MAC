@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "call_outcome.schema.json",
+  "title": "CallOutcome",
+  "description": "The challenge-mandated structured call ending (C4): every call terminates in exactly one of these — never 'they said around two thousand'. Extracted by LLM from transcript + mid-call tool logs, validated by code. FROZEN at H3.",
+  "type": "object",
+  "required": ["call_id", "outcome_type"],
+  "properties": {
+    "call_id": { "type": "string", "format": "uuid" },
+    "outcome_type": {
+      "enum": ["reduction", "payment_plan", "charity_app_initiated", "callback", "documented_decline"]
+    },
+    "original_amount": { "type": ["number", "null"] },
+    "final_amount": { "type": ["number", "null"] },
+    "reduction_pct": { "type": ["number", "null"], "description": "Computed by code, not the LLM" },
+    "winning_lever": { "type": ["string", "null"], "description": "Which lever caused the movement (demo requirement R3)" },
+    "reference_number": { "type": ["string", "null"], "description": "Always requested before hang-up" },
+    "rep_name": { "type": ["string", "null"] },
+    "agreed_action": { "type": ["string", "null"] },
+    "next_action_date": { "type": ["string", "null"], "format": "date" },
+    "decline_reason": { "type": ["string", "null"], "description": "Required when outcome_type=documented_decline" },
+    "payment_plan_terms": { "type": ["object", "null"], "properties": { "monthly": { "type": "number" }, "months": { "type": "integer" }, "interest_pct": { "type": "number" } } },
+    "evidence_event_ids": { "type": "array", "items": { "type": "integer" }, "description": "call_events rows backing this outcome — the report cites these" }
+  }
+}

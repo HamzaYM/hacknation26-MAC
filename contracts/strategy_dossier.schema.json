@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strategy_dossier.schema.json",
+  "title": "StrategyDossier",
+  "description": "Per-call battle plan built by CODE (routing + lever selection + anchor math) with OpenAI writing prose fields only. The ONLY source of numbers the negotiator agent may speak (honesty tool-gating, PRD §8.5).",
+  "type": "object",
+  "required": ["case_id", "target_entity", "route", "levers", "anchor", "target", "floor"],
+  "properties": {
+    "case_id": { "type": "string", "format": "uuid" },
+    "target_entity": { "type": "string" },
+    "route": { "enum": ["provider", "collections"] },
+    "levers": {
+      "type": "array",
+      "description": "Ordered per the three-lever stack + ladder config; the state machine walks this list.",
+      "items": {
+        "type": "object",
+        "required": ["id", "armed"],
+        "properties": {
+          "id": { "type": "string", "description": "e.g. error_duplicate_71046, statutory_501r, benchmark_anchor, prompt_pay, lump_sum, payment_plan" },
+          "armed": { "type": "boolean" },
+          "armed_by": { "type": "string", "description": "Which derived_flag or profile fact armed it" },
+          "citation": { "type": "string", "description": "Verbatim citable string (statute pack / benchmark row)" },
+          "dollar_ask": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "anchor": { "type": "number", "description": "Opening position (code-computed, e.g. 150% of Medicare)" },
+    "target": { "type": "number", "description": "Good outcome (e.g. <= MRF cash price)" },
+    "floor": { "type": "number", "description": "Never offer to pay MORE than this without human approval / never settle above" },
+    "citations": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string", "description": "LLM-written prose briefing (no numbers that aren't in levers/citations)" }
+  }
+}

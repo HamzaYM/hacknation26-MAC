@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "benchmark_row.schema.json",
+  "title": "BenchmarkRow",
+  "description": "One CPT's fair-price data. Produced by J's pipeline (data/pipeline → data/seed → benchmarks table); consumed by the flag engine, dossier builder, get_benchmark tool, and report. FROZEN at H2.",
+  "type": "object",
+  "required": ["cpt", "medicare_rate", "band_low", "band_high"],
+  "properties": {
+    "cpt": { "type": "string" },
+    "description": { "type": "string" },
+    "medicare_rate": { "type": "number", "description": "CMS fee-schedule rate, locality-adjusted (real pipeline data)" },
+    "fh_estimate": { "type": ["number", "null"], "description": "FAIR Health approximation — MUST render as 'estimated' in all UI (paywalled source)" },
+    "mrf_cash": { "type": ["number", "null"], "description": "Hospital's own posted discounted cash price (real MRF data)" },
+    "mrf_negotiated_median": { "type": ["number", "null"] },
+    "band_low": { "type": "number", "description": "medicare_rate x config multiple (default 1.5)" },
+    "band_high": { "type": "number", "description": "medicare_rate x config multiple (default 2.5)" },
+    "source_url": { "type": "string" }
+  }
+}
