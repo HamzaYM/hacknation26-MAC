@@ -14,6 +14,7 @@ export interface LineItem {
   plan_paid?: number | null;
   patient_responsibility?: number | null;
   billing_entity?: string;
+  dx_codes?: string[]; // ICD-10; feeds the upcode dx rule (additive, post-H2)
 }
 
 export interface DerivedFlag {

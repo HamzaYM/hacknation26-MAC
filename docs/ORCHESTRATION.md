@@ -13,11 +13,13 @@
 6. **Design source of truth = Suzy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
 ## Current state (update me!)
-- ✅ PRD.md (adversarially + web-verified) · scaffold merged to main (`689e858`), README (`998c2bd`), large-file policy (`b426539`)
-- ✅ Boot-verified: web (next dev), api (uvicorn + fixtures + ladder stub), `transform.py --check` green
-- ⏳ **Provisioning (Hamza, via checklist artifact):** Twilio paid + numbers + verified caller ID · ElevenLabs agents ×6 + post-call webhooks · Supabase project + migration + keys → `.env` · OpenAI key · team consents · repo collaborators
-- ⏳ Engine core PR (agent building: flags + state machine + dossier + tests → `feat/engine-core`)
+- ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
+- ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` (Hamza's provisioning checklist — LOCAL html, per preference: no artifacts) · **PR #3 engine core merged (`84af5b7`): flags + dossier + ladder state machine, 27/27 tests green on main**
+- ✅ Engine facts: demo case → exactly 4 flags (412/890/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required` (supervisor beat); hangup ⇒ terminal documented_decline
+- ⏳ **Provisioning (Hamza, via docs/setup-checklist.html):** Twilio paid ($20 total, prices confirmed) + numbers + verified caller ID · ElevenLabs agents ×6 + number import · Supabase project + migration + keys → `.env` · OpenAI key · consents · collaborators. **Blocked on Hamza reporting "env filled" + persona numbers/IDs.**
+- ⏳ Next build steps once env lands: ElevenLabs wiring (outbound call trigger, webhook tools registration, post-call webhook + tunnel), Supabase persistence (state machine + call_events), prompt compiler. Waiting on Suzy's design guide before any real frontend styling.
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after something is deployed; never critical path
+- Known nits parked: unicode-apostrophe normalization in stonewall matching; duplicate-detection modifier exemption (real bills).
 
 ## Decision log
 | Date | Decision | By |
