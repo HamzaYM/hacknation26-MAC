@@ -10,6 +10,8 @@
 3. Claude orchestrates: dispatches agents/workflows (any model/effort), integrates, verifies. Hamza executes vendor-site provisioning from Claude's checklists.
 4. Teammates may push PRD updates as versions (via PRs).
 5. Demo-optimized: when a choice trades robustness vs. demo reliability, demo wins (Hamza, 2026-07-18).
+5b. **Merges/conflict-resolution ONLY in worktrees** — never in the main checkout: it serves hagglfor.me live via next dev, and an in-progress merge broke the public site (07-18, transient).
+5c. Negotiator brain LLM = **gemini-2.5-flash** by Hamza's cost call (ElevenLabs credits; gpt-5.4 tested and reverted). Provisioning preserves llm + voice on sync.
 6. **Design source of truth = Susy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
 ## Current state (update me!)
