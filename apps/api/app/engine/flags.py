@@ -106,6 +106,10 @@ def detect_flags(
         ))
 
     # ── unbundle: NCCI components present instead of the bundled code ─────
+    # Subsumption: if a comprehensive bundle fires (e.g. CMP 80053), skip
+    # subset bundles (e.g. BMP 80048) for the same date.  Track fired
+    # component sets per date to enforce this.
+    fired_components_by_date: dict[str | None, list[set[str]]] = {}
     for bundle in ncci_table.get("bundles", []):
         components = set(bundle["component_codes"])
         min_components = bundle.get("min_components", 10)
@@ -118,8 +122,14 @@ def detect_flags(
                 continue
             if any(li.cpt == bundle["bundled_code"] and li.date_of_service == date for li in lines):
                 continue  # bundled code itself billed → not unbundled
+            # Subsumption check: skip if this bundle's components are a
+            # subset of (or equal to) an already-fired bundle on this date.
+            matched_cpts = {li.cpt for li in comps}
+            if any(matched_cpts <= fired for fired in fired_components_by_date.get(date, [])):
+                continue
             components_billed = round(sum(li.billed_amount or 0.0 for li in comps), 2)
             implicated_cpts |= {li.cpt for li in comps} | {bundle["bundled_code"]}
+            fired_components_by_date.setdefault(date, []).append(matched_cpts)
             flags.append(DerivedFlag(
                 type="unbundle",
                 cpt=bundle["bundled_code"],
