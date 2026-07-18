@@ -5,7 +5,7 @@ import Logo from "./Logo";
 
 // Marketing, login, and War Room own their own full-bleed layout; every
 // other route gets the internal product topbar/nav.
-const BARE_ROUTES = ["/", "/login", "/warroom"];
+const BARE_ROUTES = ["/", "/login", "/warroom", "/how-it-works"];
 const BARE_PREFIXES = ["/warroom"];
 
 const NAV_ITEMS = [

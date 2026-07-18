@@ -11,7 +11,7 @@ import type { EntityKind } from "./types";
 // frontend lookup table.
 const KNOWN_PROCEDURE: Record<string, string> = {
   "Mercy General Hospital": "ER visit — acute respiratory infection",
-  "Carolina Emergency Physicians": "ER visit — physician charges",
+  "Bay State Emergency Physicians": "ER visit — physician charges",
   "Meridian Recovery Services": "Lab panel (in collections)",
 };
 

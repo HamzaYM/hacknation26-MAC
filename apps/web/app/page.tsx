@@ -9,8 +9,8 @@ export default function Home() {
       <nav className="marketing-nav">
         <Logo />
         <div className="marketing-nav-links">
-          <a href="#how-it-works">How it works</a>
-          <a href="#pricing">Pricing</a>
+          <a href="/how-it-works">How it works</a>
+          <a href="/how-it-works#pricing">Pricing</a>
           <a href="/login" className="btn btn-secondary" style={{ padding: "8px 20px" }}>
             Log in
           </a>
@@ -38,7 +38,7 @@ export default function Home() {
           <a href="/login" className="btn btn-primary">
             Start saving — it&apos;s free →
           </a>
-          <a href="#how-it-works" className="link-cta">
+          <a href="/how-it-works" className="link-cta">
             see how it works
           </a>
         </div>
