@@ -12,15 +12,15 @@
   "demo_cpt_list": ["99283", "71046", "80053", "85025", "96374"],
   "seeded_flags": [
     { "type": "duplicate", "cpt": "71046", "dollar_impact": 412.0, "note": "billed twice same date; ALSO explains the EOB mismatch (4287 - 412 = 3875)" },
-    { "type": "upcode", "cpt": "99285", "supported": "99283", "dollar_impact": 890.0 },
+    { "type": "upcode", "cpt": "99285", "supported": "99283", "dollar_impact": 2011.21, "note": "billed 2340 - 328.79 (real MGH commercial negotiated median for the supported 99283)" },
     { "type": "unbundle", "cpt": "80053", "dollar_impact": 642.0, "note": "components billed $690 vs bundled ~$48" },
     { "type": "eob_mismatch", "dollar_impact": 412.0, "note": "same root cause as the duplicate" }
   ],
   "expected_totals": {
     "medicare_total": 438.0,
     "self_pay_band_150_200pct": [657.0, 876.0],
-    "mrf_cash_total": 1890.0,
-    "mrf_negotiated_median_total": 2600.0
+    "mrf_cash_total": 2633.25,
+    "mrf_negotiated_median_total": 999.3
   },
   "negotiation_arc": {
     "balance": 4287.0,

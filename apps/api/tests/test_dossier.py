@@ -8,8 +8,8 @@ The arithmetic (all inputs from benchmarks_v0.json + medical_bills.yaml):
   Medicare total     245 + 63 + 14.5 + 10.8 + 104.7            = $438.00
   anchor             1.5 × 438 (self_pay_target_multiple_low)  = $657.00
   high ask           2.0 × 438 (self_pay_target_multiple_high) = $876.00
-  MRF cash total     1050 + 260 + 95 + 60 + 425                = $1,890.00
-  target             min(1890, 876)                            = $876.00
+  MRF cash total     1409.25 + 354 + 133.50 + 93.75 + 642.75   = $2,633.25
+  target             min(2633.25, 876)                         = $876.00
   floor              financial_profile.lump_sum_available      = $1,700.00
 So anchor ≤ target ≤ floor: open at 657, aim to settle ≤ 876, never pay >1700.
 """
@@ -45,8 +45,8 @@ def test_corrected_cpt_set_matches_answer_key(answer_key):
 def test_anchor_target_floor_reconcile_with_answer_key(answer_key, dossier):
     low, high = answer_key["expected_totals"]["self_pay_band_150_200pct"]
     assert dossier.anchor == low == 657.00
-    assert dossier.target == high == 876.00          # min(MRF cash 1890, 2.0×438=876)
-    assert dossier.target < answer_key["expected_totals"]["mrf_cash_total"] == 1890.00
+    assert dossier.target == high == 876.00          # min(MRF cash 2633.25, 2.0×438=876)
+    assert dossier.target < answer_key["expected_totals"]["mrf_cash_total"] == 2633.25
     assert dossier.floor == 1700.00                  # lump_sum_available
     assert dossier.anchor <= dossier.target <= dossier.floor
 
@@ -82,7 +82,7 @@ def test_levers_armed_in_ladder_order(dossier):
 def test_error_lever_asks_equal_flag_impacts(dossier):
     asks = {lv.id: lv.dollar_ask for lv in dossier.levers}
     assert asks["error_duplicate_71046"] == 412.00
-    assert asks["error_upcode_99285"] == 890.00
+    assert asks["error_upcode_99285"] == 2011.21
     assert asks["error_unbundle_80053"] == 642.00
     assert asks["error_eob_mismatch"] == 412.00
     assert asks["benchmark_anchor"] == 657.00

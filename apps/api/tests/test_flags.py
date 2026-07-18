@@ -4,7 +4,8 @@ deterministic: parse → exactly these 4 flags → these exact dollar impacts.
 Demo arithmetic encoded in app.fixtures.DEMO_LINE_ITEMS:
   duplicate     71046 billed twice @ $412 same date → impact = $412 (the 2nd line)
   upcode        99285 @ $2,340 with low-acuity dx J06.9; supported level 99283;
-                counterfactual = 99283 mrf_negotiated_median $1,450 → $890
+                counterfactual = 99283 mrf_negotiated_median $328.79 (real MGH)
+                → 2340 − 328.79 = $2,011.21
   unbundle      14 CMP components totaling $690 instead of 80053 (bundled
                 price $48, from ncci_pairs.json) → 690 − 48 = $642
   eob_mismatch  patient_balance $4,287 − EOB responsibility $3,875 = $412

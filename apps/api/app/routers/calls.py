@@ -26,7 +26,7 @@ def launch_calls(req: LaunchRequest) -> dict:
         "case_id": req.case_id,
         "launched": [
             {"call_id": "stub-call-1", "entity": "Mercy General Hospital", "status": "queued"},
-            {"call_id": "stub-call-2", "entity": "Carolina Emergency Physicians", "status": "queued"},
+            {"call_id": "stub-call-2", "entity": "Bay State Emergency Physicians", "status": "queued"},
             {"call_id": "stub-call-3", "entity": "Meridian Recovery Services", "status": "queued"},
         ],
     }

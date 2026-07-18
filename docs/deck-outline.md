@@ -26,7 +26,7 @@ Estimator → Caller → Closer, one closed loop. *Visual: the architecture flow
 
 ### 4 · The three-lever negotiation stack
 Reuse the Visual Brief's three-lever diagram: **errors → statutory rights → price benchmarking.**
-- Grounded in **real data**: Medicare + **the hospital's own published price-transparency file** (Mercy's posted cash price **$1,890** for Maya's codes).
+- Grounded in **real data**: Medicare + **the hospital's own published price-transparency file** (Mercy's posted cash price **$2,633.25** for Maya's codes — derived from a real Boston hospital's published price file; commercial insurers pay *below* that cash price, $999.30 negotiated median).
 - Combined levers routinely cut **30–70%**; charity care **50–100%**. *[directional — labeled]*
 
 ### 5 · Code vs. LLM — the honesty architecture (MANDATED)

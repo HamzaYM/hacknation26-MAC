@@ -4,7 +4,7 @@ Hack-Nation 6th Global AI Hackathon · Challenge 01 (powered by ElevenLabs) · f
 
 *An AI advocate that reads your hospital bill, finds the errors and the law on your side, calls the billing office, and talks the price down on a live call.*
 
-The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing errors → cites Medicare ($438) and the hospital's **own posted cash price** ($1,890) → live settlement at **$1,650, −62%** — every step caused by data and tools, not script.
+The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing errors → cites Medicare ($438) and the hospital's **own posted cash price** ($2,633.25) → live settlement at **$1,650, −62%** — every step caused by data and tools, not script.
 
 ## Status
 
