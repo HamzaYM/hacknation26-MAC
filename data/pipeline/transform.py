@@ -70,7 +70,7 @@ def load_mrf_data() -> dict[str, list[dict]]:
     if not RAW_MRF.exists():
         return by_cpt
     for csv_path in RAW_MRF.glob("*.csv"):
-        with open(csv_path, encoding="utf-8") as f:
+        with open(csv_path, encoding="utf-8", errors="replace") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 cpt = clean_code(row.get("cpt", ""))
@@ -170,6 +170,9 @@ def check() -> None:
     cash_total = round(sum(r["mrf_cash"] for r in rows.values()), 2)
     if cash_total != key["expected_totals"]["mrf_cash_total"]:
         errors.append(f"MRF cash total {cash_total} != answer key {key['expected_totals']['mrf_cash_total']}")
+    neg_median_total = round(sum(r["mrf_negotiated_median"] for r in rows.values()), 2)
+    if neg_median_total != key["expected_totals"]["mrf_negotiated_median_total"]:
+        errors.append(f"MRF neg-median total {neg_median_total} != answer key {key['expected_totals']['mrf_negotiated_median_total']}")
     for r in rows.values():
         if round(r["band_low"], 2) != round(r["medicare_rate"] * cfg["band_low_multiple"], 2):
             errors.append(f"{r['cpt']} band_low != medicare x {cfg['band_low_multiple']}")

@@ -1,18 +1,7 @@
 [
   {
-    "cpt": "99283",
-    "description": "Emergency dept visit, moderate severity (records-supported level for the demo's upcoded 99285)",
-    "medicare_rate": 245.0,
-    "fh_estimate": 622.3,
-    "mrf_cash": 1409.25,
-    "mrf_negotiated_median": 328.79,
-    "band_low": 367.5,
-    "band_high": 612.5,
-    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
-  },
-  {
     "cpt": "71046",
-    "description": "Chest X-ray, 2 views (duplicated on the demo bill: $412 billed twice)",
+    "description": "Radiologic Exam Chest 2 Views",
     "medicare_rate": 63.0,
     "fh_estimate": 160.02,
     "mrf_cash": 354.0,
@@ -23,7 +12,7 @@
   },
   {
     "cpt": "80053",
-    "description": "Comprehensive metabolic panel (unbundled into components on the demo bill: $690 vs $48)",
+    "description": "Comprehensive Metabolic Panel",
     "medicare_rate": 14.5,
     "fh_estimate": 36.83,
     "mrf_cash": 133.5,
@@ -34,7 +23,7 @@
   },
   {
     "cpt": "85025",
-    "description": "Complete blood count w/ differential",
+    "description": "Blood Count Cbc Auto W/Auto Diff",
     "medicare_rate": 10.8,
     "fh_estimate": 27.43,
     "mrf_cash": 93.75,
@@ -45,13 +34,24 @@
   },
   {
     "cpt": "96374",
-    "description": "IV push, single drug",
+    "description": "Ivp/ IV < 16 Min Initial Drug - 96374",
     "medicare_rate": 104.7,
     "fh_estimate": 265.94,
     "mrf_cash": 642.75,
     "mrf_negotiated_median": 328.23,
     "band_low": 157.05,
     "band_high": 261.75,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  },
+  {
+    "cpt": "99283",
+    "description": "Emergency Department Visit Low Mdm",
+    "medicare_rate": 245.0,
+    "fh_estimate": 622.3,
+    "mrf_cash": 1409.25,
+    "mrf_negotiated_median": 328.79,
+    "band_low": 367.5,
+    "band_high": 612.5,
     "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   }
 ]
