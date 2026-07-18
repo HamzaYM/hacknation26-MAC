@@ -43,9 +43,11 @@ Next.js (UI) ↔ FastAPI (state machine · webhook tools · post-call webhooks) 
 
 ```bash
 cp .env.example .env    # fill in — see comments; Supabase keys from the project dashboard
+cp .env apps/web/.env.local    # required — the browser needs the NEXT_PUBLIC_* vars
 
 # Frontend (Susy)
 cd apps/web && npm install && npm run dev          # → http://localhost:3000
+# demo login: maya@hagglfor.me / HagglDemo2026!
 
 # Backend (Hamza; works with zero external services — fixture data built in)
 cd apps/api && python3 -m venv .venv && source .venv/bin/activate
