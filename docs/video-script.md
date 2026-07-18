@@ -15,7 +15,7 @@ Legend: **[V]** = voiceover · **[SCREEN]** = what's on screen · **[AUDIO]** = 
 four thousand two hundred eighty-seven dollars after an ER visit. Hospitals bill about
 three-point-four times cost on average — and most people never challenge it. Meet the agent
 that picks up the phone."
-**[SCREEN]** Title card: **Haggle — an AI advocate that calls, finds the errors and the law, and negotiates your bill down.**
+**[SCREEN]** Title card: **Haggl — an AI advocate that calls, finds the errors and the law, and negotiates your bill down.**
 
 ### 0:20–0:55 · Estimator (35s) — hits S2
 **[SCREEN]** Bill + EOB dropped into the upload screen; parse animation.
@@ -64,7 +64,7 @@ to discuss this account." → "Code seven-one-zero-four-six appears twice on the
 four hundred twelve dollars each. Can you remove the duplicate?"
 **[SCREEN]** Ticker: **$4,287 → $3,875** (now matches the EOB).
 **[AUDIO]** Agent: "Medicare pays four hundred thirty-eight dollars for these codes, and your
-own posted cash price is one thousand eight hundred ninety. Is this negotiable?" Rep:
+own posted cash price is two thousand six hundred thirty-three. Is this negotiable?" Rep:
 "Our rates are our rates… I could do twenty-four hundred." Agent: "She can pay sixteen fifty
 today, settled as paid in full — can you take that to your supervisor?"
 **[SCREEN]** Ticker: **$2,400 → $1,650.** Badge: **Settled, paid in full · ref MG-ADJ-2247 · Pat.**
