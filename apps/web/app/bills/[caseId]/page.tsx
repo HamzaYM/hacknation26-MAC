@@ -50,7 +50,7 @@ export default function BillDetail() {
             {procedureLabel(spec.bill.facility_name, "facility")}
           </div>
           <span className={`pill ${cashedIn ? "pill-muted" : "pill-accent"}`}>
-            {cashedIn ? "Locked in — no further calls" : "In progress"}
+            {cashedIn ? "Locked in · no further calls" : "In progress"}
           </span>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -62,7 +62,7 @@ export default function BillDetail() {
       <div className="stat-pair">
         <div className="stat">
           <div className="stat-num accent">{money(savings.savedSoFar)} · {savings.percentSavedSoFar}%</div>
-          <div className="stat-cap">Saved so far — confirmed</div>
+          <div className="stat-cap">Saved so far · confirmed</div>
         </div>
         <div className="stat">
           <div className="stat-num">{money(savings.projectedLow)}–{money(savings.projectedHigh)}</div>
@@ -83,7 +83,7 @@ export default function BillDetail() {
 
       {!cashedIn && !confirming && (
         <button className="btn btn-secondary" onClick={() => setConfirming(true)}>
-          I&apos;m done — cash in {money(savings.savedSoFar)} ({savings.percentSavedSoFar}%) now →
+          I&apos;m done, cash in {money(savings.savedSoFar)} ({savings.percentSavedSoFar}%) now →
         </button>
       )}
       {confirming && (
@@ -161,8 +161,8 @@ function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
       <div className="finding-evidence">
         <strong style={{ color: "var(--text-tertiary)", fontSize: 12, textTransform: "uppercase" }}>Evidence</strong>
         <div style={{ marginTop: 4 }}>
-          {flag.type === "duplicate" && "Itemized bill lists this code twice on the same date of service — a clean duplicate."}
-          {flag.type === "upcode" && `Diagnosis and documentation support a lower visit level (${(flag.evidence.supported as string) ?? "—"}) than what was billed.`}
+          {flag.type === "duplicate" && "Itemized bill lists this code twice on the same date of service. A clean duplicate."}
+          {flag.type === "upcode" && `Diagnosis and documentation support a lower visit level (${(flag.evidence.supported as string) ?? "–"}) than what was billed.`}
           {flag.type === "unbundle" && `Component tests total ${money(flag.evidence.components_billed as number)}; the bundled panel code prices at ${money(flag.evidence.bundled as number)}.`}
           {flag.type === "eob_mismatch" && `Your bill shows ${money(flag.evidence.bill as number)}; your insurer's EOB shows ${money(flag.evidence.eob as number)} owed.`}
           {(flag.type === "nsa" || flag.type === "markup" || flag.type === "phantom") && "See dossier citation for this line."}
@@ -191,7 +191,7 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
     } catch {
       setLaunching(false);
       setLaunchError(
-        "Couldn't start the calls — the API at :8000 didn't answer. Nothing was dialed; try again in a moment."
+        "Couldn't start the calls. The API at :8000 didn't answer. Nothing was dialed; try again in a moment."
       );
     }
   }
@@ -199,7 +199,7 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
   if (cashedIn) {
     return (
       <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
-        You cashed in your savings on this bill — no further calls are scheduled. Reopen negotiation anytime from
+        You cashed in your savings on this bill, so we&apos;ve stopped calling. Reopen negotiation anytime from
         the bill header above.
       </p>
     );
@@ -245,7 +245,7 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
                 {state === "active" && (
                   <div className="step-detail">
                     Agent is arguing Medicare pays $438 for these codes and the facility&apos;s own posted
-                    cash price is $1,890 — is this negotiable?
+                    cash price is $1,890. Is this negotiable?
                   </div>
                 )}
               </div>
@@ -311,8 +311,8 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
       type: "PDF",
       meta: [
         ["Account #", spec.bill.account_number],
-        ["Statement date", spec.bill.statement_date ?? "—"],
-        ["Due date", spec.bill.due_date ?? "—"],
+        ["Statement date", spec.bill.statement_date ?? "–"],
+        ["Due date", spec.bill.due_date ?? "–"],
         ["Line items", String(spec.bill.line_items.length)],
       ],
     },
@@ -320,7 +320,7 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
       title: "Explanation of Benefits (EOB)",
       type: "PDF",
       meta: [
-        ["Claim #", spec.eob.claim_number ?? "—"],
+        ["Claim #", spec.eob.claim_number ?? "–"],
         ["Patient responsibility", money(spec.eob.patient_responsibility_total)],
         ["Denial codes", spec.eob.denial_codes.length ? spec.eob.denial_codes.join(", ") : "None"],
       ],
@@ -348,11 +348,11 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
       <div style={{ marginTop: 16 }}>
         <UploadCard
           title="Add another document"
-          hint="Drag a PDF or photo — a follow-up letter, a second EOB, anything relevant to this bill"
+          hint="Drag a PDF or photo: a follow-up letter, a second EOB, anything relevant to this bill"
         />
       </div>
       <p className="todo" style={{ marginTop: 16 }}>
-        File preview/download isn&apos;t wired to Supabase Storage yet — this tab shows the real extracted
+        File preview/download isn&apos;t wired to Supabase Storage yet. This tab shows the real extracted
         metadata from your intake, but the &quot;View&quot; buttons are placeholders until Storage lands.
       </p>
     </div>

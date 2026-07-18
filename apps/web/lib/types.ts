@@ -236,7 +236,7 @@ export const OUTCOME_LABELS: Record<OutcomeType, string> = {
   payment_plan: "Payment plan",
   charity_app_initiated: "Charity application started",
   callback: "Callback scheduled",
-  documented_decline: "Declined — documented",
+  documented_decline: "Declined · documented",
 };
 
 export const FLAG_LABELS: Record<FlagType, string> = {

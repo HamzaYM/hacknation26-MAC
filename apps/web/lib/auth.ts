@@ -26,7 +26,7 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (!error) return null;
   return error.message === "Invalid login credentials"
     ? "That email and password don't match. Check them and try again."
-    : "Couldn't log you in — " + error.message;
+    : "Couldn't log you in: " + error.message;
 }
 
 export async function signOut(): Promise<void> {

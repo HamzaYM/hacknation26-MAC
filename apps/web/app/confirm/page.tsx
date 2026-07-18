@@ -43,7 +43,7 @@ export default function Confirm() {
   if (loadError) {
     return (
       <p className="todo">
-        Couldn&apos;t reach the API at :8000 — run <code>uvicorn app.main:app --reload --port 8000</code> in
+        Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
         apps/api, then reload this page.
       </p>
     );
@@ -60,10 +60,10 @@ export default function Confirm() {
 
   return (
     <div>
-      <h1 style={{ marginTop: 16 }}>Here&apos;s the plan — confirm before we dial</h1>
+      <h1 style={{ marginTop: 16 }}>Here&apos;s the plan: confirm before we dial</h1>
       <p style={{ color: "var(--text-secondary)", margin: "8px 0 24px" }}>
         We read your bill and EOB from {spec.bill.facility_name}. Review what we found and what
-        we&apos;ll argue — no call is placed until you approve.
+        we&apos;ll argue. We don&apos;t dial until you approve.
       </p>
 
       <div className="card">
@@ -102,19 +102,19 @@ export default function Confirm() {
           {money(estimateLow)}–{money(estimateHigh)}
         </div>
         <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-          Estimated savings if the calls go our way — {pctLow}–{pctHigh}% off your {money(savings.originalBalance)} balance.
+          Estimated savings if the calls go our way: {pctLow}–{pctHigh}% off your {money(savings.originalBalance)} balance.
         </div>
       </div>
 
       {confirmError && (
         <p className="todo">
-          Couldn&apos;t confirm the plan — the API at :8000 didn&apos;t answer. Nothing was dialed; try again.
+          Couldn&apos;t confirm the plan. The API at :8000 didn&apos;t answer. Nothing was dialed; try again.
         </p>
       )}
 
       <div style={{ marginTop: 24, textAlign: "center" }}>
         <button className="btn btn-primary" onClick={onConfirm} disabled={confirming} style={confirming ? { opacity: 0.7 } : undefined}>
-          {confirming ? "Confirming…" : "Looks right — make the calls"}
+          {confirming ? "Confirming…" : "Looks right, make the calls"}
         </button>
         <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 8 }}>
           Nothing gets dialed until you approve this plan.

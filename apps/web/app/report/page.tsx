@@ -27,7 +27,7 @@ export default function Report() {
   if (state === "error") {
     return (
       <p className="todo">
-        Couldn&apos;t reach the API at :8000 — run <code>uvicorn app.main:app --reload --port 8000</code> in
+        Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
         apps/api, then reload this page.
       </p>
     );
@@ -50,7 +50,7 @@ export default function Report() {
     <div>
       <h1 style={{ marginTop: 16 }}>Your report</h1>
       <p style={{ color: "var(--text-secondary)", margin: "8px 0 24px" }}>
-        Every outcome below is backed by call evidence — ranked best-first.
+        Every outcome below is backed by call evidence, ranked best first.
       </p>
 
       <h2 style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-tertiary)", marginBottom: 8 }}>
@@ -61,7 +61,7 @@ export default function Report() {
       ))}
 
       <h2 style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-tertiary)", margin: "24px 0 8px" }}>
-        Line by line — billed vs. fair vs. achieved
+        Line by line: billed vs. fair vs. achieved
       </h2>
       <div className="card" style={{ padding: "8px 24px", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
