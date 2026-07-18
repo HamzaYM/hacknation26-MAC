@@ -3,7 +3,7 @@ import Chrome from "../components/Chrome";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Haggl — your medical bill just met its match",
+  title: "Haggl · your medical bill just met its match",
   description: "An AI advocate that reads your hospital bill and talks the price down on a live call.",
 };
 

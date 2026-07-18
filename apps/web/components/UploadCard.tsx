@@ -50,7 +50,7 @@ export default function UploadCard({
           <strong style={{ color: "var(--accent-hover)", display: "block", marginBottom: 4 }}>
             ✓ {file.name}
           </strong>
-          <span>Ready — parsing isn&apos;t wired to the vision pipeline yet, but your file&apos;s selected</span>
+          <span>Ready. Parsing isn&apos;t wired to the vision pipeline yet, but your file&apos;s selected</span>
         </>
       ) : (
         <>

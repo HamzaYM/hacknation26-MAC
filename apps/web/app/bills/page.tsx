@@ -15,7 +15,7 @@ export default function BillList() {
     getDemoCase().then(setSpec).catch(() => setError(true));
   }, []);
 
-  const patientName = (spec?.patient?.legal_name as string) ?? "—";
+  const patientName = (spec?.patient?.legal_name as string) ?? "–";
 
   const totalSavedSoFar = spec
     ? spec.entities.reduce((sum, e) => sum + (e.kind === "facility" ? facilitySavings(spec).savedSoFar : 0), 0)
@@ -38,7 +38,7 @@ export default function BillList() {
       <div className="savings-hero">
         <div className="eyebrow">Across your {spec?.entities.length ?? "…"} active bills</div>
         <div className="figure mono-figure">{money(totalSavedSoFar + totalProjectedHigh)}</div>
-        <div className="caption">in savings — {money(totalSavedSoFar)} locked in, up to {money(totalProjectedHigh)} more possible</div>
+        <div className="caption">in savings: {money(totalSavedSoFar)} locked in, up to {money(totalProjectedHigh)} more possible</div>
         <div className="subnote">Cash in anytime, per bill, or let us keep negotiating.</div>
       </div>
 
@@ -48,7 +48,7 @@ export default function BillList() {
 
       {error && (
         <p className="todo">
-          Couldn&apos;t reach the API at :8000 — run <code>uvicorn app.main:app --reload --port 8000</code> in
+          Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
           apps/api. Showing nothing until it&apos;s up.
         </p>
       )}
@@ -95,11 +95,11 @@ function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
         </div>
         {isFacility ? (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            <strong>{flagCount} issues found</strong> — up to {money(savings.projectedHigh)} more on the table
+            <strong>{flagCount} issues found</strong>, up to {money(savings.projectedHigh)} more on the table
           </div>
         ) : (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            Typical range for this type of bill — {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
+            Typical range for this type of bill: {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
           </div>
         )}
       </div>

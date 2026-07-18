@@ -70,7 +70,7 @@ export default function Login() {
           Skip to demo →
         </a>
         <p style={{ color: "var(--text-tertiary)", fontSize: 12, marginTop: 24 }}>
-          🔒 Bank-level encryption · you can revoke access anytime
+          🔒 Encrypted in transit and at rest · revoke access anytime
         </p>
       </div>
     </div>

@@ -20,21 +20,21 @@ const QUEUE = [
     // the income question here (as an earlier draft did) is exactly the kind
     // of redundant-ask that undermines the "ask once" promise on /onboard.
     entity: "Mercy General Hospital",
-    question: "You may qualify for charity care — want us to apply?",
+    question: "You may qualify for charity care. Want us to apply?",
     why: "Based on the income range you gave us at signup, Mercy General (a nonprofit) likely has to offer you discounted or free care under federal rules (§501(r)).",
-    unlocks: "Could add charity-care eligibility to your Mercy General bill — potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
+    unlocks: "Could add charity-care eligibility to your Mercy General bill: potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
   },
   {
     entity: "Carolina Emergency Physicians",
     question: "Authorize us to dispute the ER physician charge",
-    why: "This is a separate bill from a separate entity — we need your go-ahead per entity before we call.",
-    unlocks: "Unlocks the call to Carolina Emergency Physicians — typical range is 15–35% off their $640 balance (~$96–$224).",
+    why: "This is a separate bill from a separate entity; we need your go-ahead per entity before we call.",
+    unlocks: "Unlocks the call to Carolina Emergency Physicians: typical range is 15–35% off their $640 balance (~$96–$224).",
   },
   {
     entity: "Meridian Recovery Services",
     question: "Authorize us to negotiate your collections account",
     why: "Collections settlements need explicit authorization since a lump-sum offer is binding once accepted.",
-    unlocks: "Unlocks settlement negotiation on your $980 collections balance — typically 25–50% off (~$245–$490) via lump-sum settlement.",
+    unlocks: "Unlocks settlement negotiation on your $980 collections balance: typically 25–50% off (~$245–$490) via lump-sum settlement.",
   },
 ];
 

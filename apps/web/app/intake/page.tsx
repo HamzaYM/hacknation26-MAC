@@ -38,7 +38,7 @@ const SLOT_COPY: Record<DocKind, { section: string; title: string; hint: string 
   eob: {
     section: "Your insurance EOB · optional, unlocks cross-checks",
     title: "Upload the Explanation of Benefits",
-    hint: "Drag the EOB from your insurer here — it lets us verify what the hospital billed",
+    hint: "Drag the EOB from your insurer here. It lets us check what the hospital billed",
   },
 };
 
@@ -155,7 +155,7 @@ function DocSlot({
                 animation: "haggl-pulse 1.6s ease-in-out infinite",
               }}
             />
-            Reading the document — extracting line items and checking them against your case records…
+            Reading the document: extracting line items and checking them against your case records…
           </div>
         </div>
         <span className="pill pill-muted">Parsing</span>
@@ -167,7 +167,7 @@ function DocSlot({
     return (
       <div>
         <p className="todo" style={{ marginBottom: 8 }}>
-          Couldn&apos;t parse <strong>{state.fileName}</strong> — the API at :8000 didn&apos;t answer.
+          Couldn&apos;t parse <strong>{state.fileName}</strong>. The API at :8000 didn&apos;t answer.
           Your file is still here; nothing was lost.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -209,7 +209,7 @@ function verdictPill(recon: Reconciliation) {
 // Mismatch values arrive untyped (numbers are dollar amounts in this contract).
 function fmtValue(v: unknown) {
   if (typeof v === "number") return money(v);
-  if (v == null) return "—";
+  if (v == null) return "–";
   return String(v);
 }
 
@@ -270,7 +270,7 @@ function ParseResult({
             <tr key={`${li.cpt}-${i}`}>
               <td className="mono-figure" style={{ ...cell, fontSize: 13, paddingRight: 16 }}>{li.cpt}</td>
               <td style={{ ...cell, paddingRight: 16 }}>
-                {li.description ?? "—"}
+                {li.description ?? "–"}
                 {li.dx_codes && li.dx_codes.length > 0 && (
                   <span className="mono" style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: 8 }}>
                     dx {li.dx_codes.join(", ")}
@@ -278,7 +278,7 @@ function ParseResult({
                 )}
               </td>
               <td style={{ ...cell, color: "var(--text-secondary)", fontSize: 13, paddingRight: 16, whiteSpace: "nowrap" }}>
-                {li.date_of_service ?? "—"}
+                {li.date_of_service ?? "–"}
               </td>
               <td className="mono-figure" style={{ ...cell, textAlign: "right", whiteSpace: "nowrap" }}>
                 {money(li.billed_amount)}
@@ -374,7 +374,7 @@ function VoiceInterviewCard() {
         <span className="pill pill-muted">~2 min</span>
       </div>
       <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: "8px 0 16px", lineHeight: 1.6 }}>
-        Our intake agent asks only what your documents can&apos;t answer — household income and size,
+        Our intake agent asks only what your documents can&apos;t answer: household income and size,
         what you could put down today, and the most you could manage monthly. It never re-asks
         anything already on the bill.
       </p>
@@ -385,7 +385,7 @@ function VoiceInterviewCard() {
         </>
       ) : (
         <p className="todo">
-          Voice interview is offline — set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> in{" "}
+          Voice interview is offline. Set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> in{" "}
           <code>apps/web/.env.local</code> (copy the value of <code>ELEVENLABS_AGENT_ID_INTAKE</code>)
           and restart the dev server.
         </p>

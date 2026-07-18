@@ -88,7 +88,7 @@ function WarRoom() {
         </span>
       </div>
       <div className="warroom-meta">
-        {call ? `Call ${String(call.id ?? callId).slice(0, 8)} · ${call.counterparty ?? "—"} · status: ${call.status}` : callId ? `Call ${callId.slice(0, 8)}` : "War Room"}
+        {call ? `Call ${String(call.id ?? callId).slice(0, 8)} · ${call.counterparty ?? "–"} · status: ${call.status}` : callId ? `Call ${callId.slice(0, 8)}` : "War Room"}
       </div>
 
       {!callId ? (
@@ -96,7 +96,7 @@ function WarRoom() {
           <div className="wr-idle-icon">☎</div>
           <h2>Waiting for a live call</h2>
           <p>
-            This screen renders directly off the <code>call_events</code> Realtime stream — nothing
+            This screen renders directly off the <code>call_events</code> Realtime stream. Nothing
             here is scripted. Launch a call from a bill&apos;s Plan tab (&quot;Start the calls&quot;)
             or open this page with <code>?call_id=&lt;id&gt;</code> to watch a specific one.
           </p>
@@ -104,7 +104,7 @@ function WarRoom() {
       ) : events.length === 0 ? (
         <div className="wr-idle">
           <div className="wr-idle-icon pulse">●</div>
-          <h2>Connected — waiting for the call to start talking</h2>
+          <h2>Connected, waiting for the call to start talking</h2>
           <p>No events yet for call <span className="mono-figure">{callId}</span>. This will populate live the moment the agent dials.</p>
         </div>
       ) : (
@@ -116,7 +116,7 @@ function WarRoom() {
             <div style={{ textAlign: "center", fontSize: 13, color: "rgba(245,241,236,0.5)" }}>
               Balance · negotiating
             </div>
-            <div className="wr-ticker">{latestQuote != null ? `$${latestQuote.toLocaleString()}` : "—"}</div>
+            <div className="wr-ticker">{latestQuote != null ? `$${latestQuote.toLocaleString()}` : "–"}</div>
             {firstQuote != null && latestQuote != null && firstQuote !== latestQuote && (
               <div className="wr-ticker-delta">
                 {latestQuote < firstQuote ? "▼" : "▲"} ${Math.abs(firstQuote - latestQuote).toLocaleString()} moved this call
@@ -147,7 +147,7 @@ function WarRoom() {
 
             <h2>Current step</h2>
             <div style={{ fontSize: 15, marginBottom: 20 }}>
-              {latestRung?.rung ?? "—"}
+              {latestRung?.rung ?? "–"}
             </div>
 
             <h2>Event log · tool calls <span style={{ color: "var(--accent)" }}>live</span></h2>
