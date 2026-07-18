@@ -167,7 +167,12 @@
     "stability": 0.55,
     "speed": 1.0,
     "similarity": 0.75,
-    "profile_notes": "competence leads (high-severity call); ~150 wpm, 4-5 short pauses/min; pitch-down + falling intonation on numbers and the settlement ask; warmer during rapport; imperfections per imperfection_style.md rendered naturally at this stability"
+    "profile_notes": "competence leads (high-severity call); ~150 wpm, 4-5 short pauses/min; pitch-down + falling intonation on numbers and the settlement ask; warmer during rapport; imperfections per imperfection_style.md rendered naturally at this stability",
+    "humanization_provisioning_notes": {
+      "_for": "Hamza — apply at provisioning (scripts/provision_elevenlabs.py / medical_bills.yaml voice block)",
+      "voice_casting": "Prefer a voice with real character texture — slight rasp, age, a little mouth noise — over a pristine studio voice. Pristine audio on a phone line is itself a bot tell.",
+      "per_turn_stability": "If per-turn settings are ever wired: drop stability ~0.55 -> ~0.45 on rapport/small-talk turns for more prosodic life, hold >=0.6 on number recitals and the AI-confirmation so they stay clean. Static 0.55 is the safe default until then."
+    }
   },
 
   "negotiator_conduct": {
