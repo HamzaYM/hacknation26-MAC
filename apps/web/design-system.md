@@ -1,5 +1,5 @@
 # Haggl — Design System
-**Owner: Suzy.** Reference this file for all visual decisions in `apps/web/`. If a component doesn't fit a pattern below, ask before improvising — the goal is one coherent identity across five screens built by however many hands touch this repo.
+**Owner: Susy.** Reference this file for all visual decisions in `apps/web/`. If a component doesn't fit a pattern below, ask before improvising — the goal is one coherent identity across five screens built by however many hands touch this repo.
 
 ## Brand personality
 
@@ -193,4 +193,4 @@ Pull the "Unlocks" dollar/percent figure from the same benchmark data already co
 
 ## Product IA (for context — see PRD §11 for the demo-only War Room spec)
 
-Five screens: **Onboarding → Bill List → Bill Detail (tabs: Diagnosis / Plan / Call History) → Action Items**, plus **War Room** kept separate as a judge/demo-only live-call spectator view (not part of the real user product). Full screen-by-screen content spec lives in team chat history — ask Suzy if you need the detail before it's written up as its own doc.
+Five screens: **Onboarding → Bill List → Bill Detail (tabs: Diagnosis / Plan / Call History) → Action Items**, plus **War Room** kept separate as a judge/demo-only live-call spectator view (not part of the real user product). Full screen-by-screen content spec lives in team chat history — ask Susy if you need the detail before it's written up as its own doc.
