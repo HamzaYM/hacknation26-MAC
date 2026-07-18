@@ -14,16 +14,20 @@
 
 ## Current state (update me!)
 - ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
-- ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` (Hamza's provisioning checklist — LOCAL html, per preference: no artifacts) · **PR #3 engine core merged (`84af5b7`): flags + dossier + ladder state machine, 27/27 tests green on main**
-- ✅ **MGH real-data re-tune + Boston MA relocation landed** (one commit, per the locked-numbers rule): seeds/answer key/fixtures/tests/PDFs/PRD all reconciled to real MGH cash $2,633.25 / negotiated median $999.30 / upcode $2,011.21; arc endpoints unchanged
-- ✅ Engine facts: demo case → exactly 4 flags (412/2011.21/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required` (supervisor beat); hangup ⇒ terminal documented_decline
-- ✅ Provisioning: ElevenLabs 6 agents live (scripts/provision_elevenlabs.py, voices cast, prompts synced) · Supabase live (scripts/provision_supabase.py: migration 15/15, buckets, realtime, benchmarks+personas seeded w/ agent IDs)
-- ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on Trust Hub KYC (profile BU05… status=draft — Hamza must SUBMIT it); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
-- ⏳ Hamza still owes: OPENAI_API_KEY in .env (bill-parse moment) · KYC submit
-- 🔄 Wiring workflow in flight (wf_6f0f4f52): backend persistence + simulated-call driver + report endpoint; frontend launch/confirm/report wiring. Simulator makes the War Room fully live before telephony exists.
-- ✅ Product name: **Haggl** (Susy's design system + full product UI on main via PR #13; apps/web/design-system.md is styling law). Remaining post-wiring: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC), OpenAI vision parse wiring (post-key).
-- ⏳ hagglfor.me (Cloudflare, Hamza's account) — after something is deployed; never critical path
-- Known nits parked: unicode-apostrophe normalization in stonewall matching; duplicate-detection modifier exemption (real bills).
+- ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` · **PR #3 engine core** · **PR #11 MGH retune** · **PR #12 fixture-derived PDFs** · **PR #13 product UI** · **PR #14 Supabase provisioning**
+- ✅ **MGH real-data adoption** — benchmarks reconciled to real MGH: cash $2,633.25 / neg-median $999.30 / upcode $2,011.21; arc endpoints unchanged. Boston MA location, BCBS-MA, Bay State ER.
+- ✅ Engine facts: demo case → exactly 4 flags (412/2011.21/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required`; hangup ⇒ terminal documented_decline
+- ✅ **Backend wiring (PR #18/#19):** Supabase persistence + simulated call driver + report endpoint. Frontend launch/confirm/report wired. 58/58 tests green.
+- ✅ **Document parsing (PR #24):** POST /documents/parse with OpenAI vision (gpt-5.6-terra), structured outputs, reconciliation. Both demo PDFs parse to exact match, all 4 flags fire on parsed data.
+- ✅ **Data hardening (PR #27):** NCCI table extended with production bundles + subsumption logic, extraction prompt doc, unicode apostrophe fix, TODO markers cleared.
+- ✅ **Test use-cases + voice tuning (PR #20):** Persona probes (L1), negotiator conduct rules, only-if-asked disclosure mode, eval harness with call-efficiency soft check.
+- ✅ **Intake + login (PR #25):** Supabase password auth, document parse flow, voice interview widget.
+- ✅ Provisioning: ElevenLabs 6 agents live · Supabase live (migration 15/15, buckets, realtime, benchmarks+personas seeded w/ agent IDs) · Demo auth user (maya@hagglfor.me)
+- ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on J's Trust Hub KYC (must reach "Twilio Approved"); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
+- ⏳ Remaining: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC). Browser-session calls work now.
+- ✅ Product name: **Haggl** (design-system.md is styling law)
+- ⏳ hagglfor.me (Cloudflare, Hamza's account) — after deployment; never critical path
+- Known nit parked: duplicate-detection modifier exemption (real bills only, not demo-blocking).
 
 ## Decision log
 | Date | Decision | By |
