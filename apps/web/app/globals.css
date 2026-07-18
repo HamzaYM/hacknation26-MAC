@@ -691,7 +691,35 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .warroom-shell .topbar-wr { display: flex; justify-content: space-between; align-items: center; padding: var(--space-md) var(--space-2xl); border-bottom: 1px solid rgba(245,241,236,0.12); }
 .warroom-shell .brand, .warroom-shell .logo { color: #f5f1ec; }
 .warroom-meta { padding: var(--space-lg) var(--space-2xl) 0; font-size: 14px; color: rgba(245,241,236,0.6); }
-.warroom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); padding: var(--space-lg) var(--space-2xl); max-width: 1280px; margin: 0 auto; }
+.warroom-layout { display: grid; grid-template-columns: 1fr 280px; gap: var(--space-xl); padding: var(--space-lg) var(--space-2xl); max-width: 1560px; margin: 0 auto; align-items: start; }
+.warroom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
+.wr-roster { position: sticky; top: var(--space-lg); }
+.wr-roster-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+}
+.wr-roster-chevron { color: rgba(245,241,236,0.4); font-size: 12px; }
+.wr-roster.collapsed { padding-bottom: var(--space-lg); }
+.wr-persona-card { border-top: 1px solid rgba(245,241,236,0.1); padding: var(--space-md) 0; }
+.wr-persona-card:first-of-type { border-top: none; padding-top: 0; }
+.wr-persona-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+.wr-persona-head strong { font-size: 15px; }
+.wr-persona-style { font-size: 11px; color: var(--accent); }
+.wr-persona-voice { font-size: 11px; color: rgba(245,241,236,0.4); margin-bottom: 6px; }
+.wr-persona-why { font-size: 12.5px; color: rgba(245,241,236,0.65); line-height: 1.5; margin: 0 0 6px; }
+.wr-persona-for { font-size: 11px; color: rgba(245,241,236,0.45); }
+
+@media (max-width: 900px) {
+  .warroom-layout { grid-template-columns: 1fr; }
+  .wr-roster { position: static; }
+}
 .wr-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(245,241,236,0.12); border-radius: var(--radius-card); padding: var(--space-lg); }
 .wr-panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(245,241,236,0.5); margin-bottom: var(--space-md); }
 .wr-ticker { font-family: var(--font-display); font-weight: 800; font-size: 40px; color: var(--accent); text-align: center; margin: var(--space-sm) 0; }
