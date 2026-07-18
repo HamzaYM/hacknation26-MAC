@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="omelette-owns-print" content="true">
+  <link rel="stylesheet" href="_ds/industry-fec33be7-10dd-4b6f-a597-a1b85972711c/styles.css">
+  <script src="_ds/industry-fec33be7-10dd-4b6f-a597-a1b85972711c/_ds_bundle.js"></script>
+  <style>
+    doc-page:not(:defined){visibility:hidden}
+    a{color:var(--color-accent-700);text-decoration:underline}
+    a:hover{color:var(--color-accent-900)}
+    .kept{break-inside:avoid;orphans:3;widows:3}
+  </style>
+</helmet>
+<x-import component-from-global-scope="doc-page" from="./doc-page.js" size="letter" margin="0.65in" hint-size="100%,4000px">
+
+<!-- ============ MASTHEAD ============ -->
+<div style="border-bottom:2px solid var(--color-text);padding-bottom:14px;margin-bottom:6px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+    <div style="font-family:var(--font-heading);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700)">Hack-Nation × ElevenLabs — "The Negotiator" Challenge</div>
+    <div style="font-family:var(--font-heading);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-500)">Engineering Reference · Rev A</div>
+  </div>
+  <h1 style="font-family:var(--font-heading);font-weight:600;font-size:44px;line-height:1.02;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.01em">The Negotiator</h1>
+  <div style="font-family:var(--font-body);font-size:15px;color:var(--color-neutral-700);max-width:620px">A medical bill-lowering voice agent — the US billing system end-to-end, rendered as workflows, decision logic, and reference panels. Every threshold, statistic, and caveat from the source brief is carried here verbatim.</div>
+</div>
+
+<!-- ============ 1 · OVERVIEW ============ -->
+<div class="kept" style="margin-top:22px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">01</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Overview — Why This Matters</h2>
+  </div>
+  <div class="blueprint" style="border:1px solid var(--color-neutral-400);position:relative;padding:18px 20px">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;font-size:13px;line-height:1.55">
+      <div>
+        <div style="font-family:var(--font-heading);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px">The Problem</div>
+        Medical pricing is opaque. Chargemaster list prices are largely fictional — per Bai &amp; Anderson (<em>Health Affairs</em>, June 2015), hospital charges averaged <strong>3.4× the Medicare-allowable cost</strong> in 2012 (mode 2.4×; the highest-markup facility, North Okaloosa Medical Center, FL, charged <strong>12.6× cost</strong>; 49 of the top 50 were for-profit). The EOB ("not a bill", from the insurer) and the itemized bill (from the provider) frequently don't match — and that gap is where most leverage lives.
+      </div>
+      <div>
+        <div style="font-family:var(--font-heading);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px">The Opportunity</div>
+        Insurers negotiate list prices down; uninsured/self-pay patients are exposed to the full inflated number — which is precisely why self-pay discounts of <strong>40–60%</strong> exist. Denials are common: per KFF (March 2026), HealthCare.gov insurers denied <strong>19%</strong> of in-network and <strong>37%</strong> of out-of-network claims in 2024 (~20% combined; 3%–36% range across insurers; roughly <strong>85 million</strong> in-network claims denied).
+      </div>
+      <div>
+        <div style="font-family:var(--font-heading);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:6px">Core Thesis</div>
+        A three-lever negotiation stack, applied in sequence: <strong>(1) error/coding disputes → (2) statutory rights → (3) price benchmarking</strong>. Combining all three routinely yields <strong>30–70% reductions</strong> on out-of-pocket balances; charity care alone can eliminate <strong>50–100%</strong>. The Caller routes dynamically: <strong>insurer first when the EOB is wrong; provider first</strong> when the balance is unaffordable or the bill contains errors.
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--color-neutral-300);margin-top:14px;padding-top:10px;font-size:12.5px;color:var(--color-neutral-700)">
+      <strong style="color:var(--color-text)">Schema mandate:</strong> key every config to CPT/HCPCS codes and DRGs; ingest the itemized bill AND the EOB as separate objects; store a per-line <strong>fair price band</strong> (a multiple of Medicare, e.g. 150–250%). The gap between the billed/chargemaster amount and this band is the negotiator's quantified ask.
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2 · SWIM-LANE JOURNEY ============ -->
+<div style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">02</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">End-to-End Patient Billing Journey</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:150px 1fr 1fr 1fr;border:1px solid var(--color-neutral-400);font-size:12.5px;line-height:1.45">
+    <!-- lane headers -->
+    <div style="background:var(--color-accent-900);color:var(--color-bg);font-family:var(--font-heading);letter-spacing:.1em;text-transform:uppercase;font-size:13px;padding:8px 10px">Stage</div>
+    <div style="background:var(--color-accent-900);color:var(--color-bg);font-family:var(--font-heading);letter-spacing:.1em;text-transform:uppercase;font-size:13px;padding:8px 10px;border-left:1px solid var(--color-accent-700)">Patient</div>
+    <div style="background:var(--color-accent-900);color:var(--color-bg);font-family:var(--font-heading);letter-spacing:.1em;text-transform:uppercase;font-size:13px;padding:8px 10px;border-left:1px solid var(--color-accent-700)">Provider</div>
+    <div style="background:var(--color-accent-900);color:var(--color-bg);font-family:var(--font-heading);letter-spacing:.1em;text-transform:uppercase;font-size:13px;padding:8px 10px;border-left:1px solid var(--color-accent-700)">Insurer</div>
+    <sc-for list="{{ journey }}" as="row" hint-placeholder-count="10">
+      <div style="border-top:1px solid var(--color-neutral-300);padding:8px 10px;font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.06em;color:var(--color-accent-700);font-size:12px">{{ row.stage }}</div>
+      <div style="border-top:1px solid var(--color-neutral-300);border-left:1px solid var(--color-neutral-300);padding:8px 10px;background:{{ row.pBg }}">{{ row.patient }}</div>
+      <div style="border-top:1px solid var(--color-neutral-300);border-left:1px solid var(--color-neutral-300);padding:8px 10px;background:{{ row.vBg }}">{{ row.provider }}</div>
+      <div style="border-top:1px solid var(--color-neutral-300);border-left:1px solid var(--color-neutral-300);padding:8px 10px;background:{{ row.iBg }}">{{ row.insurer }}</div>
+    </sc-for>
+  </div>
+  <div class="kept" style="border:1px solid var(--color-neutral-400);border-top:none;padding:10px 12px;font-size:12px;color:var(--color-neutral-800);background:var(--color-neutral-100)">
+    <strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.08em;color:var(--color-accent-700)">Glossary callout — first-class schema fields:</strong>
+    <strong>chargemaster / gross charge</strong> (the hospital's inflated master list price) · <strong>allowed amount</strong> (negotiated/contracted rate; billed − allowed is written off by in-network providers) · <strong>coinsurance</strong> (a %) · <strong>copay</strong> (fixed $) · <strong>deductible</strong> · <strong>out-of-pocket max</strong> · <strong>balance billing</strong> · <strong>EOB vs. itemized bill</strong> · <strong>DRG</strong> (inpatient grouping) · <strong>CPT/HCPCS</strong> (service codes) · <strong>ICD-10</strong> (diagnoses) · <strong>837 file</strong> (electronic claim) · <strong>rejection</strong> (clearinghouse formatting failure — corrected and resubmitted within hours/days, no appeal) vs. <strong>denial</strong> (adjudication decision).
+  </div>
+</div>
+
+<!-- ============ 3 · DECISION TREE ============ -->
+<div class="kept" style="margin-top:26px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">03</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Who Does the Agent Call?</h2>
+  </div>
+  <div style="text-align:center">
+    <div class="blueprint" style="display:inline-block;position:relative;border:1px solid var(--color-text);padding:10px 22px;font-family:var(--font-heading);font-size:15px;text-transform:uppercase;letter-spacing:.06em">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      Start: EOB vs. bill reconciliation
+    </div>
+    <div style="height:18px;width:1px;background:var(--color-neutral-500);margin:0 auto"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;border-top:1px solid var(--color-neutral-500);padding-top:14px">
+    <sc-for list="{{ callTargets }}" as="t" hint-placeholder-count="3">
+      <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-400);padding:14px 14px;font-size:12.5px;line-height:1.5">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">{{ t.when }}</div>
+        <div style="font-family:var(--font-heading);font-size:19px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-accent-700);margin:4px 0 6px">→ {{ t.target }}</div>
+        <div>{{ t.detail }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:10px;border:1px dashed var(--color-accent);padding:8px 12px;font-size:12.5px">
+    <strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.08em;color:var(--color-accent-700)">Sequential chaining:</strong> insurer-first and provider-first commonly chain — fix the insurer's adjudication first (which may erase or shrink the balance), then negotiate the residual with the provider. Collectors cannot fix coding errors or grant charity care — those go back to the provider.
+  </div>
+  <div style="margin-top:10px;font-size:12px;color:var(--color-neutral-800);line-height:1.55">
+    <strong>Who has authority to reduce a bill:</strong> uninsured/self-pay discounts routinely 40–60% off chargemaster (e.g., Med Center Health: 20% self-pay discount + an additional 30% for attested uninsured patients, and 60% at one of its facilities) · financial assistance/charity care (required of nonprofit hospitals under §501(r); many cover up to 300–400% of the Federal Poverty Level) · prompt-pay/lump-sum discounts (commonly 10–30%, sometimes higher) · error disputes · No Surprises Act balance-billing disputes. Front-line reps have limited authority — always ask for a <strong>billing supervisor, financial counselor, or patient advocate/ombudsman</strong>.
+  </div>
+</div>
+
+<!-- ============ 4 · THREE-LEVER STACK ============ -->
+<div class="kept" style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">04</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">The Three-Lever Negotiation Stack</h2>
+  </div>
+  <div style="display:grid;gap:0">
+    <sc-for list="{{ levers }}" as="lv" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:54px 1fr;border:1px solid var(--color-neutral-400);border-bottom:none;margin-left:{{ lv.indent }}">
+        <div style="background:{{ lv.numBg }};color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:24px;font-weight:600">{{ lv.n }}</div>
+        <div style="padding:10px 14px;font-size:12.5px;line-height:1.5">
+          <div style="font-family:var(--font-heading);font-size:16px;text-transform:uppercase;letter-spacing:.05em">{{ lv.name }}</div>
+          {{ lv.detail }}
+        </div>
+      </div>
+    </sc-for>
+    <div style="border:1px solid var(--color-neutral-400);margin-left:72px;background:var(--color-accent-100);padding:10px 14px;font-size:13px">
+      <strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.06em;color:var(--color-accent-900)">Combined yield:</strong> all three levers routinely produce <strong>30–70% reductions</strong> on out-of-pocket balances; charity care alone can eliminate <strong>50–100%</strong>. Published advocate case studies document total reductions of <strong>50–86%</strong> when errors + charity care + settlement are combined.
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5 · FAIR-PRICE BAND ============ -->
+<div class="kept" style="margin-top:26px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">05</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Fair-Price-Band Computation (Per CPT/HCPCS/DRG Line)</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 40px 1fr;gap:0;align-items:stretch">
+    <div style="display:grid;gap:10px">
+      <sc-for list="{{ priceInputs }}" as="src" hint-placeholder-count="3">
+        <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-400);padding:10px 12px;font-size:12px;line-height:1.5">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="font-family:var(--font-heading);font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-accent-700)">{{ src.name }}</div>
+          {{ src.detail }}
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--color-accent)">→</div>
+    <div class="blueprint" style="position:relative;border:2px solid var(--color-accent-700);padding:14px 16px;font-size:12.5px;line-height:1.55;display:flex;flex-direction:column;justify-content:center">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div style="font-family:var(--font-heading);font-size:19px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-accent-900)">Fair price band</div>
+      <div style="margin-top:6px">Stored as a <strong>configurable multiple of Medicare</strong> per line. Default self-pay target: <strong>150–200% of Medicare</strong>. Flag anything meaningfully above the <strong>~254% commercial norm</strong> (RAND). Any charge above the top of the band → the excess is the <strong>quantified negotiation target</strong>.</div>
+      <div style="margin-top:8px;font-size:11.5px;color:var(--color-neutral-700);border-top:1px solid var(--color-neutral-300);padding-top:6px">
+        Cross-check: Healthcare Bluebook and similar consumer tools for a quick fair-market check.
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:11.5px;color:var(--color-neutral-700);line-height:1.5">
+    <strong>Source annotations —</strong> RAND Round 5.1 Hospital Price Transparency Study (published May 2024, updated Dec 2024): employers/private insurers paid on average <strong>254% of Medicare</strong> in 2022 (inpatient 254%, outpatient 279%, professional 184%); state averages from under 170% (Arkansas) to over 300% (CA, DE, FL, GA, NY, SC, WV, WI). Professional advocates anchor self-pay at 150–200% of Medicare. Bai &amp; Anderson, <em>Health Affairs</em> (June 2015): charges averaged <strong>3.4× Medicare-allowable cost</strong> in 2012 (mode 2.4×), up to <strong>12.6×</strong> at the outlier (North Okaloosa Medical Center, FL); top-50 hospitals had markups ~10× vs. the 3.4 national average.
+  </div>
+</div>
+
+<!-- ============ 6 · RED-FLAG CHECKLIST ============ -->
+<div class="kept" style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">06</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Red-Flag / Error-Detection Checklist</h2>
+  </div>
+  <div style="font-size:12.5px;color:var(--color-neutral-800);margin-bottom:10px">Scanned on every line item by the Benchmark engine (auto-generated <code>red_flags</code> array):</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <sc-for list="{{ redFlags }}" as="rf" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:22px 1fr;gap:8px;border:1px solid var(--color-neutral-400);padding:9px 10px;font-size:12px;line-height:1.5">
+        <div style="width:14px;height:14px;border:1.5px solid var(--color-accent-700);margin-top:2px"></div>
+        <div><strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.05em;font-size:12.5px">{{ rf.name }}</strong> — {{ rf.detail }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:10px;font-size:12px;line-height:1.55;border:1px solid var(--color-neutral-300);background:var(--color-neutral-100);padding:9px 12px">
+    <strong>How advocates find them:</strong> request the itemized bill; cross-reference every CPT code against the EOB and the patient's medical record (patients have a federal right to their records, generally within 30 days); verify OR time against actual procedure duration; demand correction and — where insurance was affected — resubmission.
+  </div>
+  <div style="margin-top:6px;font-size:11.5px;color:var(--color-neutral-700);line-height:1.5">
+    * Error-rate caveat: the widely-cited "up to 80% of medical bills contain errors" figure is an advocacy-industry estimate originating with Pat Palmer / Medical Billing Advocates of America (popularized after the 2013 TIME "Bitter Pill" story); the CFPB has been cited for a more conservative "up to 49%." Treat the range (<strong>≈49–80%</strong>) as product motivation, attributed to its sources — not peer-reviewed or established academic fact.
+  </div>
+</div>
+
+<!-- ============ 7 · REGULATORY LANDSCAPE ============ -->
+<div class="kept" style="margin-top:26px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">07</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Regulatory Landscape — Reference Panel</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <sc-for list="{{ regs }}" as="rg" hint-placeholder-count="4">
+      <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-400);padding:12px 14px;font-size:12px;line-height:1.55">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-family:var(--font-heading);font-size:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-accent-700);margin-bottom:5px">{{ rg.name }}</div>
+        {{ rg.body }}
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ============ 8 · STATE MACHINE ============ -->
+<div style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">08</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Negotiation Script — State Machine (Closer)</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 240px;gap:14px;align-items:start">
+    <div>
+      <sc-for list="{{ scriptSteps }}" as="st" hint-placeholder-count="9">
+        <div style="display:grid;grid-template-columns:34px 14px 1fr;gap:0">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div style="width:28px;height:28px;border:1.5px solid var(--color-accent-700);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:14px;color:var(--color-accent-900);background:var(--color-bg)">{{ st.n }}</div>
+            <div style="flex:1;width:1px;background:{{ st.railColor }}"></div>
+          </div>
+          <div></div>
+          <div style="padding:0 0 12px;font-size:12px;line-height:1.5">
+            <strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.05em;font-size:13px">{{ st.name }}</strong> — {{ st.detail }}
+          </div>
+        </div>
+      </sc-for>
+      <div style="font-size:12px;border:1px dashed var(--color-accent-700);padding:8px 10px;margin-top:2px"><strong style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.05em">Exit rule:</strong> always get any agreement <strong>in writing</strong> before paying.</div>
+    </div>
+    <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-500);padding:12px 12px;font-size:12px;line-height:1.55;background:var(--color-neutral-100)">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div style="font-family:var(--font-heading);font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-accent-900);margin-bottom:6px">Branch: Collections Variant</div>
+      <div style="display:grid;gap:6px">
+        <div style="border:1px solid var(--color-neutral-400);background:var(--color-bg);padding:7px 9px"><strong>C1 · Debt validation</strong> — send a written debt-validation request first.</div>
+        <div style="text-align:center;color:var(--color-accent)">↓</div>
+        <div style="border:1px solid var(--color-neutral-400);background:var(--color-bg);padding:7px 9px"><strong>C2 · Settlement offer</strong> — lump-sum; collectors commonly accept <strong>25–50%</strong> of the balance.</div>
+        <div style="text-align:center;color:var(--color-accent)">↓</div>
+        <div style="border:1px solid var(--color-neutral-400);background:var(--color-bg);padding:7px 9px"><strong>C3 · Written forgiveness</strong> — require written confirmation that the remaining balance is forgiven before paying.</div>
+      </div>
+      <div style="margin-top:8px;font-size:11.5px;color:var(--color-neutral-700)">Collectors cannot fix coding errors or grant charity care — route back to the provider for those.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 9 · BUILD ROADMAP ============ -->
+<div class="kept" style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">09</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">System Build Roadmap → Hackathon Modules</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <sc-for list="{{ roadmap }}" as="rs" hint-placeholder-count="4">
+      <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-400);padding:12px 14px;font-size:12px;line-height:1.55">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <div style="font-family:var(--font-heading);font-size:17px;text-transform:uppercase;letter-spacing:.04em;color:var(--color-accent-700)">{{ rs.name }}</div>
+          <span class="tag tag-accent" style="font-size:11px">{{ rs.module }}</span>
+        </div>
+        <div style="margin-top:5px">{{ rs.body }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ============ 10 · THRESHOLD RULES ============ -->
+<div class="kept" style="margin-top:26px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">10</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Threshold Rules — Conditions That Change Strategy</h2>
+  </div>
+  <table class="table" style="width:100%;font-size:12.5px">
+    <thead><tr><th style="width:44%">Condition</th><th>Strategy Switch</th></tr></thead>
+    <tbody>
+      <sc-for list="{{ thresholds }}" as="th" hint-placeholder-count="4">
+        <tr><td><strong>{{ th.cond }}</strong></td><td>{{ th.action }}</td></tr>
+      </sc-for>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============ 11 · COMPETITIVE LANDSCAPE ============ -->
+<div class="kept" style="margin-top:26px">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">11</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Competitive Landscape</h2>
+  </div>
+  <table class="table" style="width:100%;font-size:12px">
+    <thead><tr><th style="width:20%">Service</th><th style="width:38%">Model / Specialty</th><th>Fee Structure</th></tr></thead>
+    <tbody>
+      <sc-for list="{{ competitors }}" as="c" hint-placeholder-count="7">
+        <tr><td><strong>{{ c.name }}</strong></td><td>{{ c.model }}</td><td>{{ c.fees }}</td></tr>
+      </sc-for>
+    </tbody>
+  </table>
+  <div style="margin-top:8px;font-size:11.5px;color:var(--color-neutral-700);line-height:1.5">
+    Typical independent advocate economics: contingency of 25–35% of savings, or $100–350/hour, or flat fees $300–1,500. Red flags in the space: upfront fees with guaranteed results, or fees charged on the total bill rather than the savings.
+  </div>
+</div>
+
+<!-- ============ 12 · CAVEATS APPENDIX ============ -->
+<div style="break-before:page">
+  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    <span style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent);font-weight:600">12</span>
+    <h2 style="font-family:var(--font-heading);font-size:24px;text-transform:uppercase;letter-spacing:.04em;margin:0">Appendix — Caveats &amp; Sourcing (Verbatim)</h2>
+  </div>
+  <div class="blueprint" style="position:relative;border:1px solid var(--color-neutral-400);padding:16px 18px;font-size:12.5px;line-height:1.6">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <ul style="margin:0;padding-left:18px;display:grid;gap:9px">
+      <li><strong>The "80% of bills contain errors" statistic is an advocacy-industry estimate (Medical Billing Advocates of America), not a peer-reviewed or government figure, and reflects a self-selected sample of bills patients already suspected — present it as a range (≈49–80%) and attribute it.</strong> Use it for product motivation, not as a hard claim in patient-facing reports.</li>
+      <li><strong>On dispute success rates:</strong> the best primary evidence (Duffy et al., <em>JAMA Health Forum</em>, Aug 2024) found that ~74% of people who reached out about a suspected billing mistake had it corrected and ~62% who negotiated got a price drop — but these rest on small subsamples (37 and 14 respondents respectively), so treat them as directionally encouraging, not precise.</li>
+      <li><strong>Discount percentages are highly variable</strong> by hospital, state, income, and whether payment is immediate. The ranges here are planning defaults, not guarantees; make every percentage a config parameter.</li>
+      <li><strong>Voice-agent authorization is a legal/consent issue.</strong> To speak with an insurer or provider on a patient's behalf, the agent needs a HIPAA-compliant authorization on file; build consent capture into the Estimator.</li>
+      <li><strong>State law frequently overrides the federal floor</strong> (e.g., ground-ambulance balance billing, California's Hospital Fair Pricing Act, stronger charity-care mandates in CA/IL/NY/MA). The config must be state-aware.</li>
+      <li><strong>CMS transparency-file data quality is uneven</strong> and the CY2026 dollar-amount requirements were still phasing in with enforcement beginning April 2026; treat MRF values as corroborating, not sole, evidence.</li>
+      <li>Some cited percentages (self-pay discounts, settlement ranges) come from advocacy blogs and vendor pages; the primary-source anchors (RAND 254%, Bai/Anderson 3.4×, KFF denial rates, CMS $400/120-day, IRS §501(r) AGB, the 2023 credit-bureau changes) are the ones safe to hard-code.</li>
+    </ul>
+  </div>
+  <div class="kept" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;line-height:1.55">
+    <div style="border:1px solid var(--color-accent-700);padding:10px 12px">
+      <div style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.08em;color:var(--color-accent-900);font-size:13px;margin-bottom:4px">Safe to hard-code</div>
+      RAND 254% of Medicare (2022) · Bai/Anderson 3.4× cost markup (12.6× outlier) · KFF denial rates (19% in-network / 37% OON, 2024) · CMS $400 GFE threshold / 120-day window / $25 fee · IRS §501(r) AGB &amp; 240-day FAP window · 2023 credit-bureau changes (&lt;$500 removed, paid collections removed, 1-year delay).
+    </div>
+    <div style="border:1px dashed var(--color-neutral-500);padding:10px 12px">
+      <div style="font-family:var(--font-heading);text-transform:uppercase;letter-spacing:.08em;color:var(--color-neutral-700);font-size:13px;margin-bottom:4px">Directional / advocacy estimates</div>
+      Error-rate range (≈49–80%) · dispute-success rates (~74% corrected, ~62% price drop; JAMA Health Forum small subsamples of 37 and 14) · discount percentages (self-pay 40–60%, prompt-pay 10–30%, settlements 25–50¢ on the dollar, combined 50–86%).
+    </div>
+  </div>
+</div>
+
+</x-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const alt = 'var(--color-accent-100)', none = 'transparent';
+    return {
+      journey: [
+        {stage:'1 · Care delivered', patient:'Receives care. Diagnoses recorded as ICD-10 codes; services as CPT/HCPCS codes; inpatient stays grouped into a DRG.', provider:'Records diagnoses and services.', insurer:'—', pBg:none, vBg:alt, iBg:none},
+        {stage:'2 · Charge capture → claim', patient:'—', provider:'Charges drawn from the chargemaster (master list of gross charges — inflated list prices). Claim assembled as an electronic 837 file.', insurer:'—', pBg:none, vBg:alt, iBg:none},
+        {stage:'3 · Clearinghouse scrubbing', patient:'—', provider:'Claim routes through a clearinghouse that validates formatting. REJECTIONS (technical failures) are corrected and resubmitted within hours/days — no appeal needed. Distinct from denials.', insurer:'—', pBg:none, vBg:alt, iBg:none},
+        {stage:'4 · Payer adjudication', patient:'—', provider:'—', insurer:'Verifies eligibility, checks coding, applies medical-necessity and policy rules. Decides: pay in full / pay reduced / pend / DENY. Historically ~30–45 days; timely-filing limits commonly 90–180 days (Medicare up to 12 months). KFF (Mar 2026): 19% of in-network and 37% of out-of-network claims denied in 2024 (~20% combined; 3%–36% range; ~85M in-network claims denied).', pBg:none, vBg:none, iBg:alt},
+        {stage:'5 · EOB issued', patient:'Receives the EOB ("not a bill"): billed amount (chargemaster) → allowed amount (negotiated rate) → plan paid → patient responsibility (deductible + coinsurance + copay + non-covered).', provider:'Billed − allowed is written off by in-network providers.', insurer:'Issues the EOB.', pBg:alt, vBg:none, iBg:alt},
+        {stage:'6 · Provider bills patient', patient:'Receives the bill — it should match the EOB patient-responsibility figure. A mismatch is a first-order red flag.', provider:'Bills the patient-responsibility remainder.', insurer:'—', pBg:alt, vBg:alt, iBg:none},
+        {stage:'7 · Review & reconcile', patient:'Requests an itemized bill (right to receive it, generally within 30 days). Reconciles EOB vs. itemized bill line by line.', provider:'Supplies itemized bill with CPT codes, quantities, unit prices.', insurer:'—', pBg:alt, vBg:none, iBg:none},
+        {stage:'8 · Dispute / negotiate', patient:'Applies the three levers in sequence: error disputes → statutory rights → price benchmarking.', provider:'PFS / billing supervisor / financial counselor can authorize discounts and charity care.', insurer:'Handles claim reprocessing where adjudication was wrong.', pBg:alt, vBg:alt, iBg:alt},
+        {stage:'9 · Escalation', patient:'Insurer internal appeal (typically 180 days to file) → external review. Provider financial assistance / charity care application. Lump-sum settlement. Payment plan.', provider:'Financial assistance / charity care; settlement; payment plan.', insurer:'Reprocessing → internal appeal → external review.', pBg:none, vBg:alt, iBg:alt},
+        {stage:'10 · Collections', patient:'If placed in collections: debt-validation request first, then settlement — often 25–50 cents on the dollar.', provider:'Places account with collections agency.', insurer:'—', pBg:alt, vBg:none, iBg:none},
+      ],
+      callTargets: [
+        {when:'Adjudication is wrong', target:'Insurer', detail:'Denial · misapplied deductible/coinsurance · in-network provider processed as out-of-network · out-of-pocket max not applied · coordination-of-benefits errors · No Surprises Act violation. Fix = claim reprocessing or appeal — the provider genuinely cannot lower the patient\u2019s share until the insurer corrects the claim.'},
+        {when:'Balance unaffordable, or bill has errors', target:'Provider PFS', detail:'The default target for lowering a balance. First call: request itemized bill + account hold. Front-line reps have limited authority — explicitly ask for a billing supervisor, financial counselor, or patient advocate/ombudsman, who can authorize discounts and charity care.'},
+        {when:'Account already placed in collections', target:'Collections', detail:'A distinct playbook: send a written debt-validation request FIRST, then negotiate a lump-sum settlement (collectors commonly accept 25–50% of the balance). Collectors cannot fix coding errors or grant charity care — go back to the provider for that.'},
+      ],
+      levers: [
+        {n:'1', name:'Error / coding disputes', numBg:'var(--color-accent-500)', indent:'0px', detail:'Dispute specific line items code-by-code against the EOB and medical record: duplicates, upcoding, unbundling/NCCI violations, phantom charges, mismatches.'},
+        {n:'2', name:'Statutory rights', numBg:'var(--color-accent-700)', indent:'24px', detail:'No Surprises Act balance-billing bans · §501(r) charity care at nonprofit hospitals (a hard legal lever, not a favor) · self-pay / Good Faith Estimate protections.'},
+        {n:'3', name:'Price benchmarking', numBg:'var(--color-accent-900)', indent:'48px', detail:'Anchor on Medicare rates, FAIR Health benchmarks, and the hospital\u2019s own price-transparency file. Express the ask as a multiple of Medicare.'},
+      ],
+      priceInputs: [
+        {name:'Input A · Medicare fee schedule (CMS)', detail:'The universal anchor. Compute the Medicare allowed amount for each CPT/DRG in the patient\u2019s locality; express the ask as a multiple (self-pay target ~150–200% of Medicare).'},
+        {name:'Input B · FAIR Health allowed benchmark', detail:'Independent nonprofit; largest commercial-claims database (49+ billion records). FH Charge Benchmarks (billed) and FH Allowed Benchmarks (in-network negotiated), by percentile and geozip (first 3 ZIP digits). States use specified percentiles in surprise-billing arbitration (NY: 80th percentile of charges; TX: 80th of billed / 50th of allowed); the FH NSA Reference File supports federal IDR/QPA calculations. Free at fairhealthconsumer.org.'},
+        {name:'Input C · Hospital CMS price-transparency MRF (45 CFR Part 180)', detail:'Every hospital must post one machine-readable file: gross charges, discounted cash prices, payer-specific negotiated charges, de-identified min/max — keyed to CPT/HCPCS/DRG. CY2026 rule: actual dollar amounts (median + 10th/90th percentile allowed) from EDI 835 remittance data over a 12–15 month lookback; enforcement began April 1, 2026. Lets the agent cite the hospital\u2019s own cash/negotiated price for the exact code.'},
+      ],
+      redFlags: [
+        {name:'Duplicate charges', detail:'same CPT/date billed twice (common at shift changes).'},
+        {name:'Upcoding', detail:'a higher-complexity code than the service delivered (e.g., a Level 5 ER visit, CPT 99285, for a minor issue; a 15-minute visit billed as 99215).'},
+        {name:'Unbundling / NCCI violations', detail:'separately billing components that should be one bundled code (e.g., a comprehensive metabolic panel, CPT 80053, split into individual tests; surgical prep billed separately; follow-ups within a global surgical period billed separately).'},
+        {name:'Phantom billing / services not rendered', detail:'charges for canceled tests, declined meds, or items absent from the clinical record.'},
+        {name:'Inflated supply/drug markups', detail:'hospital supply/drug charges marked up many multiples over acquisition cost.'},
+        {name:'Balance-billing violations', detail:'under the No Surprises Act.'},
+        {name:'EOB / bill mismatches', detail:'bill doesn\u2019t match EOB; wrong quantities, member ID, or service dates; deductible / out-of-pocket-max misapplied; preventive care billed as diagnostic.'},
+        {name:'Math / processing errors', detail:'arithmetic and data-entry errors across quantities and totals.'},
+      ],
+      regs: [
+        {name:'No Surprises Act (eff. Jan 1, 2022)', body:'Bans balance billing for (a) emergency services, (b) out-of-network ancillary providers at in-network facilities (anesthesia, pathology, radiology, neonatology — they cannot even ask patients to waive protections), (c) out-of-network air ambulance. Patient owes only in-network cost-sharing. Consent-to-waive requires notice ≥72 hours in advance. Uninsured/self-pay: Good Faith Estimate — a bill at least $400 over the GFE triggers the patient-provider dispute process (start within 120 calendar days; $25 fee). Complaints: CMS No Surprises Help Desk, 1-800-985-3059. Federal floor — stronger state laws prevail; does not apply to Medicare/Medicaid/TRICARE/VA (already protected). Penalties up to $10,000 per violation.'},
+        {name:'CMS Hospital Price Transparency Rule (45 CFR Part 180)', body:'One machine-readable file per hospital: gross charges, discounted cash prices, payer-specific negotiated charges, de-identified min/max — keyed to CPT/HCPCS/DRG. CY2026: actual dollar amounts mandated (median + 10th/90th percentile allowed, from EDI 835 data, 12–15 month lookback); enforcement began April 1, 2026. The compliance basis for demanding the hospital\u2019s own posted cash/negotiated price.'},
+        {name:'IRS §501(r) — nonprofit hospitals', body:'Must maintain a written Financial Assistance Policy (FAP) and widely publicize it (billing statements, ER, admissions areas); limit charges to FAP-eligible patients to Amounts Generally Billed (AGB) — computed via a look-back method or a prospective Medicare/Medicaid method; make reasonable efforts to determine FAP eligibility before extraordinary collection actions. FAP application deadline: generally at least 240 days from the first post-discharge bill. Failure can cost tax-exempt status (+ $50,000 excise tax for CHNA failures). Many FAPs cover up to 300–400% of the Federal Poverty Level.'},
+        {name:'Credit-reporting changes (2023)', body:'Joint Equifax/Experian/TransUnion announcement (April 11, 2023): medical collection debt with an initial reported balance under $500 removed from consumer credit reports — nearly 70% of medical collection tradelines. Paid-in-full medical collections removed as of July 1, 2022. Reporting delay for unpaid medical debt extended from 6 months to 1 year. Note: a 2025 CFPB attempt to ban all medical debt from credit reports was vacated by a federal court — these industry changes, not the CFPB rule, govern.'},
+      ],
+      scriptSteps: [
+        {n:'1', name:'Open + hold the account', railColor:'var(--color-accent-400)', detail:'"I\u2019m calling about account #___. Please place this account on hold / pause aging while I review it." Request a fully itemized bill with CPT codes, quantities, unit prices.'},
+        {n:'2', name:'Reach authority', railColor:'var(--color-accent-400)', detail:'"Please connect me with a billing supervisor, financial counselor, or patient advocate who can adjust balances."'},
+        {n:'3', name:'Financial assistance screening', railColor:'var(--color-accent-400)', detail:'Ask whether the patient qualifies for the FAP / charity care and request the application — BEFORE negotiating, because it reframes the whole conversation.'},
+        {n:'4', name:'Line-item dispute', railColor:'var(--color-accent-400)', detail:'Dispute specific line items with the red-flag list (§06), citing code-by-code discrepancies against the EOB/record.'},
+        {n:'5', name:'Price benchmarking ask', railColor:'var(--color-accent-400)', detail:'"Medicare pays $X for this code; FAIR Health\u2019s benchmark for this area is $Y; your own posted cash price is $Z. I\u2019m asking you to adjust to a fair rate."'},
+        {n:'6', name:'Self-pay / prompt-pay discount', railColor:'var(--color-accent-400)', detail:'"What is your self-pay discount? I understand many hospitals offer 40–60%."'},
+        {n:'7', name:'Lump-sum settlement', railColor:'var(--color-accent-400)', detail:'"I can pay $___ today as payment in full. Can you submit this as a hardship settlement to your supervisor?" Lump-sum discounts of 10–30% are common; combined with errors + charity care, total reductions of 50–86% are documented in published advocate case studies.'},
+        {n:'8', name:'Payment-plan fallback', railColor:'var(--color-accent-400)', detail:'Insist on interest-free terms.'},
+        {n:'9', name:'Escalate', railColor:'transparent', detail:'Written certified-mail disputes → state regulators → CMS No Surprises complaint line (1-800-985-3059).'},
+      ],
+      roadmap: [
+        {name:'Stage 1 · Estimator (intake)', module:'Estimator', body:'Two structured objects — EOB and itemized_bill — each an array of line items keyed by CPT/HCPCS (or DRG). Per-line fields: code, description, date_of_service, units, billed_amount, allowed_amount, plan_paid, patient_responsibility, place_of_service, provider_NPI, in_network_flag. Immediately compute an eob_bill_reconciliation diff. Capture patient context: insured vs. self-pay, household income + size (FPL/§501(r) screening), hospital nonprofit status, emergency vs. scheduled, GFE existence. Build HIPAA consent capture here.'},
+        {name:'Stage 2 · Benchmark engine', module:'Estimator', body:'Per line, populate a fair_price_band from three sources (Medicare rate, FAIR Health geozip percentile, hospital MRF cash/negotiated price — §05). Store benchmarks as configurable multiples of Medicare (default self-pay target 150–200%; flag above the ~254% commercial norm). Auto-generate the red_flags array (§06): duplicate, upcode candidate, unbundle candidate via NCCI, phantom charge, balance-billing violation, EOB mismatch.'},
+        {name:'Stage 3 · Caller routing', module:'Caller', body:'The decision-tree logic of §03. Rule: if eob_bill_reconciliation shows an adjudication problem (denial, network error, cost-sharing misapplication, NSA violation) → call insurer first (reprocess/appeal). Else → provider PFS. Always request itemized bill + account hold on the first provider call; always ask for a supervisor/financial counselor.'},
+        {name:'Stage 4 · Closer negotiation ladder', module:'Closer', body:'Encode the 9-step script (§08) as a state machine with fallbacks. Lever sequence: errors → charity care/§501(r) → statutory (NSA/self-pay) → benchmark-anchored price → self-pay/prompt-pay discount → lump-sum settlement → payment plan. Output: a ranked, evidence-backed report — per-line "billed vs. fair vs. achieved," the statutory/benchmark citation used, and the settlement secured in writing.'},
+      ],
+      thresholds: [
+        {cond:'Bill already in collections', action:'Switch to the debt-validation + 25–50%-of-balance settlement track (§08 branch).'},
+        {cond:'Income ≤ ~200–400% FPL at a nonprofit hospital', action:'Charity care becomes the lead lever (potential 50–100% elimination), not price negotiation.'},
+        {cond:'Emergency, or in-network-facility ancillary out-of-network charge', action:'NSA makes the charge non-negotiable/illegal — file a complaint (CMS No Surprises Help Desk) rather than negotiate.'},
+        {cond:'Bill under ~$500', action:'Lower priority / lower ROI — medical debt under $500 is already off credit reports; weight the effort accordingly.'},
+      ],
+      competitors: [
+        {name:'Goodbill', model:'Hospital-bill specialist; medical-coding experts + AI audit bills and draft formal negotiation letters; screens for §501(r) charity care. Publishes case reductions (e.g., a $3,620 bill cut to $542).', fees:'~20% of savings, capped at $1,000'},
+        {name:'Resolve (resolvemedicalbills.com)', model:'Dedicated advocate model; handles collections. Founder Braden Pan: savings found in ~95% of disputes it takes on.', fees:'Tiered 10–25% contingency; $249–499 deposit; $5,000 minimum for collections cases'},
+        {name:'CareRoute', model:'Multi-strategy: errors, charity care, insurer disputes, negotiation. Publishes free scripts/templates.', fees:'18–25%, capped at $1,000'},
+        {name:'Dollar For', model:'Nonprofit focused purely on charity-care applications; helps patients at ~300% FPL or below. Publishes negotiation and settlement scripts.', fees:'Free'},
+        {name:'Patient Advocate Foundation', model:'Free case management, income-qualified.', fees:'Free'},
+        {name:'SHIP', model:'State Health Insurance Assistance Program — free Medicare counseling, 1-877-839-2675.', fees:'Free'},
+        {name:'Medical Cost Advocate / Health Advocate', model:'Health Advocate via Union Plus — free to union members with a bill ≥ $400.', fees:'Free to eligible union members'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
