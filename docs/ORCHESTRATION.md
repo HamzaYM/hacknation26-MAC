@@ -36,6 +36,10 @@
 | 07-18 | Demo numbers locked: $8,432 billed / $4,287 balance / EOB $3,875 / Medicare $438 / settle $1,650 (−62%) — change ONLY together with `data/seed/demo_answer_key.json` + PRD §10.3 + §14. **Adopted 07-18: real MGH MRF cash $2,633.25 / negotiated median $999.30 / upcode $2,011.21** (arc endpoints unchanged) | Hamza |
 | 07-18 | Demo relocated to Boston MA (Maya, facility, insurer BCBSMA, ER group "Bay State Emergency Physicians") | Hamza |
 | 07-18 | Facility name stays fictional ("Mercy General Hospital", Boston); MGH named only as the data source — benchmarks labeled "derived from a real Boston hospital's published price file", never the negotiation counterparty | Hamza |
+| 07-18 | **Submission format: 60-second UI/UX demo video + 60-second tech demo video** (replaces the 3:30 single video — Kar Shin's script + deck need restructuring; compliance auditor producing both shot lists) | Hamza |
+| 07-18 | Page copy must pass Hamza's voice guide (docs/voice/ — "Page copy" register in voice-profile-addendum.md; standing rules: no em-dashes, no "not just X, it's Y" framing). Copy pass runs after the current build round merges | Hamza |
+| 07-18 | Susy keeps pushing UI work — orchestrator consolidates (watch origin/susy + PRs, merge + reconcile) | Hamza |
+| 07-18 | Telephony: J's Twilio account is the path (Hamza's KYC unfixable); J's Trust Hub profile must reach "Twilio Approved" before scripts/provision_twilio.py can buy numbers. Browser-session calls are the working baseline meanwhile | Hamza |
 
 ## Key facts Claude must not re-derive
 - Contracts frozen per PRD §12 (H2/H3/H8 schedule); `data/seed/demo_answer_key.json` is the single source of demo truth (`transform.py --check` gates it).
