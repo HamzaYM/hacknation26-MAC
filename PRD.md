@@ -1,5 +1,5 @@
 # The Negotiator — Medical Bills · PRD
-**Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs) · Team: Suzy · J · Hamza · Kar Shin**
+**Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs) · Team: Susy · J · Hamza · Kar Shin**
 
 ---
 
@@ -13,7 +13,7 @@ We build the challenge's three modules — **Estimator → Caller → Closer** �
 
 | Person | Start here | Then |
 |---|---|---|
-| **Suzy** (UX/frontend) | §11 | §12, §8.2 (ladder rungs the War Room renders), §6, `docs/workplans/suzy.md` |
+| **Susy** (UX/frontend) | §11 | §12, §8.2 (ladder rungs the War Room renders), §6, `docs/workplans/susy.md` |
 | **J** (data) | §10 | §12, §7, `docs/workplans/j.md` |
 | **Hamza** (engine/orchestration/scaffold) | §7–§9 | §6, §12, `docs/workplans/hamza.md` |
 | **Kar Shin** (narrative/personas/video) | §14, §9 | §15, §12, §8.4–8.6 (the style layer he applies), `docs/workplans/kar-shin.md` |
@@ -216,7 +216,7 @@ Four ElevenLabs persona agents, each bound to its own inbound Twilio number, eac
 | **Sympathetic-No-Authority** (rep) | Warm, apologetic, powerless | Personally grants ≤5%; escalation request reaches a supervisor who honors error disputes | Escalation ladder works |
 | **Collections Agent** | Fast, transactional, month-end quota pressure | Floor 25% of balance; hardship stories worth 0; lump-sum-today offers worth 15–20 extra points | Strategy switching (economics mode) |
 
-**5th style — live human role-play:** J plays a gruff-then-movable billing supervisor on a real cell phone (Suzy backup), rehearsed against a persona guide (Kar Shin writes it alongside the four agent personas) with the same hidden-concession discipline: concede the duplicate only when cited; counter at $2,400 only after the MRF cite; accept only a today-payment ≥ their floor ($1,500). The human numbers to dial are rows in the `personas` table, entered during H1 provisioning.
+**5th style — live human role-play:** J plays a gruff-then-movable billing supervisor on a real cell phone (Susy backup), rehearsed against a persona guide (Kar Shin writes it alongside the four agent personas) with the same hidden-concession discipline: concede the duplicate only when cited; counter at $2,400 only after the MRF cite; accept only a today-payment ≥ their floor ($1,500). The human numbers to dial are rows in the `personas` table, entered during H1 provisioning.
 
 Persona prompts + concession configs: `prompts/personas/` + `personas` table (Kar Shin owns content, Hamza wires; the `persona_config` shape — floor, lever→discount unlock map, escalation behavior, agent/Twilio IDs — freezes at H3, see §12).
 
@@ -245,7 +245,7 @@ Persona prompts + concession configs: `prompts/personas/` + `personas` table (Ka
 
 ---
 
-## §11 · UX & User Flow (Suzy)
+## §11 · UX & User Flow (Susy)
 
 Six screens (mapping the whiteboard journey from `negotiator-intake-data-schema.md` steps 1–5); the War Room is the demo's money shot. Route stubs exist in `apps/web/app/`.
 
@@ -256,7 +256,7 @@ Six screens (mapping the whiteboard journey from `negotiator-intake-data-schema.
 5. **Report** (`/report`) — ranked outcomes across entities (rank key per §12); per-line **billed vs. fair vs. achieved**; audio playback + transcript with citation highlights; honesty-audit badge; plain-language recommendation. *Data: `report` contract + `outcomes` + recordings.*
 6. **Case Timeline / Next Steps** (whiteboard step 5; ships as a Report tab if time is short) — every regulatory deadline computed from the statement date (FAP 240-day, GFE 120-day, FDCPA 30-day validation, 1-year credit-reporting grace), the call log (rep, reference #, outcome, next scheduled callback), current escalation level, and notification preferences (SMS/email cadence — UI only in hackathon scope). *Data: `cases.case_state` + `outcomes`.*
 
-**Also:** golden-recording playback mode — a "golden" call = its stored `call_events` rows replayed on their original timestamps + the recording audio from Storage `recordings/`; Hamza provides the replay endpoint, Suzy renders it through the *identical* live-card code path. This is simultaneously the demo fallback and the video-capture rig. States to design: in-progress, escalation, decline, settlement-confirmed.
+**Also:** golden-recording playback mode — a "golden" call = its stored `call_events` rows replayed on their original timestamps + the recording audio from Storage `recordings/`; Hamza provides the replay endpoint, Susy renders it through the *identical* live-card code path. This is simultaneously the demo fallback and the video-capture rig. States to design: in-progress, escalation, decline, settlement-confirmed.
 
 ---
 
@@ -264,7 +264,7 @@ Six screens (mapping the whiteboard journey from `negotiator-intake-data-schema.
 
 | Area | Owner | Directory |
 |---|---|---|
-| Frontend (5 screens, Realtime wiring) | **Suzy** | `apps/web/` |
+| Frontend (5 screens, Realtime wiring) | **Susy** | `apps/web/` |
 | Data pipeline, benchmarks, statutes, demo documents | **J** | `data/`, `config/` (contents) |
 | FastAPI engine, state machine, ElevenLabs/Twilio wiring, scaffold, integration | **Hamza** (+ Claude Code as orchestrator) | `apps/api/`, `supabase/`, `contracts/` |
 | Personas, imperfection style, eval pass, deck, video | **Kar Shin** | `prompts/`, `docs/` |
@@ -288,7 +288,7 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 
 **Ownership clarifications:** Hamza implements the red-flag detection functions in `apps/api` against J's config thresholds + NCCI table — J's DoD is satisfied when his data makes Hamza's engine fire all 4 flags. Negotiator + intake agent prompt templates: **Hamza drafts** (encoding §8.4–8.6), **Kar Shin applies the imperfection/style layer** and reviews; files live in `prompts/`. Kar Shin's **eval pass** = a per-criterion checklist (S1–S7, C1–C4) run against a full E2E call: persona distinctness, disclosure timing, honesty-audit pass, every demo CPT resolving to a benchmark cite.
 
-**Definition of done per person:** Suzy — full click-through on live data; price move visible at distance. J — demo bill parses → all 4 flags fire → each flag carries a benchmark row and a quantified ask; agent can cite Medicare *and* Mercy's own cash price for every demo CPT. Hamza — one command boots web+api; a provider call completes with a lever-caused price move **twice in a row**; 3 parallel calls reach structured outcomes; report generates with citations. Kar Shin — all four counter-agent styles are audibly distinct (the §14 montage features three: Stonewaller, Policy-Citer, Collections; Sympathetic-No-Authority is built and eval'd but not shown on camera); a cold viewer of the video can check off every success criterion.
+**Definition of done per person:** Susy — full click-through on live data; price move visible at distance. J — demo bill parses → all 4 flags fire → each flag carries a benchmark row and a quantified ask; agent can cite Medicare *and* Mercy's own cash price for every demo CPT. Hamza — one command boots web+api; a provider call completes with a lever-caused price move **twice in a row**; 3 parallel calls reach structured outcomes; report generates with citations. Kar Shin — all four counter-agent styles are audibly distinct (the §14 montage features three: Stonewaller, Policy-Citer, Collections; Sympathetic-No-Authority is built and eval'd but not shown on camera); a cold viewer of the video can check off every success criterion.
 
 ---
 
@@ -296,15 +296,15 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 
 | Hours | Work |
 |---|---|
-| **H0–H1** | Kickoff sync (30 min): confirm schemas, storyline, descope order. Then in parallel: **provision immediately** — Twilio off-trial + all numbers purchased, ElevenLabs agents created; J starts CMS download (longest lead); Suzy wireframes; Kar Shin drafts personas; Hamza scaffolds. |
+| **H0–H1** | Kickoff sync (30 min): confirm schemas, storyline, descope order. Then in parallel: **provision immediately** — Twilio off-trial + all numbers purchased, ElevenLabs agents created; J starts CMS download (longest lead); Susy wireframes; Kar Shin drafts personas; Hamza scaffolds. |
 | **H1–H2** | Scaffold lands: repo + Supabase migrations + **H2 contracts frozen** (`job_spec`, `benchmark_row`, yaml keys, `levers.json`) + README. Remaining contracts freeze per §12 (H3: events/tools/outcome/personas/CPT list; H8: report). Everyone pulls. |
-| **H2–H6** | Parallel build. Hamza: tool endpoints, negotiator agent, Twilio wiring — *first agent-vs-persona test call by H4* (catches double-talk/deadlock ahead of CP1). J: benchmarks v0 (5 codes) by H3 → full seed + demo bill by H5. Suzy: screens 2/3/4 skeletons. Kar Shin: personas v0 by H3, refined by H4 + style guide. |
+| **H2–H6** | Parallel build. Hamza: tool endpoints, negotiator agent, Twilio wiring — *first agent-vs-persona test call by H4* (catches double-talk/deadlock ahead of CP1). J: benchmarks v0 (5 codes) by H3 → full seed + demo bill by H5. Susy: screens 2/3/4 skeletons. Kar Shin: personas v0 by H3, refined by H4 + style guide. |
 | **H6 — CP1 (go/no-go)** | **Gate: one full provider call with a lever-caused price move and a logged outcome.** Failing → cut collections + real-bill parse now; Hamza+Kar Shin pair on the loop until green. |
 | **H6–H8** | Integration: live call renders in War Room; in-call benchmark cites from J's table; charity screening branch; collections persona if on schedule. |
 | **H8 — CP2 (full E2E)** | **Gate: upload → parse → confirm → 3 parallel calls → draft report.** Descope order if behind: ① real-bill parse ② collections call ③ charity branch ④ parallel→sequential. **Never cut:** provider ladder · live price move · AI disclosure · cited report · ElevenLabs voice intake. |
 | **H8–H10** | Demo hardening: two clean golden recordings per scenario into playback mode (= fallback + video footage); human role-play rehearsal; Kar Shin's eval checklist run, fixes applied. |
 | **H10 — CP3** | **Hard feature freeze.** Bugfixes only. Kar Shin takes the room: video script → capture. |
-| **H10–H13** | Video cut + deck (reuse Visual Brief diagrams). Suzy cosmetics. Hamza/J: reliability runs + one-command demo-reset script + offline bundle. |
+| **H10–H13** | Video cut + deck (reuse Visual Brief diagrams). Susy cosmetics. Hamza/J: reliability runs + one-command demo-reset script + offline bundle. |
 | **H13–H14** | Submission + two full live-demo dry runs. |
 
 ---
@@ -320,7 +320,7 @@ Seeded around Maya's bill (§10.3); every number below reconciles with the answe
 - **1:55–3:00 · Showstopper (live, human, audible Twilio ring).** The **Facility callback** from montage (a), now escalated: J as the billing supervisor — which is why the ticker resumes at **$4,287**. Disclosure in the first line. Ticker moves on screen: duplicate X-ray conceded → **$4,287 → $3,875** (now matches the EOB) → *"Medicare pays $438 for these codes, and your own posted cash price is $2,633.25 — commercial insurers pay you less than that — is this negotiable?"* → rep counters **$2,400** → *"She can pay **$1,650 today**, settled as paid in full — can you take that to your supervisor?"* → approved. **$4,287 → $1,650. −62%.** Every step caused by intake data and tools, not script.
 - **3:00–3:30 · Closer.** Ranked report: per-line billed/fair/achieved, transcript citations under each claim, honesty-audit badge, plain-language recommendation, deadline timeline. Flash `config/verticals/`: "swap this file and it negotiates moving quotes." End card.
 
-**Ops:** Kar Shin opens, Hamza drives UI, J on the phone (Suzy backup rep). Any live failure >20s → golden recording, zero on-stage debugging. Video is the submission artifact; live is upside. Call audio for the video comes from stored call recordings (ElevenLabs/Twilio → Supabase `recordings/`, capture confirmed by Hamza at H8) replayed through §11's golden-playback mode. Hotspot backup uplink; report renders fully from stored data (offline-safe).
+**Ops:** Kar Shin opens, Hamza drives UI, J on the phone (Susy backup rep). Any live failure >20s → golden recording, zero on-stage debugging. Video is the submission artifact; live is upside. Call audio for the video comes from stored call recordings (ElevenLabs/Twilio → Supabase `recordings/`, capture confirmed by Hamza at H8) replayed through §11's golden-playback mode. Hotspot backup uplink; report renders fully from stored data (offline-safe).
 
 ---
 
