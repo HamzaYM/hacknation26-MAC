@@ -137,6 +137,20 @@ def set_case_status(case_id: str, status: str):
     return _run("update cases set status = %s where id = %s", (status, case_id))
 
 
+# ── documents ─────────────────────────────────────────────────────────────
+def insert_document(document_id: str, case_id: str, kind: str, storage_path: str, parsed: dict):
+    if not _is_uuid(document_id) or not _is_uuid(case_id):
+        return None
+    return _run(
+        """
+        insert into documents (id, case_id, kind, storage_path, parsed, parse_status)
+        values (%s, %s, %s, %s, %s, 'parsed')
+        on conflict (id) do nothing
+        """,
+        (document_id, case_id, kind, storage_path, Json(parsed)),
+    )
+
+
 # ── strategy dossiers ─────────────────────────────────────────────────────
 def insert_dossier(case_id: str, dossier) -> str | None:
     """Persist a StrategyDossier; returns the new row id (report joins on it)."""
@@ -212,6 +226,19 @@ def insert_event(call_id: str, type_: str, payload: dict) -> int | None:
     return int(rows[0]["id"]) if rows else None
 
 
+def get_events_by_ids(event_ids: list[int]) -> list[dict] | None:
+    """The call_events referenced by an outcome's evidence_event_ids, id-ordered."""
+    ids = [int(i) for i in (event_ids or [])]
+    if not ids:
+        return []
+    rows = _run(
+        "select id, ts, type, payload from call_events where id = any(%s) order by id",
+        (ids,),
+        fetch=True,
+    )
+    return [_jsonable(r) for r in rows] if rows is not None else None
+
+
 # ── outcomes ──────────────────────────────────────────────────────────────
 def insert_outcome(outcome: dict):
     """Insert a CallOutcome (only the fields that exist in the outcomes table)."""
@@ -237,7 +264,7 @@ def get_case_outcomes(case_id: str) -> list[dict] | None:
         return None
     rows = _run(
         """
-        select o.*, d.target_entity, d.route
+        select o.*, d.target_entity, d.route, c.recording_path
         from outcomes o
         join calls c on c.id = o.call_id
         left join strategy_dossiers d on d.id = c.dossier_id
