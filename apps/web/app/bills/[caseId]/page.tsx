@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDemoCase } from "../../../lib/api";
+import { useRouter } from "next/navigation";
+import { getDemoCase, launchCalls } from "../../../lib/api";
 import { facilitySavings, money } from "../../../lib/savings";
 import { procedureLabel } from "../../../lib/procedures";
 import UploadCard from "../../../components/UploadCard";
@@ -172,7 +173,28 @@ function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
 }
 
 function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
+  const router = useRouter();
+  const [launching, setLaunching] = useState(false);
+  const [launchedCallId, setLaunchedCallId] = useState<string | null>(null);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const currentIndex = PROVIDER_LADDER.indexOf(DEMO_CURRENT_RUNG as (typeof PROVIDER_LADDER)[number]);
+
+  async function startCalls() {
+    setLaunching(true);
+    setLaunchError(null);
+    try {
+      const { launched } = await launchCalls(spec.case_id, { simulate: true });
+      const first = launched[0];
+      if (!first) throw new Error("no calls launched");
+      setLaunchedCallId(first.call_id);
+      router.push(`/warroom?call_id=${first.call_id}`);
+    } catch {
+      setLaunching(false);
+      setLaunchError(
+        "Couldn't start the calls — the API at :8000 didn't answer. Nothing was dialed; try again in a moment."
+      );
+    }
+  }
 
   if (cashedIn) {
     return (
@@ -192,12 +214,22 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
             Continuing the {LADDER_LABELS[PROVIDER_LADDER[currentIndex]]?.toLowerCase()} step with {spec.bill.facility_name}
           </div>
         </div>
-        <a href="/warroom" className="btn btn-secondary" style={{ textDecoration: "none" }}>Open War Room →</a>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn btn-primary" onClick={startCalls} disabled={launching} style={launching ? { opacity: 0.7 } : undefined}>
+            {launching ? "Dialing…" : "Start the calls"}
+          </button>
+          <a
+            href={launchedCallId ? `/warroom?call_id=${launchedCallId}` : "/warroom"}
+            className="btn btn-secondary"
+            style={{ textDecoration: "none" }}
+          >
+            Open War Room →
+          </a>
+        </div>
       </div>
-      <p className="todo" style={{ marginBottom: 16 }}>
-        Call launching isn&apos;t wired to the UI yet (TODO Hamza — <code>POST /calls/launch</code>). War Room
-        will show this call live, driven by real events, once it is.
-      </p>
+      {launchError && (
+        <p className="todo" style={{ marginBottom: 16 }}>{launchError}</p>
+      )}
 
       <div className="stepper">
         {PROVIDER_LADDER.map((rung, i) => {
