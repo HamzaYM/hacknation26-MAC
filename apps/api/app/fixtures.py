@@ -25,7 +25,7 @@ def demo_benchmarks() -> dict[str, dict]:
 _DOS = "2026-06-02"
 DEMO_LINE_ITEMS: list[dict] = [
     # (b) upcode candidate: level-5 E/M with a low-acuity dx (J06.9, acute URI);
-    #     impact = 2340 - mrf_negotiated_median(99283)=328.79 → $2011.21
+    #     impact = 2340 - mrf_negotiated_median(99283)=328.79 → $2,011.21
     {"cpt": "99285", "description": "Emergency department visit, high severity (level 5)",
      "date_of_service": _DOS, "billed_amount": 2340.00, "dx_codes": ["J06.9"]},
     # (a) duplicate: chest X-ray billed twice same date → impact $412
@@ -82,7 +82,7 @@ DEMO_JOB_SPEC: dict = {
         "line_items": DEMO_LINE_ITEMS,   # J's parser (E3) must reproduce these from the PDF
     },
     "eob": {
-        "claim_number": "BCNC-2026-118842",
+        "claim_number": "BCBSMA-2026-118842",
         "patient_responsibility_total": 3875.00,
         "denial_codes": [],
         "line_items": [],

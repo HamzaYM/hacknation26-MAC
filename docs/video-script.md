@@ -32,8 +32,8 @@ call, word for word."
 
 ### 0:55–1:15 · War Room (20s) — hits S1 (loop begins), S3 (entities)
 **[SCREEN]** Dossier renders three armed levers with real numbers:
-**Medicare $438** · **Mercy General's own posted cash price $1,890** (from the hospital's
-public price-transparency file) · **§501(r) + 250% FPL at a nonprofit**.
+**Medicare $438** · **Mercy General's own posted cash price $2,633.25** (derived from a real
+Boston hospital's published price file) · **§501(r) + 250% FPL at a nonprofit**.
 **[V]** "Now the War Room. Three levers, armed with real data — including the hospital's own
 published cash price. Three calls queue: the facility, the ER physician group, and a
 collections agency holding an old nine-hundred-eighty-dollar lab bill."
@@ -99,4 +99,4 @@ transcript under every number, and passes an honesty audit — no invented facts
 ## Production notes
 - Call audio = stored recordings replayed through golden-playback mode (identical to live).
 - Any live failure > 20s on demo day → cut to the golden recording; never debug on stage.
-- Numbers to keep exact: 8432 · 4287 · 3875 · 2400 · 1650 · 438 · 1890 · 250% FPL · 1700 · 980 · −62% · MG-ADJ-2247. All from the answer key.
+- Numbers to keep exact: 8432 · 4287 · 3875 · 2400 · 1650 · 438 · 2633.25 · 999.30 · 250% FPL · 1700 · 980 · −62% · MG-ADJ-2247. All from the answer key.

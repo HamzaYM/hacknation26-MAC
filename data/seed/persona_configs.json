@@ -1,6 +1,6 @@
 {
   "_comment": "Seed for the `personas` table (supabase/migrations/0001_init.sql). Each object = one row; `hidden_params` is the §12 persona_config 'hidden concession function' — NEVER shown to the negotiator agent, consumed only by the counterparty persona agent + the eval harness. All monetary numbers reconcile with data/seed/demo_answer_key.json. Concession discipline: price/outcome moves ONLY when the agent earns it (the anti-'screenplay' defense). H3-FREEZE.",
-  "_reconciliation": "human_facility_supervisor.monetary_floor 1500 = answer_key.negotiation_arc.human_rep_floor; duplicate concession -> 3875 = after_duplicate_concession; benchmark cite (Medicare $438 + MGH cash $2633) -> 2400 = rep_counter; settlement 1650 = settlement. collections.monetary_floor 245 = 25% of the $980 lab bill (PRD §3). DECISION 2026-07-18: real MGH numbers adopted.",
+  "_reconciliation": "human_facility_supervisor.monetary_floor 1500 = answer_key.negotiation_arc.human_rep_floor; duplicate concession -> 3875 = after_duplicate_concession; benchmark cite -> 2400 = rep_counter (cash price cited = answer_key.expected_totals.mrf_cash_total $2,633.25, real MGH); settlement 1650 = settlement. collections.monetary_floor 245 = 25% of the $980 lab bill (PRD §3).",
   "_ids_note": "elevenlabs_agent_id + twilio_number are provisioning placeholders — Hamza fills them at H0/H1 when the persona agents and inbound numbers are created. Voice recommendations are starting points; confirm each voice exists in the team's ElevenLabs library.",
 
   "personas": [
@@ -145,7 +145,7 @@
         "hardship_value_pct": 0,
         "lever_unlocks": [
           { "lever": "error_dispute", "condition": "duplicate 71046 cited with code + date", "response": "removes one", "grants": "line_correction", "balance_after": 3875.0 },
-          { "lever": "benchmark_cite", "condition": "cites BOTH Medicare ($438 total) AND the hospital's own posted cash price ($2,633)", "response": "grumbles, counters", "grants": "counter", "counter_amount": 2400.0 },
+          { "lever": "benchmark_cite", "condition": "cites BOTH Medicare ($438 total) AND the hospital's own posted cash price ($2,633.25)", "response": "grumbles, counters", "grants": "counter", "counter_amount": 2400.0 },
           { "lever": "lump_sum_settlement", "condition": "offer >= $1,500, asked as paid-in-full with supervisor framing", "response": "puts caller on hold, returns approved", "grants": "settlement", "settlement_amount": 1650.0 }
         ],
         "escalation_behavior": "if the agent skips the ladder (jumps straight to a lowball), refuse flat and get gruffer",

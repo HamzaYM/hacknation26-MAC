@@ -15,7 +15,8 @@
 ## Current state (update me!)
 - ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
 - ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` (Hamza's provisioning checklist — LOCAL html, per preference: no artifacts) · **PR #3 engine core merged (`84af5b7`): flags + dossier + ladder state machine, 27/27 tests green on main**
-- ✅ Engine facts: demo case → exactly 4 flags (412/890/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required` (supervisor beat); hangup ⇒ terminal documented_decline
+- ✅ **MGH real-data re-tune + Boston MA relocation landed** (one commit, per the locked-numbers rule): seeds/answer key/fixtures/tests/PDFs/PRD all reconciled to real MGH cash $2,633.25 / negotiated median $999.30 / upcode $2,011.21; arc endpoints unchanged
+- ✅ Engine facts: demo case → exactly 4 flags (412/2011.21/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required` (supervisor beat); hangup ⇒ terminal documented_decline
 - ⏳ **Provisioning (Hamza, via docs/setup-checklist.html):** Twilio paid ($20 total, prices confirmed) + numbers + verified caller ID · ElevenLabs agents ×6 + number import · Supabase project + migration + keys → `.env` · OpenAI key · consents · collaborators. **Blocked on Hamza reporting "env filled" + persona numbers/IDs.**
 - ⏳ Next build steps once env lands: ElevenLabs wiring (outbound call trigger, webhook tools registration, post-call webhook + tunnel), Supabase persistence (state machine + call_events), prompt compiler. Waiting on Suzy's design guide before any real frontend styling.
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after something is deployed; never critical path
@@ -29,7 +30,9 @@
 | 07-18 | Stack: Next.js + FastAPI + Supabase; all calls over Twilio PSTN | Hamza |
 | 07-18 | Scope: provider ladder + collections + charity + 3 levers; insurer call cut | Hamza |
 | 07-18 | Raw MRFs (450MB+) never hosted: filter locally, commit slim extract; R2 only if sharing needed | Hamza |
-| 07-18 | Demo numbers locked: $8,432 billed / $4,287 balance / EOB $3,875 / Medicare $438 / MRF cash $1,890 / settle $1,650 (−62%) — change ONLY together with `data/seed/demo_answer_key.json` + PRD §10.3 + §14 | — |
+| 07-18 | Demo numbers locked: $8,432 billed / $4,287 balance / EOB $3,875 / Medicare $438 / settle $1,650 (−62%) — change ONLY together with `data/seed/demo_answer_key.json` + PRD §10.3 + §14. **Adopted 07-18: real MGH MRF cash $2,633.25 / negotiated median $999.30 / upcode $2,011.21** (arc endpoints unchanged) | Hamza |
+| 07-18 | Demo relocated to Boston MA (Maya, facility, insurer BCBSMA, ER group "Bay State Emergency Physicians") | Hamza |
+| 07-18 | Facility name stays fictional ("Mercy General Hospital", Boston); MGH named only as the data source — benchmarks labeled "derived from a real Boston hospital's published price file", never the negotiation counterparty | Hamza |
 
 ## Key facts Claude must not re-derive
 - Contracts frozen per PRD §12 (H2/H3/H8 schedule); `data/seed/demo_answer_key.json` is the single source of demo truth (`transform.py --check` gates it).

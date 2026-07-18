@@ -8,9 +8,9 @@ The arithmetic (all inputs from benchmarks_v0.json + medical_bills.yaml):
   Medicare total     245 + 63 + 14.5 + 10.8 + 104.7            = $438.00
   anchor             1.5 × 438 (self_pay_target_multiple_low)  = $657.00
   high ask           2.0 × 438 (self_pay_target_multiple_high) = $876.00
-  MRF cash total     1409.25 + 354 + 133.5 + 93.75 + 642.75   = $2,633.25
-  target             min(2633.25, 876)                          = $876.00
-  floor              financial_profile.lump_sum_available       = $1,700.00
+  MRF cash total     1409.25 + 354 + 133.50 + 93.75 + 642.75   = $2,633.25
+  target             min(2633.25, 876)                         = $876.00
+  floor              financial_profile.lump_sum_available      = $1,700.00
 So anchor ≤ target ≤ floor: open at 657, aim to settle ≤ 876, never pay >1700.
 """
 import json

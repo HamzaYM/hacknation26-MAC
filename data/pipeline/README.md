@@ -57,13 +57,15 @@ Per demo CPT: `medicare_rate` (professional + facility where applicable), `mrf_c
 `transform.py --check` asserts, against `data/seed/demo_answer_key.json`:
 - every CPT on the demo bill has a benchmark row;
 - Medicare total across demo codes = **$438.00** (the number the demo script speaks);
-- MRF cash total = **$1,890.00**;
-- every seeded flag's dollar impact resolves (duplicate $412, upcode $890, unbundle $642, EOB mismatch $412);
+- MRF cash total = **$2,633.25**;
+- every seeded flag's dollar impact resolves (duplicate $412, upcode $2,011.21, unbundle $642, EOB mismatch $412);
 - arithmetic holds: 4287 − 412 = 3875; 1650/4287 → −61.5% (say "−62%").
 
-**`benchmarks_v0.json` is a hand-seeded placeholder shaped like real output** so integration
-starts at H3 — replace its values with pipeline output by H5, keeping the totals identical
-(or update the answer key + PRD §10.3 + demo script together, never one alone).
+**`benchmarks_v0.json` cash/negotiated values are REAL MGH figures** (extracted from
+Mass General's published price file via `mrf_extract.py` — outpatient, commercial-only
+medians; see `docs/boston-mgh-proposal.md`). Medicare rates are still hand-seeded
+placeholders, `TODO(J-verify)` against the real MA PFS — if totals change, update the
+answer key + PRD §10.3 + demo script together, never one alone.
 
 ## Also owned here
 - `demo_answer_key.json` — seeded flags + expected asks + the negotiation arc.
