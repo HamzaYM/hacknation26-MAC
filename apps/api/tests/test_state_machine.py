@@ -52,6 +52,14 @@ def test_stonewall_trigger_phrase_in_quote_forces_reach_authority(machine, call)
     assert resp["escalation"] is True
 
 
+def test_stonewall_trigger_with_unicode_apostrophe(machine, call):
+    """LLMs often produce curly quotes (\u2019) — must still match triggers."""
+    resp = machine.advance(call, "line_item_disputes", "rejected",
+                           quote="That\u2019s our policy, there\u2019s nothing I can do.")
+    assert resp["next_move"] == "reach_authority"
+    assert resp["escalation"] is True
+
+
 def test_hangup_yields_terminal_documented_decline(machine, call):
     resp = machine.advance(call, "line_item_disputes", "hangup")
     assert resp["next_move"] == "documented_decline"
