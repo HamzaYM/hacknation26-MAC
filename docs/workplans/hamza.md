@@ -10,7 +10,7 @@
 - [ ] Server tools (`apps/api/app/routers/tools.py`): real state machine behind `report_lever_result` (ladder from yaml, stonewall triggers, floors enforced in code), `get_benchmark` from J's table, event logging → `call_events` (typed milestones — the War Room's primary feed)
 - [ ] ElevenLabs wiring: outbound call trigger (native Twilio), post-call webhook → recording to Storage + OpenAI outcome extraction (CallOutcome schema) + honesty audit (figures vs. DB, case-facts vs. JobSpec)
 - [ ] **First agent-vs-persona test call by H4** (turn-taking pathology check: persona greets first, negotiator wait-biased)
-- [ ] Golden-recording replay endpoint (events on original timestamps + audio URL) for Suzy
+- [ ] Golden-recording replay endpoint (events on original timestamps + audio URL) for Susy
 - [ ] Report builder: code ranking (rank key per §12) + OpenAI narrative (numbers interpolated by code)
 - [ ] Demo-reset script (re-seed Maya's case, clear calls) + drive the UI on demo day
 

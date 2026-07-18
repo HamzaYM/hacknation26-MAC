@@ -10,7 +10,7 @@
 3. Claude orchestrates: dispatches agents/workflows (any model/effort), integrates, verifies. Hamza executes vendor-site provisioning from Claude's checklists.
 4. Teammates may push PRD updates as versions (via PRs).
 5. Demo-optimized: when a choice trades robustness vs. demo reliability, demo wins (Hamza, 2026-07-18).
-6. **Design source of truth = Suzy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
+6. **Design source of truth = Susy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
 ## Current state (update me!)
 - ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
@@ -21,7 +21,7 @@
 - ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on Trust Hub KYC (profile BU05… status=draft — Hamza must SUBMIT it); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
 - ⏳ Hamza still owes: OPENAI_API_KEY in .env (bill-parse moment) · KYC submit
 - 🔄 Wiring workflow in flight (wf_6f0f4f52): backend persistence + simulated-call driver + report endpoint; frontend launch/confirm/report wiring. Simulator makes the War Room fully live before telephony exists.
-- ✅ Product name: **Haggl** (Suzy's design system + full product UI on main via PR #13; apps/web/design-system.md is styling law). Remaining post-wiring: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC), OpenAI vision parse wiring (post-key).
+- ✅ Product name: **Haggl** (Susy's design system + full product UI on main via PR #13; apps/web/design-system.md is styling law). Remaining post-wiring: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC), OpenAI vision parse wiring (post-key).
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after something is deployed; never critical path
 - Known nits parked: unicode-apostrophe normalization in stonewall matching; duplicate-detection modifier exemption (real bills).
 
