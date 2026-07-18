@@ -6,7 +6,7 @@ extraction prompt (data/pipeline/extraction_prompt.md).
 """
 from fastapi import APIRouter, HTTPException
 
-from .. import db
+from .. import db, storage
 from ..engine.report import build_lines, build_recommendation, fair_total, rank_outcomes
 from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_benchmarks, demo_flags
 from ..models import JobSpec
@@ -56,6 +56,13 @@ def get_case_report(case_id: str) -> dict:
 
     outcomes = db.get_case_outcomes(DEMO_CASE_ID) or []
     ranked = rank_outcomes(outcomes, fair_total(spec, flags, benchmarks))
+    for o in ranked:  # frozen contract: entity + evidence events + recording_url
+        o["entity"] = o.get("target_entity")
+        events = db.get_events_by_ids(o.get("evidence_event_ids") or []) or []
+        o["evidence"] = [{"ts": e.get("ts"), "type": e.get("type"), "payload": e.get("payload")}
+                         for e in events]
+        path = o.pop("recording_path", None)
+        o["recording_url"] = storage.sign_url(path) if path else None
     best_final = next(
         (float(o["final_amount"]) for o in ranked if o.get("final_amount") is not None), None
     )
