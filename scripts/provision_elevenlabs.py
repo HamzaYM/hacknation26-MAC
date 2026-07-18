@@ -28,7 +28,14 @@ API = "https://api.elevenlabs.io"
 AGENTS: dict[str, dict] = {
     "negotiator": {
         "prompt_file": "prompts/negotiator_system.md",
-        "first_message": "",
+        # A2A deadlock fix (live-verified 07-18: empty first_message + persona greeting
+        # failing to fire = 4 min of mutual silence on a real PSTN call). The negotiator
+        # now opens with the disclosure line — compliance wants it first anyway.
+        "first_message": (
+            "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient "
+            "{{patient_name}}, who has authorized me to discuss account {{account_number}}. "
+            "This call may be recorded on both ends. Am I through to the billing department?"
+        ),
         "voices": ["Eric", "Chris", "Brian"],       # smooth-trustworthy advocate
     },
     "intake": {
