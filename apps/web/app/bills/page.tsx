@@ -207,7 +207,7 @@ function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
           </div>
         ) : (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            Typical range for this type of bill — {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
+            Based on our research and aggregated data on people like you — {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
           </div>
         )}
       </div>
