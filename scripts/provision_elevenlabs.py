@@ -72,6 +72,101 @@ PERSONA_PREFIX = (
     "concede ONLY when the caller triggers them:\n\n"
 )
 
+# Webhook tools (negotiator only) — the honesty boundary made real: the agent
+# fetches case facts and prices from OUR server instead of improvising them.
+# Live-verified need: the first tool-less PSTN call invented a CPT code + date.
+API_BASE = "https://api.hagglfor.me"
+NEGOTIATOR_TOOLS = [
+    {
+        "type": "webhook",
+        "name": "get_case_brief",
+        "description": (
+            "Fetch the verbatim confirmed case file: bill line items, EOB, detected "
+            "billing errors (red flags) with exact CPT codes, dates, and dollar impacts, "
+            "and the entities involved. CALL THIS FIRST, before discussing any specifics — "
+            "never state a code, date, or amount that is not in this brief."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/get_case_brief",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "No parameters needed",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "webhook",
+        "name": "get_benchmark",
+        "description": (
+            "Fair-price data for one CPT code: Medicare rate, the hospital's own posted "
+            "cash price, negotiated median, and the fair band. The ONLY source of citable "
+            "prices — if you did not get a number here or from the case brief, do not say it."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/get_benchmark",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "The CPT code to price",
+                "properties": {"cpt": {"type": "string", "description": "CPT code, e.g. 71046"}},
+                "required": ["cpt"],
+            },
+        },
+    },
+    {
+        "type": "webhook",
+        "name": "report_lever_result",
+        "description": (
+            "Report what just happened with the current negotiation step and receive the "
+            "REQUIRED next move from the strategy engine. Call after every meaningful "
+            "exchange (an ask made, a response heard, a stonewall, an offer). Follow the "
+            "returned next_move; never invent your own escalation."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/report_lever_result",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "What happened in the last exchange",
+                "properties": {
+                    "lever": {"type": "string", "description": "The step just attempted, e.g. open_and_hold_account, line_item_disputes, benchmark_anchor, lump_sum_settlement"},
+                    "result": {"type": "string", "description": "accepted | rejected | partial | stonewalled | escalated | hangup"},
+                    "offer_amount": {"type": "number", "description": "Dollar amount you are about to offer or settle at, if any"},
+                    "quote": {"type": "string", "description": "The counterparty's own words, verbatim, if notable"},
+                },
+                "required": ["lever", "result"],
+            },
+        },
+    },
+    {
+        "type": "webhook",
+        "name": "end_call_summary",
+        "description": (
+            "Structured wrap-up before hanging up: the outcome type, final amount if any, "
+            "reference number, rep name, and agreed action. Every call must end with this."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/end_call_summary",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "The structured outcome of this call",
+                "properties": {
+                    "outcome_type": {"type": "string", "description": "reduction | payment_plan | charity_app_initiated | callback | documented_decline"},
+                    "final_amount": {"type": "number", "description": "Final agreed amount, if any"},
+                    "reference_number": {"type": "string", "description": "Confirmation or reference number the rep gave"},
+                    "rep_name": {"type": "string", "description": "The rep's name"},
+                    "agreed_action": {"type": "string", "description": "What was agreed and by when"},
+                },
+                "required": ["outcome_type"],
+            },
+        },
+    },
+]
+
 
 def env() -> dict[str, str]:
     vals = {}
@@ -130,41 +225,61 @@ def main() -> None:
         sys.exit(f"agent list failed: {s} {existing}")
     by_name = {a["name"]: a["agent_id"] for a in existing.get("agents", [])}
 
+    # Delivery-style guides are INLINED into uploaded prompts — the live agent
+    # cannot read repo files, so "see verbalization_guide.md" would be dangling.
+    imperfection = (ROOT / "prompts/imperfection_style.md").read_text()
+    verbalization = (ROOT / "prompts/verbalization_guide.md").read_text()
+
     ids: dict[str, str] = {}
     for name, spec in AGENTS.items():
         prompt = (ROOT / spec["prompt_file"]).read_text()
         if name.startswith("persona-"):
-            prompt = PERSONA_PREFIX + prompt
-        conversation_config = {
-            "agent": {
-                "first_message": spec["first_message"],
-                "language": "en",
-                "prompt": {"prompt": prompt},
-            },
-            "tts": {
-                # English-only agents require flash v2 / turbo v2 (v2_5 is multilingual —
-                # the API rejects it for language=en)
-                "model_id": "eleven_flash_v2" if "v2_5" in vcfg.get("model", "") else vcfg.get("model", "eleven_flash_v2"),
-                "voice_id": pick_voice(voices_by_name, spec["voices"], fallback_voice),
-                "stability": vcfg.get("stability", 0.55),
-                "speed": vcfg.get("speed", 1.0),
-            },
-        }
+            prompt = PERSONA_PREFIX + prompt + "\n\n# DELIVERY STYLE (inlined)\n\n" + imperfection
+        elif name == "negotiator":
+            prompt = prompt + "\n\n# DELIVERY STYLE (inlined)\n\n" + verbalization + "\n\n" + imperfection
+        tools = NEGOTIATOR_TOOLS if name == "negotiator" else None
+
         if dry:
             print(f"[dry-run] would upsert {name}")
             continue
+
         if name in by_name:
+            # PRESERVE dashboard tweaks (voice, LLM, temperature…): fetch the live
+            # config, change only prompt text / first_message / tools, PATCH back.
             agent_id = by_name[name]
-            s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key,
-                           {"conversation_config": conversation_config})
-            action = "updated"
+            s, live = call("GET", f"/v1/convai/agents/{agent_id}", key)
+            if s != 200:
+                print(f"FAILED {name}: GET {s} {live}")
+                continue
+            cc = live["conversation_config"]
+            cc.setdefault("agent", {}).setdefault("prompt", {})["prompt"] = prompt
+            cc["agent"]["first_message"] = spec["first_message"]
+            cc["agent"]["language"] = "en"
+            if tools is not None:
+                cc["agent"]["prompt"]["tools"] = tools
+            s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, {"conversation_config": cc})
+            action = "updated (voice/llm preserved)"
         else:
+            conversation_config = {
+                "agent": {
+                    "first_message": spec["first_message"],
+                    "language": "en",
+                    "prompt": {"prompt": prompt, **({"tools": tools} if tools else {})},
+                },
+                "tts": {
+                    # English-only agents require flash v2 / turbo v2 (v2_5 is multilingual)
+                    "model_id": "eleven_flash_v2" if "v2_5" in vcfg.get("model", "") else vcfg.get("model", "eleven_flash_v2"),
+                    "voice_id": pick_voice(voices_by_name, spec["voices"], fallback_voice),
+                    "stability": vcfg.get("stability", 0.55),
+                    "speed": vcfg.get("speed", 1.0),
+                },
+            }
             s, resp = call("POST", "/v1/convai/agents/create", key,
                            {"name": name, "conversation_config": conversation_config})
             agent_id = resp.get("agent_id") if isinstance(resp, dict) else None
             action = "created"
         if s not in (200, 201) or not agent_id:
-            print(f"FAILED {name}: {s} {resp}")
+            print(f"FAILED {name}: {s} {str(resp)[:300]}")
             continue
         ids[name] = agent_id
         print(f"{action}: {name} → {agent_id}")
