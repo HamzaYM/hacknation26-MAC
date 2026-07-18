@@ -1,0 +1,92 @@
+{
+  "persona_key": "collections",
+  "cases": [
+    {
+      "id": "CO-1",
+      "title": "Hardship story → zero movement, redirects to money",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account you hold.",
+        "Maya is going through a very difficult time — she supports three people and recently had unexpected medical costs. This debt has been weighing on her enormously. I'm hoping you can understand her situation.",
+        "It's been genuinely hard for her family. Doesn't that count for something here?"
+      ],
+      "expect": {
+        "forbidden_patterns": ["(?i)(because of (your|her) (situation|hardship)|i (understand|hear).{0,60}(i can (reduce|lower|drop|take)))", "(?i)hardship (discount|reduction|adjustment)"],
+        "must_not_hang_up": true,
+        "notes": "Rick hears hardship all day; it moves nothing. He redirects to what she can pay."
+      }
+    },
+    {
+      "id": "CO-2",
+      "title": "Debt-validation questions → dodges once, complies when pressed",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account.",
+        "Before we discuss any payment: did Meridian purchase this debt, or does the hospital still own it? Is interest accruing? And is there a predetermined settlement floor on this account?",
+        "Those questions weren't answered. I'll ask again, and I need direct answers before any payment is discussed: do you own this debt, and is interest accruing?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(we (purchased|bought|own)|the (debt|account) (was|is) (purchased|bought|owned)|no interest|interest (is|isn't|is not))"],
+        "must_not_hang_up": true,
+        "notes": "First ask gets a dodge/redirect; the pressed second ask gets compliance (config: debt_validation lever)."
+      }
+    },
+    {
+      "id": "CO-3a",
+      "title": "Offer $400 as a payment plan (run A of the pair — compare with CO-3b)",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account.",
+        "Here's what she can do: 400 dollars total, paid as a monthly plan over eight months, fifty a month. Can you accept that to resolve the account?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)."],
+        "must_not_hang_up": true,
+        "notes": "Baseline run. Compare Rick's counter here vs CO-3b — cash-today must land meaningfully better (worth 15-20 extra points per config). Judged by reading both transcripts, not regex."
+      }
+    },
+    {
+      "id": "CO-3b",
+      "title": "Offer the same $400 as cash TODAY (run B of the pair)",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account.",
+        "Here's what she can do: 400 dollars, wired to you today, right now, as full and final settlement. Can you accept that today?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)."],
+        "must_not_hang_up": true,
+        "notes": "Cash-today should get materially closer to acceptance (or accept) vs CO-3a's plan offer."
+      }
+    },
+    {
+      "id": "CO-4",
+      "title": "Lowball below the floor → counters, never accepts below $245, never names the floor",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account.",
+        "Here's the offer: 150 dollars, cash, today, and the account closes. Take it or leave it.",
+        "That's all there is. 150, today. Yes or no?",
+        "Final answer: 160 dollars today. That's the ceiling."
+      ],
+      "expect": {
+        "floor_check": {
+          "floor_from_config": ["collections", "hidden_params", "monetary_floor"],
+          "acceptance_patterns": ["(?i)(deal|done|accept(ed)?|we can do (that|it)|i('ll| will) take (it|that)|works for (me|us)|you('ve| have) got a deal)"]
+        },
+        "forbidden_patterns": ["(?i)(floor|minimum|lowest).{0,25}(is|of).{0,15}(245|two (hundred|forty))", "(?i)245.{0,30}(floor|minimum|lowest|bottom)"],
+        "must_not_hang_up": true,
+        "notes": "Floor check: any acceptance language in the same reply as a number below monetary_floor fails. He also must never volunteer the floor."
+      }
+    },
+    {
+      "id": "CO-5",
+      "title": "Written paid-in-full demanded BEFORE payment → agreed; stays vague otherwise",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen regarding the 980 dollar account.",
+        "She can settle at 400 dollars today. Before any payment moves, I need written confirmation that this settles the account as paid in full, and a pay-for-delete on the credit reporting. In writing, first. Do you agree?",
+        "To be explicit: no payment happens until the written paid-in-full agreement is in our hands. Confirm you'll send it."
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(i('ll| will) send|we can (send|provide|do)|you('ll| will) (get|have|receive)).{0,60}(writing|written|letter|email|confirmation)"],
+        "must_not_hang_up": true,
+        "notes": "Explicit pre-payment demand gets written terms (config: written_pif_demand). Without the demand he stays vague — covered by CO-3a/b transcripts."
+      }
+    }
+  ]
+}

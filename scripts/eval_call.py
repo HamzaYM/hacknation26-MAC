@@ -149,8 +149,20 @@ def check_price_move(call):
     return ("N2", "pass", f"price moved {orig}->{final}, caused by lever '{lever}' (event present)")
 
 
+def check_duration(call):
+    """NG-6 call efficiency — SOFT check, never fails the gate (no hard threshold by design:
+    under ~10 min ideal, beyond ~15-20 min too long; pushy on pace, not tone)."""
+    secs = (call.get("call_metadata") or {}).get("duration_seconds")
+    if secs is None:
+        return ("D8", "n/a", "no duration metadata")
+    mins = secs / 60
+    if secs > 900:
+        return ("D8", "warn", f"call ran {mins:.0f} min — beyond the ~15 min soft ceiling; ideal is <10. Tighten pacing (see negotiator_conduct in persona_configs.json)")
+    return ("D8", "pass", f"call ran {mins:.0f} min ({'ideal' if secs < 600 else 'acceptable'})")
+
+
 DET_CHECKS = [check_disclosure, check_robot_question, check_honesty_numbers,
-              check_outcome, check_fees_itemized, check_price_move]
+              check_outcome, check_fees_itemized, check_price_move, check_duration]
 
 
 # ── subjective layer (claude -p) ────────────────────────────────────────

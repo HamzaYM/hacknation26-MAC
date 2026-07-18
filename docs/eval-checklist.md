@@ -26,6 +26,7 @@ CP1/CP2. Two layers:
 | D7 | Friction survived | C2 | llm | Interruption / evasion / hang-up occurs and the agent still reaches a structured outcome |
 | D8 | Tone calibration | §8.4 | llm | Warmth→front-line, evidence→supervisor, economics→collections; competence leads on the big ask |
 | D9 | Delivery imperfection | §8.6 | llm | Sounds human (fillers/pace) without garbling numbers or the disclosure line |
+| D8 | Call efficiency (soft — never fails the gate) | NG-6 | det. | Info ≤10 min (ideal) / ≤15 min (acceptable); **warn** beyond ~15 min. Pushy on pace, not tone |
 
 ## Per-negotiation criteria (the showstopper + any real move)
 

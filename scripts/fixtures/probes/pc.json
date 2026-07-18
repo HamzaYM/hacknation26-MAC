@@ -1,0 +1,76 @@
+{
+  "persona_key": "policy_citer",
+  "cases": [
+    {
+      "id": "PC-1",
+      "title": "Honest robot-confirm → continues professionally",
+      "prober_turns": [
+        "Hi, my name is Alex — I'm calling on behalf of your patient Maya Chen regarding account 4471902.",
+        "I'd like to discuss two charges on the account that appear inconsistent with the billing records.",
+        "[If asked whether I'm a robot, I answer:] You are — I'm an AI advocate authorized by the patient, and I have her account details ready whenever you are.",
+        "Thank you. As I was saying, I'd like to review code 99285 on the account."
+      ],
+      "expect": {
+        "forbidden_patterns": ["(?i)(i('m| am) (ending|terminating)|refuse to (speak|talk)|hang(ing)? up on)", "(?i)(get off (the|my) (line|phone))"],
+        "must_not_hang_up": true,
+        "notes": "Honest AI confirmation keeps the call professional. Hostility is reserved for evasion (not probed here)."
+      }
+    },
+    {
+      "id": "PC-2",
+      "title": "Hardship story → zero movement",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "Maya is 31, she supports a household of three, and this bill is more than a month of her income. She's been losing sleep over it. Anything you could do on the balance would change her life.",
+        "I understand policy matters, but I'm asking you, person to person — can't you reduce this for her?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(policy|balance stands|not (able|authorized)|cannot|can't)"],
+        "forbidden_patterns": ["(?i)(i can (reduce|adjust|match|lower)|let me (apply|take off)|i('ll| will) (reduce|adjust|remove))"],
+        "must_not_hang_up": true,
+        "notes": "Emotion is worth zero to Halloran; he stays polite but immovable."
+      }
+    },
+    {
+      "id": "PC-3",
+      "title": "Vague price complaint → nothing unlocked",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "Frankly, your prices are way too high. Everyone knows medical bills are inflated. You should cut this bill down substantially."
+      ],
+      "expect": {
+        "forbidden_patterns": ["(?i)(i can (match|reduce|adjust)|cash (rate|price) match|let me lower)"],
+        "must_not_hang_up": true,
+        "notes": "Vague complaints unlock nothing — only exact-code cites do."
+      }
+    },
+    {
+      "id": "PC-4",
+      "title": "Exact-code benchmark cite → cash-rate match authorized",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "I'd like to discuss code 99285, the emergency visit charge. Your group's own posted cash price for code 99285 on your public price-transparency file is substantially below what was billed here, and the Medicare rate for this exact code is lower still. I'm asking you to adjust this line to your posted cash rate.",
+        "So to confirm — you're able to match your own posted cash price for code 99285?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(match|adjust|honor).{0,40}(cash|posted|rate|price)|(?i)cash (rate|price).{0,40}(match|apply|adjust)"],
+        "must_not_hang_up": true,
+        "notes": "An exact-code cite of their OWN posted price unlocks the cash-rate match (config: benchmark_cite lever)."
+      }
+    },
+    {
+      "id": "PC-5",
+      "title": "§501(r) mention → FAP application offered",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "Maya's household income is around 250 percent of the federal poverty level. Under section 501(r), as a provider affiliated with a nonprofit facility, financial assistance screening applies here. Can we start the financial assistance application for her?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(financial assistance|FAP|application|charity)"],
+        "forbidden_patterns": ["(?i)(no such program|we (do not|don't) (have|offer) (financial assistance|charity))"],
+        "must_not_hang_up": true,
+        "notes": "The statutory lever works: he offers to open the FAP application (config: statutory_501r → charity_app_initiated)."
+      }
+    }
+  ]
+}
