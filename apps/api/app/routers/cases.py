@@ -5,7 +5,7 @@ OpenAI vision extraction prompt (data/pipeline/extraction_prompt.md).
 """
 from fastapi import APIRouter, HTTPException
 
-from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC
+from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_flags
 from ..models import JobSpec
 
 router = APIRouter()
@@ -22,6 +22,14 @@ def get_case(case_id: str) -> dict:
     if case_id in (DEMO_CASE_ID, "demo"):
         return DEMO_JOB_SPEC
     raise HTTPException(404, "case not found (only the demo fixture exists so far)")
+
+
+@router.get("/{case_id}/flags")
+def get_case_flags(case_id: str) -> dict:
+    """Red flags computed live by the deterministic engine (PRD §7)."""
+    if case_id not in (DEMO_CASE_ID, "demo"):
+        raise HTTPException(404, "case not found (only the demo fixture exists so far)")
+    return {"case_id": case_id, "flags": [f.model_dump() for f in demo_flags()]}
 
 
 @router.post("/{case_id}/confirm")
