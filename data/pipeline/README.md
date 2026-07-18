@@ -28,7 +28,12 @@ transform.py   → data/seed/benchmarks.json  (+ loads into Supabase `benchmarks
   **Novant Health** — JSON (19/20 facilities), file index at
   www2.novanthealth.org/Public_Files/regulatory/cms-hpt.txt. UNC/Duke publish too but are
   403-walled or click-through vendor exports — stretch/manual only.
-- These are BIG (100MB–GB). Stream-filter to our demo CPT list only; never commit raw files.
+- These are BIG (100MB–GB; an Atrium file runs ~450MB). **Never host or commit raw MRFs** —
+  they stay in `data/raw/` on the downloader's machine (gitignored); stream-filter to the demo
+  CPT list and share only the slim extract (a few KB) via git. Supabase Storage is reserved for
+  app assets (bill PDFs, recordings). If sharing a raw file across machines is truly needed,
+  use a Cloudflare R2 bucket on Hamza's account (10GB free, no egress fees) — not GitHub
+  (100MB cap), not Supabase (1GB total).
 
 ## Stage 2 — Clean (the unglamorous 80%)
 

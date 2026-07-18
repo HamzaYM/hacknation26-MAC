@@ -64,7 +64,7 @@ cd data/pipeline && python3 transform.py --check   # validates seed vs demo answ
 ## Demo-critical gotchas (web-verified 2026-07)
 - **Twilio trial can't call unverified numbers** (error 21608, ≤5 verified) — upgrade to paid at H0.
 - **Agent-vs-agent over PSTN is undocumented** — the H4 loop test is the go/no-go; fallback = persona calls as recorded browser/widget sessions, PSTN reserved for the live human call.
-- **Supabase free tier**: 1GB storage / 500MB DB / 7-day auto-pause — provision at H0, ping it demo-day morning.
+- **Supabase free tier**: 1GB storage / 500MB DB / 7-day auto-pause — provision at H0, ping it demo-day morning. **Raw MRFs (450MB+) never go there**: stream-filter locally, commit only the slim extract; share raw files via Cloudflare R2 if ever needed (`data/pipeline/README.md`).
 - **Consent paper trail**: text/Slack consent from every teammate whose phone gets dialed (FCC treats AI voice as TCPA-covered regardless of who's called).
 - **Cost saver**: offline prose runs free on Claude Max subscriptions via headless `claude -p` — see `docs/claude-headless-notes.md`. Vision parsing stays on OpenAI.
 
