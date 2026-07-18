@@ -5,10 +5,14 @@ csv reader for CSV), keep only rows whose code in demo list, write the slim resu
 to data/raw/mrf/<hospital>.csv (columns: hospital,cpt,setting,description,gross,cash,payer,plan,negotiated).
 
 Find files: "<hospital name> price transparency machine readable" -- filename is
-usually <EIN>_<name>_standardcharges.<ext>. Target 2-3 real NC systems.
+usually <EIN>_<name>_standardcharges.<ext>.
+
+DECISION 2026-07-18: Demo relocated to Boston MA. Primary target = MGH (Mass General
+Brigham). For full extraction with payer-class segmentation, use mrf_extract.py instead.
+This script is the lightweight stream-filter for raw data capture.
 
 USAGE:
-    python fetch_mrf.py --all          # fetch both Atrium + Novant (default targets)
+    python fetch_mrf.py --all          # fetch MGH (default target)
     python fetch_mrf.py --url URL --hospital name --format csv|json
 """
 import argparse
@@ -23,19 +27,14 @@ import httpx
 RAW_DIR = Path(__file__).resolve().parents[1] / "raw" / "mrf"
 DEMO_CPTS_FILE = Path(__file__).resolve().parents[1] / "seed" / "demo_answer_key.json"
 
-# Pre-configured NC hospital MRF sources (web-verified 2026-07)
+# Pre-configured Boston MA hospital MRF sources (DECISION 2026-07-18)
 TARGETS = [
     {
-        "hospital": "atrium_carolinas_medical_center",
-        "display_name": "Atrium Health Carolinas Medical Center (Charlotte NC)",
-        "url": "https://sthpiprd.blob.core.windows.net/machine-readable-files/11170/561398929-1295789907_carolinas-medical-center_standardcharges.csv",
+        "hospital": "mgh_massachusetts_general",
+        "display_name": "Massachusetts General Hospital (Boston MA)",
+        "url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip",
         "format": "csv",
-    },
-    {
-        "hospital": "novant_presbyterian",
-        "display_name": "Novant Health Presbyterian Medical Center (Charlotte NC)",
-        "url": "https://www2.novanthealth.org/Public_Files/regulatory/560554230_the-presbyterian-hospital-dba-novant-health-presbyterian-medical-center_standardcharges.json",
-        "format": "json",
+        "note": "ZIP containing ~60MB CSV (159k rows, CMS v3.0.0). Download + unzip, then use mrf_extract.py for full analysis.",
     },
 ]
 
