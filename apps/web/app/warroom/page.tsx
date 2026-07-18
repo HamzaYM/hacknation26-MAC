@@ -88,7 +88,7 @@ function WarRoom() {
         </span>
       </div>
       <div className="warroom-meta">
-        {call ? `Call ${call.id.slice(0, 8)} · ${call.counterparty} · status: ${call.status}` : callId ? `Call ${callId.slice(0, 8)}` : "War Room"}
+        {call ? `Call ${String(call.id ?? callId).slice(0, 8)} · ${call.counterparty ?? "—"} · status: ${call.status}` : callId ? `Call ${callId.slice(0, 8)}` : "War Room"}
       </div>
 
       {!callId ? (
@@ -97,8 +97,8 @@ function WarRoom() {
           <h2>Waiting for a live call</h2>
           <p>
             This screen renders directly off the <code>call_events</code> Realtime stream — nothing
-            here is scripted. Launch a call from a bill&apos;s Plan tab (once call-launching is
-            wired) or open this page with <code>?call_id=&lt;id&gt;</code> to watch a specific one.
+            here is scripted. Launch a call from a bill&apos;s Plan tab (&quot;Start the calls&quot;)
+            or open this page with <code>?call_id=&lt;id&gt;</code> to watch a specific one.
           </p>
         </div>
       ) : events.length === 0 ? (
