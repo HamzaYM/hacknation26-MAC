@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getReport } from "../../lib/api";
 import { money } from "../../lib/savings";
 import { OUTCOME_LABELS } from "../../lib/types";
-import type { CaseReport, ReportOutcome } from "../../lib/types";
+import type { CaseReport, EvidenceEvent, ReportOutcome } from "../../lib/types";
 
 // PRD §11 screens 5–6 — ranked outcomes across entities (rank key per §12,
 // ranking done server-side), per-line billed vs. fair vs. achieved, and the
@@ -159,6 +159,133 @@ function OutcomeRow({ outcome, rank }: { outcome: ReportOutcome; rank: number })
           ))}
         </div>
       )}
+      <EvidenceSection outcome={outcome} />
     </div>
   );
+}
+
+// Section sub-head style shared by the evidence blocks (matches the page's
+// uppercase mini-headings; light-theme sibling of the War Room panel heads).
+const evidenceHead: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+  color: "var(--text-tertiary)",
+  margin: "12px 0 6px",
+};
+
+// Expandable per-outcome evidence: the cited transcript lines + tool-call
+// milestones (the call_events behind evidence_event_ids) and the call
+// recording. Backend fields may not exist yet — everything treats absent
+// as null and renders nothing rather than breaking.
+function EvidenceSection({ outcome }: { outcome: ReportOutcome }) {
+  const [open, setOpen] = useState(false);
+  const evidence = outcome.evidence ?? [];
+  const transcript = evidence.filter((e) => e.type === "transcript");
+  const milestones = evidence.filter((e) => e.type !== "transcript");
+  if (evidence.length === 0 && !outcome.recording_url) return null;
+
+  return (
+    <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          fontFamily: "var(--font-body)",
+          fontSize: 13,
+          fontWeight: 600,
+          color: "var(--accent)",
+        }}
+      >
+        {open ? "▾" : "▸"} Evidence
+        {evidence.length > 0 && <span style={{ color: "var(--text-tertiary)", fontWeight: 400 }}> · {evidence.length} cited event{evidence.length === 1 ? "" : "s"}</span>}
+        {outcome.recording_url && <span style={{ color: "var(--text-tertiary)", fontWeight: 400 }}> · recording</span>}
+      </button>
+
+      {open && (
+        <div>
+          {transcript.length > 0 && (
+            <>
+              <div style={evidenceHead}>Cited transcript lines</div>
+              <div
+                style={{
+                  background: "var(--bg-surface-muted)",
+                  borderRadius: "var(--radius-input)",
+                  padding: "var(--space-md)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  maxHeight: 220,
+                  overflowY: "auto",
+                }}
+              >
+                {transcript.map((e, i) => (
+                  <div key={`${e.ts}-${i}`}>
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "var(--accent)",
+                        marginRight: 6,
+                      }}
+                    >
+                      {String(e.payload?.speaker ?? "?")}
+                    </span>
+                    {String(e.payload?.text ?? "")}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {milestones.length > 0 && (
+            <>
+              <div style={evidenceHead}>Call milestones</div>
+              <div className="mono" style={{ fontSize: 12.5, display: "flex", flexDirection: "column", gap: 6 }}>
+                {milestones.map((e, i) => (
+                  <div key={`${e.ts}-${i}`}>
+                    <span style={{ color: "var(--text-tertiary)", marginRight: 8 }}>
+                      {new Date(e.ts).toLocaleTimeString()}
+                    </span>
+                    {milestoneLabel(e)}
+                    {typeof e.payload?.result === "string" && (
+                      <div style={{ color: "var(--text-secondary)", paddingLeft: 24 }}>→ {e.payload.result}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {evidence.length === 0 && (
+            <p style={{ fontSize: 13, color: "var(--text-tertiary)", margin: "12px 0 0" }}>
+              No cited call events for this outcome.
+            </p>
+          )}
+
+          {outcome.recording_url && (
+            <>
+              <div style={evidenceHead}>Call recording</div>
+              <audio controls src={outcome.recording_url} style={{ width: "100%" }} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function milestoneLabel(e: EvidenceEvent): string {
+  const name = e.payload?.name;
+  if (typeof name === "string" && name) return name;
+  if (e.type === "quote" && e.payload?.amount != null) return `quote · $${Number(e.payload.amount).toLocaleString()}`;
+  return e.type;
 }

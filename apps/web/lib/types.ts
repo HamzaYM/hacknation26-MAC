@@ -199,11 +199,19 @@ export interface ReportLine {
   achieved: number;
 }
 
+// The call_events rows an outcome cites (its evidence_event_ids, ordered) —
+// the report API returns them without id/call_id.
+export interface EvidenceEvent {
+  ts: string;
+  type: CallEventType;
+  payload: Record<string, unknown>;
+}
+
 // The CallOutcome fields the report surfaces per ranked entry; everything
 // optional so the page renders defensively whatever subset the API includes.
 export interface ReportOutcome {
   call_id?: string;
-  entity?: string;
+  entity?: string | null;
   outcome_type?: OutcomeType;
   original_amount?: number | null;
   final_amount?: number | null;
@@ -213,6 +221,8 @@ export interface ReportOutcome {
   rep_name?: string | null;
   agreed_action?: string | null;
   next_action_date?: string | null;
+  evidence?: EvidenceEvent[];
+  recording_url?: string | null;
 }
 
 export interface CaseReport {

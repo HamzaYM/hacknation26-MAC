@@ -32,7 +32,7 @@ export default function BillList() {
       <div className="user-strip">
         <span className="avatar">{patientName.charAt(0) || "?"}</span>
         <span><strong>{patientName}</strong></span>
-        <span>· Charlotte, NC</span>
+        <span>· Boston, MA</span>
       </div>
 
       <div className="savings-hero">
