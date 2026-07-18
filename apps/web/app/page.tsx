@@ -1,28 +1,65 @@
+import MoneyRain from "../components/MoneyRain";
+import Logo from "../components/Logo";
+
 export default function Home() {
   return (
-    <>
-      <div className="card">
-        <h1>The Negotiator — scaffold</h1>
-        <p>
-          An AI advocate that reads your hospital bill, finds the errors and the law on your
-          side, calls the billing office, and talks the price down on a live call.
+    <div className="marketing">
+      <MoneyRain />
+
+      <nav className="marketing-nav">
+        <Logo />
+        <div className="marketing-nav-links">
+          <a href="#how-it-works">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <a href="/login" className="btn btn-secondary" style={{ padding: "8px 20px" }}>
+            Log in
+          </a>
+        </div>
+      </nav>
+
+      <section className="marketing-hero">
+        <span className="badge-live">
+          <span className="dot" />
+          AI voice agents · live now
+        </span>
+
+        <h1 className="marketing-headline">
+          your medical bill
+          <br />
+          just met its <span className="accent">match</span>
+        </h1>
+
+        <p className="marketing-sub">
+          upload it, we call the billing dept and haggle it down while you touch grass. no calls,
+          no hold music, no PhD in insurance.
         </p>
-        <p>
-          Start with <code>PRD.md</code> at the repo root, then your own file in{" "}
-          <code>docs/workplans/</code>.
-        </p>
-      </div>
-      <div className="card">
-        <h2>The six screens (PRD §11)</h2>
-        <ol>
-          <li><a href="/onboard">Onboard / Authorize</a></li>
-          <li><a href="/intake">Intake — upload + voice interview</a></li>
-          <li><a href="/confirm">Action Plan / Spec Confirm</a></li>
-          <li><a href="/warroom">War Room — live calls</a></li>
-          <li><a href="/report">Report (+ Case Timeline tab)</a></li>
-        </ol>
-        <p className="todo">Fixture case: <code>GET /api/cases/demo</code> (FastAPI must be running on :8000).</p>
-      </div>
-    </>
+
+        <div className="marketing-cta-row">
+          <a href="/login" className="btn btn-primary">
+            Start saving — it&apos;s free →
+          </a>
+          <a href="#how-it-works" className="link-cta">
+            see how it works
+          </a>
+        </div>
+
+        <div className="stat-row">
+          <div>
+            <div className="stat-value">$1,240</div>
+            <div className="stat-label">avg. saved per bill</div>
+          </div>
+          <div className="stat-div" />
+          <div>
+            <div className="stat-value">3 min</div>
+            <div className="stat-label">to upload &amp; go</div>
+          </div>
+          <div className="stat-div" />
+          <div>
+            <div className="stat-value">$0</div>
+            <div className="stat-label">until you save</div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
