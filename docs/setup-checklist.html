@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Negotiator — Setup Checklist</title>
+<style>
+  :root {
+    --ink: #1b2733; --ink-2: #5b6b77; --paper: #fafaf7; --card: #ffffff;
+    --line: #e3e6e2; --accent: #0e7c7b; --accent-soft: #e3f0ef;
+    --cost: #b7791f; --cost-soft: #faf3e3; --done: #2f855a; --done-soft: #e7f2ec;
+    --warn: #b03a2e; --warn-soft: #f9e9e6; --mono-bg: #eef1ee;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --ink: #e6eae7; --ink-2: #9aa8a4; --paper: #101820; --card: #18222c;
+    --line: #2a3540; --accent: #3fb6ac; --accent-soft: #16302f;
+    --cost: #d9a441; --cost-soft: #2e2618; --done: #57b380; --done-soft: #16281f;
+    --warn: #e07b6e; --warn-soft: #331d1a; --mono-bg: #1f2a34;
+  } }
+  :root[data-theme="dark"] {
+    --ink: #e6eae7; --ink-2: #9aa8a4; --paper: #101820; --card: #18222c;
+    --line: #2a3540; --accent: #3fb6ac; --accent-soft: #16302f;
+    --cost: #d9a441; --cost-soft: #2e2618; --done: #57b380; --done-soft: #16281f;
+    --warn: #e07b6e; --warn-soft: #331d1a; --mono-bg: #1f2a34;
+  }
+  :root[data-theme="light"] {
+    --ink: #1b2733; --ink-2: #5b6b77; --paper: #fafaf7; --card: #ffffff;
+    --line: #e3e6e2; --accent: #0e7c7b; --accent-soft: #e3f0ef;
+    --cost: #b7791f; --cost-soft: #faf3e3; --done: #2f855a; --done-soft: #e7f2ec;
+    --warn: #b03a2e; --warn-soft: #f9e9e6; --mono-bg: #eef1ee;
+  }
+  body { background: var(--paper); color: var(--ink); margin: 0;
+    font: 16px/1.55 "Avenir Next", "Inter", system-ui, -apple-system, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+  header.sticky { position: sticky; top: 0; z-index: 5; background: var(--paper);
+    border-bottom: 1px solid var(--line); padding: 0.7rem 0; margin-bottom: 1.5rem; }
+  .head-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  h1 { font-size: 1.15rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .progress { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; margin-top: 0.55rem; overflow: hidden; }
+  .bar b { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.25s; }
+  .lede { color: var(--ink-2); margin: 0 0 1.6rem; max-width: 62ch; }
+  .lede strong { color: var(--ink); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    margin-bottom: 1.4rem; overflow: hidden; }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem;
+    padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line); }
+  .sec-head h2 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin: 0; }
+  .sec-meta { font-size: 0.8rem; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .step { display: grid; grid-template-columns: 1.7rem 1fr; gap: 0.15rem 0.75rem;
+    padding: 0.95rem 1.1rem; border-bottom: 1px solid var(--line); }
+  .step:last-child { border-bottom: none; }
+  .step.done { background: var(--done-soft); }
+  .step.done .t { text-decoration: line-through; text-decoration-color: var(--done); text-decoration-thickness: 1.5px; }
+  .step input[type="checkbox"] { width: 1.15rem; height: 1.15rem; margin-top: 0.2rem;
+    accent-color: var(--done); cursor: pointer; }
+  .t { font-weight: 600; }
+  .d { grid-column: 2; color: var(--ink-2); font-size: 0.92rem; max-width: 60ch; }
+  .d b { color: var(--ink); font-weight: 600; }
+  .path { display: block; margin-top: 0.3rem; }
+  .path::before { content: "→ "; color: var(--accent); }
+  code { font: 0.85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--mono-bg);
+    padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+  .chip { display: inline-block; font-size: 0.75rem; font-weight: 600; border-radius: 99px;
+    padding: 0.1rem 0.6rem; margin-left: 0.45rem; vertical-align: 0.08em; font-variant-numeric: tabular-nums; }
+  .chip.cost { background: var(--cost-soft); color: var(--cost); }
+  .chip.free { background: var(--done-soft); color: var(--done); }
+  .chip.block { background: var(--warn-soft); color: var(--warn); }
+  .note { margin: 0 1.1rem 1rem; padding: 0.6rem 0.8rem; border-left: 3px solid var(--accent);
+    background: var(--accent-soft); border-radius: 0 6px 6px 0; font-size: 0.88rem; color: var(--ink); }
+  .note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  ul.tight { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+  ul.tight li { margin: 0.15rem 0; }
+  footer { color: var(--ink-2); font-size: 0.85rem; margin-top: 2rem; max-width: 62ch; }
+  input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="sticky">
+    <div class="head-row">
+      <h1>Setup checklist — The Negotiator</h1>
+      <span class="progress"><span id="done-n">0</span>/<span id="total-n">0</span> done</span>
+    </div>
+    <div class="bar"><b id="bar-fill"></b></div>
+  </header>
+
+  <p class="lede">Everything Claude needs you to do on vendor sites, in order. Check things off as you go — this page remembers. Expected total: <strong>~45 min</strong> and <strong>$20 out of pocket</strong> — the mandatory Twilio top-up fully covers all usage (numbers $5.75 + ~300 min of calls $3–7; balances don’t expire). Secrets go into your local <code>.env</code> — never into chat, never committed.</p>
+
+  <section>
+    <div class="sec-head"><h2>Before you start</h2><span class="sec-meta">2 min</span></div>
+    <label class="step"><input type="checkbox" data-k="pre-1"><span class="t">Have these open and logged in</span>
+      <span class="d">Twilio Console · ElevenLabs · Supabase · OpenAI platform · GitHub. Plus: a credit card (Twilio), your phone (verification texts), and the repo cloned with <code>cp .env.example .env</code> done.</span></label>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>A · Twilio</h2><span class="sec-meta">~15 min · $20 total</span></div>
+    <label class="step"><input type="checkbox" data-k="tw-1"><span class="t">Upgrade to a paid account <span class="chip block">the blocker</span><span class="chip cost">$20 min top-up</span></span>
+      <span class="d">Trial accounts can’t call unverified numbers (error 21608), so nothing works until this is done. Upgrade is instant — restrictions lift immediately, no waiting period.
+      <span class="path">Console → click the <b>Trial</b> banner (top-left) → business profile → payment method → load <b>$20</b> (the minimum, and all you’ll need).</span></span></label>
+    <label class="step"><input type="checkbox" data-k="tw-kyc"><span class="t">Complete Trust Hub KYC <span class="chip block">blocks number purchases</span><span class="chip free">free</span></span>
+      <span class="d">Discovered live: buying any number fails with error 20003 until the primary customer profile is approved.
+      <span class="path">Console → search <b>Trust Hub</b> → <b>Customer Profiles → Primary profile</b> → Individual → name + address → submit (approval usually near-instant).</span>
+      Tell Claude when it shows <b>Approved</b>.</span></label>
+    <label class="step"><input type="checkbox" data-k="tw-2"><span class="t">Numbers: Claude buys them via API <span class="chip cost">≈$1.15/mo each</span></span>
+      <span class="d">Nothing to click — once KYC is approved, Claude runs <code>scripts/provision_twilio.py</code>: buys <b>2 Massachusetts</b> voice numbers to start (negotiator outbound + one persona inbound; more added instantly if the H4 agent-to-agent test passes), writes <code>TWILIO_PHONE_NUMBER</code>, imports them into ElevenLabs, and assigns the persona agents.</span></label>
+    <label class="step"><input type="checkbox" data-k="tw-3"><span class="t">Verify your own cell as a Caller ID <span class="chip free">free</span></span>
+      <span class="d">Confirmed: on a paid account a verified personal number can be the <b>outbound “From” caller ID</b> for ElevenLabs-initiated calls — so demo calls can show <b>your</b> number. (Inbound to it still rings your real carrier — outbound-only trick.)
+      <span class="path">Console → <b>Phone Numbers → Manage → Verified Caller IDs → Add</b> → OTP by call or text.</span>
+      While you’re there: verify J’s and Suzy’s cells too — they’re the demo call targets (and the trial-mode bridge if payment lags).</span></label>
+    <label class="step"><input type="checkbox" data-k="tw-4"><span class="t">Capture the API credentials</span>
+      <span class="d"><span class="path">Console home (Account Info card): <b>Account SID</b> + <b>Auth Token</b>.</span>
+      → <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code> in <code>.env</code>.</span></label>
+    <div class="note">Confirmed pricing: numbers $1.15/mo each (no setup fee) · outbound $0.0140/min · inbound $0.0085/min · agent-to-agent burns both legs (≈$0.0225/min). ~300 demo minutes ≈ $3–7, so the $20 top-up covers the entire hackathon with change. Voice-only needs no A2P/10DLC registration.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>B · ElevenLabs</h2><span class="sec-meta">~20 min · existing plan</span></div>
+    <label class="step"><input type="checkbox" data-k="el-1"><span class="t">Confirm the plan has Agents credits</span>
+      <span class="d">Live calls burn conversational-AI credits (LLM tokens are billed through ElevenLabs too — that’s intentional, no extra API keys). If the balance looks thin for a day of testing, top up now, not at 2am.</span></label>
+    <label class="step"><input type="checkbox" data-k="el-2"><span class="t">Create the 6 agents</span>
+      <span class="d">Names: <b>negotiator</b>, <b>intake</b>, <b>persona-stonewaller</b>, <b>persona-policy-citer</b>, <b>persona-no-authority</b>, <b>persona-collections</b>. Blank/default prompts are fine — Claude wires the real prompts from <code>prompts/</code>.
+      <span class="path"><b>elevenlabs.io/app/agents → New agent</b> ×6.</span>
+      Capture: negotiator + intake agent IDs → <code>ELEVENLABS_AGENT_ID_NEGOTIATOR</code> / <code>_INTAKE</code>; paste the 4 persona IDs to Claude.</span></label>
+    <label class="step"><input type="checkbox" data-k="el-3"><span class="t">Connect Twilio numbers to agents</span>
+      <span class="d"><span class="path">Agents → <b>Phone Numbers → Import from Twilio</b> (paste Account SID + Auth Token).</span>
+      ElevenLabs auto-configures the voice webhooks — no TwiML app, no SIP trunk (confirmed against current docs). Assign each persona agent to one inbound number; the negotiator uses the outbound number for outgoing calls.</span></label>
+    <label class="step"><input type="checkbox" data-k="el-4"><span class="t">Copy the API key</span>
+      <span class="d"><span class="path"><b>Settings → API keys</b>.</span> → <code>ELEVENLABS_API_KEY</code>.</span></label>
+    <div class="note">Post-call webhooks need a public URL for our FastAPI — skip for now; Claude will hand you a <code>cloudflared</code> tunnel URL to paste when the engine is wired.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>C · Supabase</h2><span class="sec-meta">~10 min · free tier</span></div>
+    <label class="step"><input type="checkbox" data-k="sb-1"><span class="t">Create the project</span>
+      <span class="d"><span class="path"><b>supabase.com/dashboard → New project</b> — US East region, save the DB password.</span>
+      Create it today (free projects auto-pause after 7 idle days — also ping it demo-day morning).</span></label>
+    <label class="step"><input type="checkbox" data-k="sb-2"><span class="t">Run the migration</span>
+      <span class="d"><span class="path"><b>SQL Editor</b> → paste all of <code>supabase/migrations/0001_init.sql</code> → Run.</span>
+      Expect: 10 tables + 2 storage buckets, no errors.</span></label>
+    <label class="step"><input type="checkbox" data-k="sb-3"><span class="t">Capture keys + connection string</span>
+      <span class="d"><span class="path"><b>Project Settings → API</b>: URL, anon key, service-role key. <b>Settings → Database</b>: connection string.</span>
+      → <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_DB_URL</code> — and copy URL + anon key again into <code>NEXT_PUBLIC_SUPABASE_URL</code> / <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.</span></label>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>D · OpenAI</h2><span class="sec-meta">~2 min · your credits</span></div>
+    <label class="step"><input type="checkbox" data-k="oa-1"><span class="t">API key with credits available</span>
+      <span class="d"><span class="path"><b>platform.openai.com → API keys → Create</b>.</span> → <code>OPENAI_API_KEY</code>. Used for bill/EOB vision parsing + offline text; prose that can wait runs free on Claude subscriptions (<code>docs/claude-headless-notes.md</code>).</span></label>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>E · Team &amp; compliance</h2><span class="sec-meta">~10 min</span></div>
+    <label class="step"><input type="checkbox" data-k="tm-1"><span class="t">Add teammates to the GitHub repo</span>
+      <span class="d"><span class="path">github.com/HamzaYM/hacknation26-MAC → <b>Settings → Collaborators</b> → add Suzy, J, Kar Shin.</span></span></label>
+    <label class="step"><input type="checkbox" data-k="tm-2"><span class="t">Consent paper trail <span class="chip free">2 min, don’t skip</span></span>
+      <span class="d">FCC treats AI voice as TCPA-covered no matter who’s called. Get one line in the group chat from each teammate whose phone we’ll dial: <i>“OK to receive recorded AI demo calls on my number.”</i> Screenshot it.</span></label>
+    <label class="step"><input type="checkbox" data-k="tm-3"><span class="t">Ask who volunteers the real bill</span>
+      <span class="d">One anonymized real bill is the generalization proof (J redacts it). Decide the volunteer now.</span></label>
+    <label class="step"><input type="checkbox" data-k="tm-4"><span class="t">Everyone runs <code>claude</code> → <code>/login</code> once</span>
+      <span class="d">Caches subscription OAuth so headless <code>claude&nbsp;-p</code> prose generation works free on each machine.</span></label>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>F · Report back</h2><span class="sec-meta">1 min</span></div>
+    <label class="step"><input type="checkbox" data-k="rb-1"><span class="t">Tell Claude: “env is filled” + paste the persona numbers/IDs</span>
+      <span class="d">Claude then wires the agent prompts, webhook tools, the tunnel, and runs the first test call. Reminder: <b>secrets stay in <code>.env</code></b> — say <i>done</i>, don’t paste keys.</span></label>
+  </section>
+
+  <footer>All prices confirmed against Twilio + ElevenLabs published docs on 2026-07-18 by Claude’s research pass. Source of truth for the build: <code>PRD.md</code> + <code>docs/ORCHESTRATION.md</code> in the repo.</footer>
+</div>
+
+<script>
+  const boxes = [...document.querySelectorAll('input[type="checkbox"]')];
+  const KEY = 'negotiator-setup-v1';
+  const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+  const update = () => {
+    const done = boxes.filter(b => b.checked).length;
+    document.getElementById('done-n').textContent = done;
+    document.getElementById('total-n').textContent = boxes.length;
+    document.getElementById('bar-fill').style.width = (100 * done / boxes.length) + '%';
+    boxes.forEach(b => b.closest('.step').classList.toggle('done', b.checked));
+  };
+  boxes.forEach(b => {
+    b.checked = !!saved[b.dataset.k];
+    b.addEventListener('change', () => {
+      saved[b.dataset.k] = b.checked;
+      localStorage.setItem(KEY, JSON.stringify(saved));
+      update();
+    });
+  });
+  update();
+</script>
+</body>
+</html>

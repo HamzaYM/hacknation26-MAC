@@ -112,7 +112,8 @@
         "allowed_amount": { "type": ["number", "null"] },
         "plan_paid": { "type": ["number", "null"] },
         "patient_responsibility": { "type": ["number", "null"] },
-        "billing_entity": { "type": "string" }
+        "billing_entity": { "type": "string" },
+        "dx_codes": { "type": "array", "items": { "type": "string" }, "description": "ICD-10 diagnosis codes on the line — feeds the upcode dx rule (additive, post-H2)" }
       }
     }
   }

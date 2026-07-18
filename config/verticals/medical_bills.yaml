@@ -14,6 +14,7 @@ red_flags:
     em_pairs:                                # billed vs. records-supported E/M candidates
       - { billed: "99285", suspect_if_supported: ["99282", "99283"] }
       - { billed: "99215", suspect_if_supported: ["99212", "99213"] }
+    low_acuity_dx: ["J06.9", "J00", "R51.9"] # dx that don't support a top-level E/M (demo seeds J06.9)
   unbundle:
     ncci_table: data/seed/ncci_pairs.json    # J ships pairs for the demo codes
   eob_mismatch:
