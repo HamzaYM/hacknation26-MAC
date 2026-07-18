@@ -3,55 +3,55 @@
     "cpt": "99283",
     "description": "Emergency dept visit, moderate severity (records-supported level for the demo's upcoded 99285)",
     "medicare_rate": 245.0,
-    "fh_estimate": 622.0,
-    "mrf_cash": 1050.0,
-    "mrf_negotiated_median": 1450.0,
+    "fh_estimate": 622.3,
+    "mrf_cash": 1409.25,
+    "mrf_negotiated_median": 328.79,
     "band_low": 367.5,
     "band_high": 612.5,
-    "source_url": "https://www.cms.gov/medicare/physician-fee-schedule/search (PFS 2.11 RVU x $33.40 CF) + OPPS APC 5022 (CMS-1834-FC 2026)"
+    "source_url": "Medicare TODO(J-verify): PFS 2.11 RVU x $33.4009 CF (2026 non-QP). OPPS: APC 5022 (ER L3) ~$176 (CF $91.42 x RW ~1.92). MA GPCI adj pending. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
   },
   {
     "cpt": "71046",
     "description": "Chest X-ray, 2 views (duplicated on the demo bill: $412 billed twice)",
     "medicare_rate": 63.0,
-    "fh_estimate": 160.0,
-    "mrf_cash": 260.0,
-    "mrf_negotiated_median": 360.0,
+    "fh_estimate": 160.02,
+    "mrf_cash": 354.0,
+    "mrf_negotiated_median": 180.78,
     "band_low": 94.5,
     "band_high": 157.5,
-    "source_url": "https://www.cms.gov/medicare/physician-fee-schedule/search (PFS 0.99 RVU global) + OPPS APC 5521 (CMS-1834-FC 2026)"
+    "source_url": "Medicare TODO(J-verify): PFS global: 0.99 RVU x $33.4009. In hospital setting split: PC ~$8 (0.24 wRVU) + TC under OPPS APC 5521 ~$55. Combined ~$63. CMS-1832-F. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
   },
   {
     "cpt": "80053",
     "description": "Comprehensive metabolic panel (unbundled into components on the demo bill: $690 vs $48)",
     "medicare_rate": 14.5,
-    "fh_estimate": 37.0,
-    "mrf_cash": 95.0,
-    "mrf_negotiated_median": 130.0,
+    "fh_estimate": 36.83,
+    "mrf_cash": 133.5,
+    "mrf_negotiated_median": 94.87,
     "band_low": 21.75,
     "band_high": 36.25,
-    "source_url": "https://www.cms.gov/medicare/payment/fee-schedules/clinical-laboratory-fee-schedule-clfs/files/26clabq1 (CLFS $10.33 + collection)"
+    "source_url": "Medicare TODO(J-verify): CLFS: $10.33 national (no geographic variation). Hospital outpatient: CLFS rate + specimen collection/handling ~$4. 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
   },
   {
     "cpt": "85025",
     "description": "Complete blood count w/ differential",
     "medicare_rate": 10.8,
-    "fh_estimate": 27.0,
-    "mrf_cash": 60.0,
-    "mrf_negotiated_median": 85.0,
+    "fh_estimate": 27.43,
+    "mrf_cash": 93.75,
+    "mrf_negotiated_median": 66.63,
     "band_low": 16.2,
     "band_high": 27.0,
-    "source_url": "https://www.cms.gov/medicare/payment/fee-schedules/clinical-laboratory-fee-schedule-clfs/files/26clabq1 (CLFS $7.77 + collection)"
+    "source_url": "Medicare TODO(J-verify): CLFS: $7.77 national (April 2025-March 2026 period). Hospital outpatient: add collection/handling ~$3. 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
   },
   {
     "cpt": "96374",
     "description": "IV push, single drug",
     "medicare_rate": 104.7,
-    "fh_estimate": 266.0,
-    "mrf_cash": 425.0,
-    "mrf_negotiated_median": 575.0,
+    "fh_estimate": 265.94,
+    "mrf_cash": 642.75,
+    "mrf_negotiated_median": 328.23,
     "band_low": 157.05,
     "band_high": 261.75,
-    "source_url": "https://www.cms.gov/medicare/physician-fee-schedule/search (PFS 1.13 RVU x $33.40 CF) + OPPS drug admin APC (CMS-1834-FC 2026)"
+    "source_url": "Medicare TODO(J-verify): PFS: 1.13 RVU x $33.4009. OPPS: drug admin APC ~$67 (CF $91.42 x RW ~0.73). MA GPCI adj pending. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians — see docs/boston-mgh-proposal.md"
   }
 ]

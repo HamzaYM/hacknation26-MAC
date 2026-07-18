@@ -2,7 +2,7 @@
   "call_id": "demo-facility-showstopper",
   "entity": "facility",
   "meta": {
-    "allowed_numbers": [438, 1890, 4287, 3875, 2400, 1650, 412, 71046],
+    "allowed_numbers": [438, 2633.25, 999.30, 4287, 3875, 2400, 1650, 412, 71046],
     "number_tolerance": 1.0,
     "disclosure_required": true,
     "disclosure_max_agent_turn": 3
@@ -12,7 +12,7 @@
     { "speaker": "counterparty", "text": "Okay... I see a note here. What is it you're asking for?" },
     { "speaker": "agent", "text": "Thanks. First, code seven-one-zero-four-six, the chest X-ray, appears twice on the same date of service — 412 dollars each time. Can you remove the duplicate?" },
     { "speaker": "counterparty", "text": "Hang on. Let me pull that up... yeah, I see that. I can remove one. That takes it to 3875." },
-    { "speaker": "agent", "text": "Appreciate it. Now — Medicare pays 438 dollars for these exact codes, and your own hospital's posted cash price for them is 1890 dollars, on your public price-transparency file. Is this negotiable?" },
+    { "speaker": "agent", "text": "Appreciate it. Now — Medicare pays 438 dollars for these exact codes, and your own hospital's posted cash price for them is 2633 dollars, on your public price-transparency file — commercial insurers pay you less than that. Is this negotiable?" },
     { "speaker": "counterparty", "text": "Our rates are our rates. But... I could do 2400." },
     { "speaker": "agent", "text": "I hear you. She can pay 1650 today, settled as paid in full. Can you take that to your supervisor?" },
     { "speaker": "counterparty", "text": "Let me put you on a brief hold... okay. Approved at 1650, paid in full." },
