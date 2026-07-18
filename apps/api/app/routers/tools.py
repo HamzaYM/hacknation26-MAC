@@ -20,7 +20,9 @@ state_machine = LadderStateMachine(load_vertical())
 
 
 class LeverResult(BaseModel):
-    call_id: str
+    # PSTN calls placed outside /calls/launch have no calls row; the stable
+    # default keys the in-memory ladder state for the single live demo call.
+    call_id: str = "live-call"
     lever: str
     result: str  # accepted | rejected | partial | stonewalled | escalated | hangup
     offer_amount: float | None = None  # what the agent is about to offer/settle at
@@ -28,7 +30,7 @@ class LeverResult(BaseModel):
 
 
 class LogEvent(BaseModel):
-    call_id: str
+    call_id: str = "live-call"
     type: str  # transcript | tool_call | state_change | quote | escalation
     payload: dict = {}
 
