@@ -84,6 +84,7 @@ honesty audit; every call ends in a structured outcome; ranked report with trans
 citations. Built on ElevenLabs Agents + Twilio, FastAPI, Supabase, Next.js.
 
 **Honest about the hard parts:** counterparties are our own reactive counter-agents + a live
-human role-player (a brief-sanctioned setup); the benchmark methodology runs on real hospital
-price-transparency files (the demo hospital "Mercy General" is fictional, its figures labeled as
-demo data); Medicare rates and legal artifacts (HIPAA authorization) are flagged where mocked.
+human role-player (a brief-sanctioned setup); the benchmark numbers are real — cash and
+negotiated rates pulled from a real Boston hospital's published price-transparency file — with
+"Mercy General" a fictional stand-in name over that real data; Medicare rates and legal
+artifacts (HIPAA authorization) are flagged where mocked.

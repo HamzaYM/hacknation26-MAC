@@ -4,7 +4,8 @@
   "meta": {
     "allowed_numbers": [
       438,
-      1890,
+      2633.25,
+      999.3,
       4287,
       3875,
       2400,
@@ -35,7 +36,7 @@
     },
     {
       "speaker": "agent",
-      "text": "Appreciate it. Now \u2014 Medicare pays 438 dollars for these exact codes, and your own hospital's posted cash price for them is 1890 dollars, on your public price-transparency file. Is this negotiable?"
+      "text": "Appreciate it. Now \u2014 Medicare pays 438 dollars for these exact codes, and your own hospital's posted cash price for them is 2633 dollars, on your public price-transparency file \u2014 commercial insurers pay you less than that. Is this negotiable?"
     },
     {
       "speaker": "counterparty",
