@@ -1,0 +1,127 @@
+[
+  {
+    "lever_id": "nsa_emergency_balance_billing_ban",
+    "category": "no_surprises_act",
+    "citable_string": "Under the No Surprises Act (Public Law 116-260, effective January 1, 2022), you are prohibited from balance-billing this patient for emergency services. The patient's cost-sharing is limited to the in-network amount regardless of provider network status.",
+    "arming_condition": "flag.emergency_service == true AND (flag.out_of_network == true OR entity.kind == 'ancillary')",
+    "source": "No Surprises Act, 42 USC §300gg-111; 45 CFR §149.410",
+    "demo_armed": false
+  },
+  {
+    "lever_id": "nsa_gfe_dispute",
+    "category": "no_surprises_act",
+    "citable_string": "The patient's final bill exceeds the Good Faith Estimate by more than $400. Under the No Surprises Act, the patient has the right to initiate a dispute within 120 days of the bill date. The dispute fee is $25, and penalties for non-compliance can reach $10,000 per violation.",
+    "arming_condition": "patient.uninsured_or_self_pay == true AND (bill.total - gfe.total) > 400 AND days_since_bill <= 120",
+    "source": "No Surprises Act, 42 USC §300gg-111(b); CMS GFE dispute process; penalties: 45 CFR §149.620",
+    "demo_armed": false,
+    "parameters": {
+      "threshold_usd": 400,
+      "window_days": 120,
+      "dispute_fee_usd": 25,
+      "penalty_per_violation_usd": 10000,
+      "complaint_phone": "1-800-985-3059"
+    }
+  },
+  {
+    "lever_id": "501r_charity_care",
+    "category": "irc_501r",
+    "citable_string": "As a 501(c)(3) nonprofit hospital, you are required under IRC §501(r) to maintain a Financial Assistance Policy. The patient's household income is at or below your FAP eligibility threshold. I am requesting a Financial Assistance application and that collections activity be suspended during the 240-day application period.",
+    "arming_condition": "entity.nonprofit_status == true AND patient.fpl_percent <= config.charity_fpl_threshold",
+    "source": "IRC §501(r)(4)-(6); 26 CFR §1.501(r)-4; IRS Notice 2015-46",
+    "demo_armed": true,
+    "parameters": {
+      "application_window_days": 240,
+      "fpl_threshold_default": 400,
+      "typical_discount_range": "50-100%"
+    }
+  },
+  {
+    "lever_id": "501r_agb_limitation",
+    "category": "irc_501r",
+    "citable_string": "Under IRC §501(r), FAP-eligible patients cannot be charged more than the Amounts Generally Billed (AGB) to insured patients. Your AGB percentage must be calculated using either the look-back or prospective method. The patient's bill exceeds what commercial payers typically pay for these services.",
+    "arming_condition": "entity.nonprofit_status == true AND patient.fap_eligible == true AND bill.total > benchmark.mrf_negotiated_median",
+    "source": "IRC §501(r)(5)(A); 26 CFR §1.501(r)-5(b); AGB calculation methods: look-back or prospective Medicare",
+    "demo_armed": true
+  },
+  {
+    "lever_id": "price_transparency_mrf",
+    "category": "price_transparency",
+    "citable_string": "Under 45 CFR §180.50, your hospital is required to publish machine-readable standard charges including the discounted cash price. Your own posted cash price for these services is ${mrf_cash_total}, which is significantly less than the balance being billed. I am requesting the posted cash price be honored.",
+    "arming_condition": "benchmark.mrf_cash IS NOT NULL AND bill.patient_balance > benchmark.mrf_cash_total",
+    "source": "CMS Hospital Price Transparency Final Rule; 45 CFR §180.50; penalties up to $5,500/day ($2M/year for large hospitals)",
+    "demo_armed": true,
+    "parameters": {
+      "penalty_per_day_usd": 5500,
+      "penalty_annual_max_large_usd": 2000000
+    }
+  },
+  {
+    "lever_id": "credit_bureau_under_500",
+    "category": "credit_reporting",
+    "citable_string": "As of April 2023, medical debt under $500 no longer appears on consumer credit reports per the joint policy of Equifax, Experian, and TransUnion. Additionally, paid medical collections are removed immediately, and a one-year reporting delay applies to all medical debt. This balance has no credit leverage over the patient.",
+    "arming_condition": "entity.kind == 'collections' AND debt.amount < 500",
+    "source": "Equifax/Experian/TransUnion joint announcement March 2022 (effective 2022-2023); CFPB Medical Debt Bulletin 2022-01",
+    "demo_armed": false,
+    "parameters": {
+      "threshold_usd": 500,
+      "paid_removal": "immediate",
+      "reporting_delay_days": 365
+    }
+  },
+  {
+    "lever_id": "credit_bureau_paid_removal",
+    "category": "credit_reporting",
+    "citable_string": "Per the 2022 joint policy of the three major credit bureaus, any medical collection that is paid is removed from credit reports immediately — not after seven years. Settling this debt today means it will not appear on the patient's credit report at all.",
+    "arming_condition": "entity.kind == 'collections' AND negotiation.settlement_type == 'paid_in_full'",
+    "source": "Equifax/Experian/TransUnion joint changes, effective July 2022",
+    "demo_armed": true
+  },
+  {
+    "lever_id": "fdcpa_debt_validation",
+    "category": "collections",
+    "citable_string": "Under the Fair Debt Collection Practices Act, 15 USC §1692g, the patient has the right to request written validation of this debt within 30 days of initial contact. Please provide the original creditor name, itemized charges, and proof that you are authorized to collect. Collection activity must cease until validation is provided.",
+    "arming_condition": "entity.kind == 'collections' AND days_since_first_contact <= 30",
+    "source": "FDCPA, 15 USC §1692g; CFPB Regulation F, 12 CFR §1006.34",
+    "demo_armed": true,
+    "parameters": {
+      "validation_window_days": 30
+    }
+  },
+  {
+    "lever_id": "medicare_benchmark",
+    "category": "benchmarking",
+    "citable_string": "Medicare pays ${medicare_total} for these exact services in this locality. Private insurers pay on average 254% of Medicare rates according to the RAND Hospital Price Transparency Study (2024). The patient is requesting a rate within a reasonable range of the publicly established Medicare benchmark.",
+    "arming_condition": "benchmark.medicare_rate IS NOT NULL",
+    "source": "CMS Physician Fee Schedule 2026 (CMS-1832-F); RAND Hospital Price Transparency Study 5.1 (2024): 254% of Medicare average",
+    "demo_armed": true,
+    "parameters": {
+      "rand_commercial_multiple": 2.54,
+      "ask_target_low_multiple": 1.5,
+      "ask_target_high_multiple": 2.0
+    }
+  },
+  {
+    "lever_id": "duplicate_charge_dispute",
+    "category": "billing_error",
+    "citable_string": "CPT ${cpt} appears on the statement twice for the same date of service. This is a duplicate charge of ${dollar_impact}. I am requesting immediate removal of the duplicate line item.",
+    "arming_condition": "flag.type == 'duplicate'",
+    "source": "Standard billing dispute; CMS Claims Processing Manual ch.1 §80.3.2",
+    "demo_armed": true
+  },
+  {
+    "lever_id": "upcode_dispute",
+    "category": "billing_error",
+    "citable_string": "The E/M code billed is ${billed_code} but the clinical documentation — including diagnosis ${diagnosis} — supports the lower-level ${supported_code}. The difference is ${dollar_impact}. I am requesting a code correction.",
+    "arming_condition": "flag.type == 'upcode'",
+    "source": "AMA CPT E/M documentation guidelines 2023; CMS E/M documentation requirements",
+    "demo_armed": true
+  },
+  {
+    "lever_id": "unbundle_dispute",
+    "category": "billing_error",
+    "citable_string": "The component tests for ${bundled_code} (${description}) have been billed separately at ${components_total}, but NCCI edits require these to be billed as the panel code at approximately ${bundled_price}. The overcharge is ${dollar_impact}.",
+    "arming_condition": "flag.type == 'unbundle'",
+    "source": "CMS NCCI Policy Manual ch.1; NCCI edit pairs table; OIG compliance guidance",
+    "demo_armed": true
+  }
+]
