@@ -82,6 +82,8 @@ Return ONLY a JSON object. Top level = the frozen CallOutcome contract; `extract
    `extraction.red_flags` — the confirm call depends on it.
 7. **`user_facing_summary`** voice: warm advocate, plain language, no promises. Lead with
    the outcome, then what it means, then the next step in one clause. A decline reads as
-   expected-and-handled ("first noes are normal — next we ask a supervisor").
+   expected-and-handled ("first noes are normal — next we ask a supervisor"). Apply
+   `humanizer.md` — no chatbot openers, signposting, or manufactured transitions; this is
+   read by an anxious patient, so it must sound like a person, not a status bot.
 8. **No strategy.** You extract; the engine plans. A rep's suggestion ("call financial
    assistance") belongs in `info_learned`, not in a recommendation.

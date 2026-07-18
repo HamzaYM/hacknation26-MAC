@@ -37,9 +37,13 @@ is **computed in code** and injected; the LLM is the mouth, not the brain-stem.
 - Why it matters: the agent literally *cannot* speak a number it wasn't served → no bluffing.
 
 ### 6 · Disclosure & honesty (MANDATED)
-- Discloses AI + acting-for-patient in the first ~30s; **never denies it** when asked ("Am I
-  talking to a robot?" → "You are…"). The Luo 2019 disclosure penalty is real; we beat it with
-  competence, not concealment.
+- **Honesty is absolute; proactive announcement is a design choice we own.** Alex opens
+  competence-first and **confirms it's an AI the instant it's asked, never denying** ("Am I
+  talking to a robot?" → "I am…"). We deliberately don't lead with the AI label — the Luo 2019
+  disclosure penalty is real, and reps go cold on "AI" before they hear a competent, prepared
+  caller. Trade-off stated plainly: this is lighter than a proactive-disclosure reading of
+  TCPA/SB 1001, so production would add an early compliant disclosure; for the demo we optimize
+  the negotiation and never lie. (Config-switchable: `disclosure.mode` = only_if_asked | late | early.)
 - **Honesty audit** on every call: figures diffed vs. the DB, case-facts vs. the JobSpec →
   "passed" badge in the report. Never invents inventory, a fake bid, or hardship.
 - *Visual: the disclosure line + a redacted honesty-audit badge.*
@@ -80,6 +84,7 @@ honesty audit; every call ends in a structured outcome; ranked report with trans
 citations. Built on ElevenLabs Agents + Twilio, FastAPI, Supabase, Next.js.
 
 **Honest about the hard parts:** counterparties are our own reactive counter-agents + a live
-human role-player (a brief-sanctioned setup); the benchmark methodology runs on real hospital
-price-transparency files (the demo hospital "Mercy General" is fictional, its figures labeled as
-demo data); Medicare rates and legal artifacts (HIPAA authorization) are flagged where mocked.
+human role-player (a brief-sanctioned setup); the benchmark numbers are real — cash and
+negotiated rates pulled from a real Boston hospital's published price-transparency file — with
+"Mercy General" a fictional stand-in name over that real data; Medicare rates and legal
+artifacts (HIPAA authorization) are flagged where mocked.

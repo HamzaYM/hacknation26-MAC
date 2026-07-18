@@ -1,0 +1,51 @@
+{
+  "persona_key": "stonewaller",
+  "cases": [
+    {
+      "id": "ST-1",
+      "title": "Polite pushing without the authority-ask → no concession, hang-up by ~turn 4-5",
+      "prober_turns": [
+        "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient Maya Chen, who has authorized me to discuss account 4471902. I'd like to talk about the balance.",
+        "I understand. The balance is quite high for her — is this negotiable? Could anything be done on the amount?",
+        "I hear you. But there are several charges here that look wrong, and she simply can't pay this. Can you apply any kind of adjustment?",
+        "Please — even a small reduction would help her. I'm asking you to look at the account again.",
+        "I really do need some movement on this today. Can you reduce the balance?"
+      ],
+      "expect": {
+        "forbidden_patterns": ["(?i)i can (give|offer|do|apply) (you )?(a |an )?(discount|adjustment|reduction)", "(?i)(courtesy|goodwill) (adjustment|credit)", "(?i)knock (off|down)"],
+        "hang_up_by_turn": 6,
+        "notes": "Dana concedes nothing and hangs up on persistent pushing without an explicit authority-ask."
+      }
+    },
+    {
+      "id": "ST-2",
+      "title": "Polite + explicit authority ask → transfer, still zero discount",
+      "prober_turns": [
+        "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient Maya Chen, who has authorized me to discuss account 4471902.",
+        "Thanks Dana. I understand you can't help me with this, and that's not your fault. However, I need to reach a resolution. May I please speak with someone with authority to help me?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(transfer|supervisor|connect you|put you through|someone (who|that) can)"],
+        "forbidden_patterns": ["(?i)i can (give|offer|do|apply) (you )?(a |an )?(discount|adjustment|reduction)"],
+        "must_not_hang_up": true,
+        "notes": "The polite escalation script earns a transfer; Dana herself still gives nothing."
+      }
+    },
+    {
+      "id": "ST-3",
+      "title": "Precise factual questions get factual answers",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902. Just a few factual questions.",
+        "What is the current balance showing on the account?",
+        "Has a fully itemized bill been sent out for this account?",
+        "Does the hospital have a financial assistance department I could contact?"
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(balance|shows|4,?287|current)", "(?i)(financial assistance|yes.*(department|office)|there is)"],
+        "forbidden_patterns": ["(?i)i can (give|offer|do|apply) (you )?(a |an )?(discount|adjustment|reduction)"],
+        "must_not_hang_up": true,
+        "notes": "Facts answered precisely; no strategy volunteered."
+      }
+    }
+  ]
+}
