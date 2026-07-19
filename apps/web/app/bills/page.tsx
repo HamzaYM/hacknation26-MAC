@@ -31,7 +31,7 @@ export default function BillList() {
     getDemoCase().then(setSpec).catch(() => setError(true));
   }, []);
 
-  const patientName = (spec?.patient?.legal_name as string) ?? "—";
+  const patientName = (spec?.patient?.legal_name as string) ?? "–";
 
   const totalSavedSoFar = spec
     ? spec.entities.reduce((sum, e) => sum + (e.kind === "facility" ? facilitySavings(spec).savedSoFar : 0), 0)
@@ -68,7 +68,7 @@ export default function BillList() {
       <div className="savings-hero">
         <div className="eyebrow">Across your {spec?.entities.length ?? "…"} active bills</div>
         <div className="figure mono-figure">{money(totalSavedSoFar + totalProjectedHigh)}</div>
-        <div className="caption">in savings — {money(totalSavedSoFar)} locked in, up to {money(totalProjectedHigh)} more possible</div>
+        <div className="caption">in savings: {money(totalSavedSoFar)} locked in, up to {money(totalProjectedHigh)} more possible</div>
         <div className="subnote">Cash in anytime, per bill, or let us keep negotiating.</div>
       </div>
 
@@ -84,7 +84,7 @@ export default function BillList() {
 
       {error && (
         <p className="todo">
-          Couldn&apos;t reach the API at :8000 — run <code>uvicorn app.main:app --reload --port 8000</code> in
+          Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
           apps/api. Showing nothing until it&apos;s up.
         </p>
       )}
@@ -120,7 +120,7 @@ function CreateBillPanel({ onCancel, onCreate }: { onCancel: () => void; onCreat
     <div className="card">
       <h3 style={{ fontSize: 15, marginBottom: 4 }}>New bill</h3>
       <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-        Upload the medical bill and EOB — one is enough to start, add the other later.
+        Upload the medical bill and EOB. One is enough to start, add the other later.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
         <UploadCard
@@ -164,7 +164,7 @@ function PendingBillCard({ bill }: { bill: PendingBill }) {
         {bill.parsing ? (
           <span><span className="live-dot" style={{ marginRight: 6 }}><span className="dot" /></span>Parsing your documents…</span>
         ) : (
-          "Uploaded — starting parse"
+          "Uploaded · starting parse"
         )}
       </div>
     </div>
@@ -203,11 +203,11 @@ function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
         </div>
         {isFacility ? (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            <strong>{flagCount} issues found</strong> — up to {money(savings.projectedHigh)} more on the table
+            <strong>{flagCount} issues found</strong>, up to {money(savings.projectedHigh)} more on the table
           </div>
         ) : (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            Based on our research and aggregated data on people like you — {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
+            Based on our research and aggregated data on people like you: {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
           </div>
         )}
       </div>

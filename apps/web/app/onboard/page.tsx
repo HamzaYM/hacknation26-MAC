@@ -12,7 +12,7 @@ import UploadCard from "../../components/UploadCard";
 const AUTH_ROWS = [
   { key: "hipaa_roi", label: "HIPAA release", detail: "Lets us request your itemized records and medical documentation" },
   { key: "provider_rep", label: "Provider authorized-representative", detail: "Lets us call and negotiate with hospital & doctor billing offices on your behalf" },
-  { key: "insurer_rep", label: "Insurer authorized-representative", detail: "Lets us call your health plan — dispute denials, fix claim errors, and file appeals" },
+  { key: "insurer_rep", label: "Insurer authorized-representative", detail: "Lets us call your health plan: dispute denials, fix claim errors, and file appeals" },
   { key: "recording_consent", label: "Call-recording consent", detail: "Required to record negotiation calls" },
 ];
 
@@ -48,14 +48,14 @@ export default function Onboard() {
       <h1 style={{ fontSize: 30, marginBottom: 8 }}>Let&apos;s set up your case</h1>
       <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
         A few details so our agents can act on your behalf. We only ask for what&apos;s needed to
-        negotiate — nothing more.
+        negotiate, nothing more.
       </p>
 
       <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)", marginBottom: 4 }}>
         Your documents <span style={{ color: "var(--destructive)" }}>*</span>
       </h3>
       <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-        We use both together to find the strongest leverage — but one is enough to start. Missing the
+        We use both together to find the strongest leverage, but one is enough to start. Missing the
         other? Add it later from that bill&apos;s Documents tab.
       </p>
       {!skippingUpload && (
@@ -80,12 +80,12 @@ export default function Onboard() {
           onClick={() => setSkippingUpload(true)}
           style={{ background: "none", border: "none", color: "var(--text-tertiary)", fontSize: 13, marginTop: 8, cursor: "pointer", textDecoration: "underline" }}
         >
-          I already have a case set up — skip this
+          I already have a case set up, skip this
         </button>
       )}
       {skippingUpload && (
         <p className="todo" style={{ marginTop: 8 }}>
-          Skipping upload — assuming an existing case already has documents on file. New cases need
+          Skipping upload: assuming an existing case already has documents on file. New cases need
           at least one before we can negotiate anything.
         </p>
       )}
@@ -156,7 +156,7 @@ export default function Onboard() {
         </p>
       )}
       <p style={{ textAlign: "center", fontSize: 12, color: "var(--text-tertiary)", marginTop: 12 }}>
-        🔒 Bank-level encryption · you can revoke access anytime
+        🔒 Encrypted in transit and at rest · revoke access anytime
       </p>
     </div>
   );

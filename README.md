@@ -4,7 +4,7 @@ Hack-Nation 6th Global AI Hackathon · Challenge 01 (powered by ElevenLabs) · f
 
 *An AI advocate that reads your hospital bill, finds the errors and the law on your side, calls the billing office, and talks the price down on a live call.*
 
-The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing errors → cites Medicare ($438) and the hospital's **own posted cash price** ($1,890) → live settlement at **$1,650, −62%** — every step caused by data and tools, not script.
+The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing errors → cites Medicare ($438) and the hospital's **own posted cash price** ($2,633.25) → live settlement at **$1,650, −62%** — every step caused by data and tools, not script.
 
 ## Status
 
@@ -14,7 +14,7 @@ The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing 
 
 | Person | Read | Then |
 |---|---|---|
-| **Suzy** — UX/frontend | [PRD §11](PRD.md) + [your workplan](docs/workplans/suzy.md) | Wireframe the six screens; `apps/web` runs now (see Quickstart) |
+| **Susy** — UX/frontend | [PRD §11](PRD.md) + [your workplan](docs/workplans/susy.md) | Wireframe the six screens; `apps/web` runs now (see Quickstart) |
 | **J** — data/benchmarks | [PRD §10](PRD.md) + [your workplan](docs/workplans/j.md) | **Start the CMS download immediately** (longest lead); `data/pipeline/README.md` is your spec |
 | **Hamza** — engine/orchestration | [PRD §7–9](PRD.md) + [your workplan](docs/workplans/hamza.md) | Provision Twilio/ElevenLabs/Supabase FIRST, then tool endpoints |
 | **Kar Shin** — personas/voice/video | [PRD §14+§9](PRD.md) + [your workplan](docs/workplans/kar-shin.md) | Persona prompts v0 (`prompts/personas/`) + the voice-style layer |
@@ -30,7 +30,7 @@ Next.js (UI) ↔ FastAPI (state machine · webhook tools · post-call webhooks) 
 | Path | What | Owner |
 |---|---|---|
 | `PRD.md` | The plan. Read it first. | everyone |
-| `apps/web/` | Next.js frontend — six screens (PRD §11) | **Suzy** |
+| `apps/web/` | Next.js frontend — six screens (PRD §11) | **Susy** |
 | `apps/api/` | FastAPI — engine, tools, webhooks, state machine | **Hamza** |
 | `contracts/` | Frozen JSON Schemas (job_spec, benchmark_row, dossier, call_outcome) | Hamza |
 | `config/verticals/` | The config-not-code boundary (levers, flags, thresholds, voice) | Hamza keys / **J** values |
@@ -43,9 +43,11 @@ Next.js (UI) ↔ FastAPI (state machine · webhook tools · post-call webhooks) 
 
 ```bash
 cp .env.example .env    # fill in — see comments; Supabase keys from the project dashboard
+cp .env apps/web/.env.local    # required — the browser needs the NEXT_PUBLIC_* vars
 
-# Frontend (Suzy)
+# Frontend (Susy)
 cd apps/web && npm install && npm run dev          # → http://localhost:3000
+# demo login: maya@hagglfor.me / HagglDemo2026!
 
 # Backend (Hamza; works with zero external services — fixture data built in)
 cd apps/api && python3 -m venv .venv && source .venv/bin/activate

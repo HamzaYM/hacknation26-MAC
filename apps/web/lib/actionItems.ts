@@ -56,8 +56,8 @@ export const ACTION_ITEMS: ActionItem[] = [
     entity: "Mercy General Hospital",
     type: "form",
     question: "Complete your charity care application",
-    why: "Mercy General is a nonprofit and must offer discounted or free care below certain income thresholds (IRS §501(r)) — but the application needs a few specific numbers we don't have yet.",
-    unlocks: "Could add charity-care eligibility to your Mercy General bill — potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
+    why: "Mercy General is a nonprofit and must offer discounted or free care below certain income thresholds (IRS §501(r)), but the application needs a few specific numbers we don't have yet.",
+    unlocks: "Could add charity-care eligibility to your Mercy General bill: potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
     submitLabel: "Submit application",
     fields: [
       { key: "household_size", label: "Household size", kind: "number", placeholder: "2" },
@@ -75,16 +75,16 @@ export const ACTION_ITEMS: ActionItem[] = [
     entity: "Bay State Emergency Physicians",
     type: "confirm",
     question: "Authorize us to dispute the ER physician charge",
-    why: "This is a separate bill from a separate entity — we need your go-ahead per entity before we call.",
-    unlocks: "Unlocks the call to Bay State Emergency Physicians — typical range is 15–35% off their $640 balance (~$96–$224).",
+    why: "This is a separate bill from a separate entity; we need your go-ahead per entity before we call.",
+    unlocks: "Unlocks the call to Bay State Emergency Physicians: typical range is 15–35% off their $640 balance (~$96–$224).",
   },
   {
     id: "bay-state-income",
     entity: "Bay State Emergency Physicians",
     type: "select",
     question: "What's your household income range?",
-    why: "Bay State screens separately from Mercy General for its own hardship/prompt-pay discount — this determines what you qualify for here specifically, not what you already told us at signup.",
-    unlocks: "Could unlock a hardship discount on your $640 Bay State balance — typically 10–25% off (~$64–$160).",
+    why: "Bay State screens separately from Mercy General for its own hardship/prompt-pay discount: this determines what you qualify for here specifically, not what you already told us at signup.",
+    unlocks: "Could unlock a hardship discount on your $640 Bay State balance: typically 10–25% off (~$64–$160).",
     options: ["Under $30k", "$30k – $50k", "$50k – $75k", "$75k+"],
   },
   {
@@ -93,7 +93,7 @@ export const ACTION_ITEMS: ActionItem[] = [
     type: "confirm",
     question: "Authorize us to negotiate your collections account",
     why: "Collections settlements need explicit authorization since a lump-sum offer is binding once accepted.",
-    unlocks: "Unlocks settlement negotiation on your $980 collections balance — typically 25–50% off (~$245–$490) via lump-sum settlement.",
+    unlocks: "Unlocks settlement negotiation on your $980 collections balance: typically 25–50% off (~$245–$490) via lump-sum settlement.",
   },
 ];
 

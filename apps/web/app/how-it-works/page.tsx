@@ -6,7 +6,7 @@ import Logo from "../../components/Logo";
 // PRD.md §2 for full sourcing.
 const STATS = [
   { value: "$220B", label: "in medical debt held by Americans today", source: "KFF, 2025" },
-  { value: "3.4×", label: "average hospital markup over Medicare cost — up to 12.6× at outliers", source: "Bai & Anderson, Health Affairs 2015" },
+  { value: "3.4×", label: "average hospital markup over Medicare cost, up to 12.6× at outliers", source: "Bai & Anderson, Health Affairs 2015" },
   { value: "254%", label: "of Medicare rates, on average, paid by private insurers for the same care", source: "RAND Hospital Price Transparency Study, 2024" },
   { value: "49–80%", label: "of medical bills are estimated to contain errors", source: "advocacy-industry estimate, directional" },
 ];
@@ -36,7 +36,7 @@ export default function HowItWorks() {
       <section className="hiw-section">
         <h1 className="hiw-h1">The prices aren&apos;t fixed. Almost nobody asks.</h1>
         <p className="hiw-lede">
-          Medical bills aren&apos;t like a restaurant check — the sticker price is closer to a
+          Medical bills aren&apos;t like a restaurant check. The sticker price is closer to a
           suggestion. The numbers below are why.
         </p>
 
@@ -72,7 +72,7 @@ export default function HowItWorks() {
             <div className="hiw-step-num">1</div>
             <h3>Upload your bill</h3>
             <p>
-              A PDF or photo of your medical bill — and your EOB if you have it. We read both,
+              A PDF or photo of your medical bill, and your EOB if you have it. We read both,
               cross-check them against Medicare rates and the hospital&apos;s own posted prices, and
               flag every error, overcharge, and legal protection working in your favor.
             </p>
@@ -81,7 +81,7 @@ export default function HowItWorks() {
             <div className="hiw-step-num">2</div>
             <h3>We call</h3>
             <p>
-              A real phone call to the billing office — disclosed as AI from the first thirty
+              A real phone call to the billing office, disclosed as AI from the first thirty
               seconds, never bluffing, citing only numbers we can prove. We negotiate the way a
               good human advocate would: politely, persistently, and armed with your specific
               case.
@@ -92,7 +92,7 @@ export default function HowItWorks() {
             <h3>You save</h3>
             <p>
               Watch the balance move in real time. Cash in whenever you&apos;re satisfied, or let us
-              keep pushing for more — every call, every dollar, and every reference number is
+              keep pushing for more. Every call, every dollar, and every reference number is
               logged for you to see.
             </p>
           </div>
@@ -104,11 +104,11 @@ export default function HowItWorks() {
         <div className="hiw-pricing-card">
           <div className="hiw-pricing-figure">25%</div>
           <p className="hiw-pricing-detail">
-            of what we save you — capped at <strong>$2,000</strong> per bill. Nothing upfront,
+            of what we save you, capped at <strong>$2,000</strong> per bill. Nothing upfront,
             nothing if we don&apos;t save you anything.
           </p>
           <ul className="hiw-pricing-list">
-            <li>No savings, no fee — ever</li>
+            <li>No savings, no fee, ever</li>
             <li>You see the exact math before you pay anything</li>
             <li>Cash in partial savings anytime; we only charge on what&apos;s actually confirmed</li>
           </ul>

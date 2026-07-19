@@ -1,4 +1,4 @@
-# Workplan — Suzy (UX & Frontend)
+# Workplan — Susy (UX & Frontend)
 
 **Mission:** the six-screen user journey in `apps/web/`, with the live-call **War Room** as the demo's money shot. Read PRD §11 first, then §12 and §8.2 (the ladder rungs your progress indicator renders).
 

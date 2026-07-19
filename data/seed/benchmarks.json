@@ -1,0 +1,57 @@
+[
+  {
+    "cpt": "99283",
+    "description": "Emergency dept visit, moderate severity (records-supported level for the demo's upcoded 99285)",
+    "medicare_rate": 245.0,
+    "fh_estimate": 622.3,
+    "mrf_cash": 1409.25,
+    "mrf_negotiated_median": 328.79,
+    "band_low": 367.5,
+    "band_high": 612.5,
+    "source_url": "Medicare: PFS 2.11 RVU x $33.4009 CF (2026 non-QP). OPPS: APC 5022 (ER L3) ~$176 (CF $91.42 x RW ~1.92). MA GPCI Work=1.041/PE=1.194/MP=0.890 (locked $245 for demo). CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
+  },
+  {
+    "cpt": "71046",
+    "description": "Chest X-ray, 2 views (duplicated on the demo bill: $412 billed twice)",
+    "medicare_rate": 63.0,
+    "fh_estimate": 160.02,
+    "mrf_cash": 354.0,
+    "mrf_negotiated_median": 180.78,
+    "band_low": 94.5,
+    "band_high": 157.5,
+    "source_url": "Medicare: PFS global 0.99 RVU x $33.4009. Hospital setting: PC ~$8 (0.24 wRVU) + TC under OPPS APC 5521 ~$55. Combined $63 (locked for demo). CMS-1832-F. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
+  },
+  {
+    "cpt": "80053",
+    "description": "Comprehensive metabolic panel (unbundled into components on the demo bill: $690 vs $48)",
+    "medicare_rate": 14.5,
+    "fh_estimate": 36.83,
+    "mrf_cash": 133.5,
+    "mrf_negotiated_median": 94.87,
+    "band_low": 21.75,
+    "band_high": 36.25,
+    "source_url": "Medicare: CLFS $10.33 national (no geographic variation) + hospital specimen collection/handling ~$4 = $14.50 (locked for demo). 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
+  },
+  {
+    "cpt": "85025",
+    "description": "Complete blood count w/ differential",
+    "medicare_rate": 10.8,
+    "fh_estimate": 27.43,
+    "mrf_cash": 93.75,
+    "mrf_negotiated_median": 66.63,
+    "band_low": 16.2,
+    "band_high": 27.0,
+    "source_url": "Medicare: CLFS $7.77 national (Apr 2025-Mar 2026) + hospital collection/handling ~$3 = $10.80 (locked for demo). 26CLABQ1. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
+  },
+  {
+    "cpt": "96374",
+    "description": "IV push, single drug",
+    "medicare_rate": 104.7,
+    "fh_estimate": 265.94,
+    "mrf_cash": 642.75,
+    "mrf_negotiated_median": 328.23,
+    "band_low": 157.05,
+    "band_high": 261.75,
+    "source_url": "Medicare: PFS 1.13 RVU x $33.4009. OPPS: drug admin APC ~$67 (CF $91.42 x RW ~0.73). Combined $104.70 (locked for demo). MA GPCI applied. CMS-1832-F + CMS-1834-FC. cash/negotiated: real MGH MRF (042697983_Massachusetts-General-Hospital_StandardCharges.csv), outpatient, commercial-only medians. Verified 2026-07-18."
+  }
+]

@@ -100,14 +100,16 @@
     <label class="step"><input type="checkbox" data-k="tw-1"><span class="t">Upgrade to a paid account <span class="chip block">the blocker</span><span class="chip cost">$20 min top-up</span></span>
       <span class="d">Trial accounts can’t call unverified numbers (error 21608), so nothing works until this is done. Upgrade is instant — restrictions lift immediately, no waiting period.
       <span class="path">Console → click the <b>Trial</b> banner (top-left) → business profile → payment method → load <b>$20</b> (the minimum, and all you’ll need).</span></span></label>
-    <label class="step"><input type="checkbox" data-k="tw-2"><span class="t">Buy 5 local voice numbers <span class="chip cost">≈$1.15/mo each</span></span>
-      <span class="d">1 outbound caller (the negotiator) + 4 inbound (one per persona). Any US local numbers with <b>Voice</b> capability; SMS not needed.
-      <span class="path">Console → <b>Phone Numbers → Buy a Number</b> (filter: Voice).</span>
-      Capture: negotiator’s number → <code>TWILIO_PHONE_NUMBER</code>; paste the other 4 to Claude (they go in the personas table).</span></label>
+    <label class="step"><input type="checkbox" data-k="tw-kyc"><span class="t">Complete Trust Hub KYC <span class="chip block">blocks number purchases</span><span class="chip free">free</span></span>
+      <span class="d">Discovered live: buying any number fails with error 20003 until the primary customer profile is approved.
+      <span class="path">Console → search <b>Trust Hub</b> → <b>Customer Profiles → Primary profile</b> → Individual → name + address → submit (approval usually near-instant).</span>
+      Tell Claude when it shows <b>Approved</b>.</span></label>
+    <label class="step"><input type="checkbox" data-k="tw-2"><span class="t">Numbers: Claude buys them via API <span class="chip cost">≈$1.15/mo each</span></span>
+      <span class="d">Nothing to click — once KYC is approved, Claude runs <code>scripts/provision_twilio.py</code>: buys <b>2 Massachusetts</b> voice numbers to start (negotiator outbound + one persona inbound; more added instantly if the H4 agent-to-agent test passes), writes <code>TWILIO_PHONE_NUMBER</code>, imports them into ElevenLabs, and assigns the persona agents.</span></label>
     <label class="step"><input type="checkbox" data-k="tw-3"><span class="t">Verify your own cell as a Caller ID <span class="chip free">free</span></span>
       <span class="d">Confirmed: on a paid account a verified personal number can be the <b>outbound “From” caller ID</b> for ElevenLabs-initiated calls — so demo calls can show <b>your</b> number. (Inbound to it still rings your real carrier — outbound-only trick.)
       <span class="path">Console → <b>Phone Numbers → Manage → Verified Caller IDs → Add</b> → OTP by call or text.</span>
-      While you’re there: verify J’s and Suzy’s cells too — they’re the demo call targets (and the trial-mode bridge if payment lags).</span></label>
+      While you’re there: verify J’s and Susy’s cells too — they’re the demo call targets (and the trial-mode bridge if payment lags).</span></label>
     <label class="step"><input type="checkbox" data-k="tw-4"><span class="t">Capture the API credentials</span>
       <span class="d"><span class="path">Console home (Account Info card): <b>Account SID</b> + <b>Auth Token</b>.</span>
       → <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code> in <code>.env</code>.</span></label>
@@ -152,7 +154,7 @@
   <section>
     <div class="sec-head"><h2>E · Team &amp; compliance</h2><span class="sec-meta">~10 min</span></div>
     <label class="step"><input type="checkbox" data-k="tm-1"><span class="t">Add teammates to the GitHub repo</span>
-      <span class="d"><span class="path">github.com/HamzaYM/hacknation26-MAC → <b>Settings → Collaborators</b> → add Suzy, J, Kar Shin.</span></span></label>
+      <span class="d"><span class="path">github.com/HamzaYM/hacknation26-MAC → <b>Settings → Collaborators</b> → add Susy, J, Kar Shin.</span></span></label>
     <label class="step"><input type="checkbox" data-k="tm-2"><span class="t">Consent paper trail <span class="chip free">2 min, don’t skip</span></span>
       <span class="d">FCC treats AI voice as TCPA-covered no matter who’s called. Get one line in the group chat from each teammate whose phone we’ll dial: <i>“OK to receive recorded AI demo calls on my number.”</i> Screenshot it.</span></label>
     <label class="step"><input type="checkbox" data-k="tm-3"><span class="t">Ask who volunteers the real bill</span>

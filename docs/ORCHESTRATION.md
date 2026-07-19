@@ -10,16 +10,24 @@
 3. Claude orchestrates: dispatches agents/workflows (any model/effort), integrates, verifies. Hamza executes vendor-site provisioning from Claude's checklists.
 4. Teammates may push PRD updates as versions (via PRs).
 5. Demo-optimized: when a choice trades robustness vs. demo reliability, demo wins (Hamza, 2026-07-18).
-6. **Design source of truth = Suzy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
+6. **Design source of truth = Susy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
 ## Current state (update me!)
 - ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
-- ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` (Hamza's provisioning checklist — LOCAL html, per preference: no artifacts) · **PR #3 engine core merged (`84af5b7`): flags + dossier + ladder state machine, 27/27 tests green on main**
-- ✅ Engine facts: demo case → exactly 4 flags (412/890/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required` (supervisor beat); hangup ⇒ terminal documented_decline
-- ⏳ **Provisioning (Hamza, via docs/setup-checklist.html):** Twilio paid ($20 total, prices confirmed) + numbers + verified caller ID · ElevenLabs agents ×6 + number import · Supabase project + migration + keys → `.env` · OpenAI key · consents · collaborators. **Blocked on Hamza reporting "env filled" + persona numbers/IDs.**
-- ⏳ Next build steps once env lands: ElevenLabs wiring (outbound call trigger, webhook tools registration, post-call webhook + tunnel), Supabase persistence (state machine + call_events), prompt compiler. Waiting on Suzy's design guide before any real frontend styling.
-- ⏳ hagglfor.me (Cloudflare, Hamza's account) — after something is deployed; never critical path
-- Known nits parked: unicode-apostrophe normalization in stonewall matching; duplicate-detection modifier exemption (real bills).
+- ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` · **PR #3 engine core** · **PR #11 MGH retune** · **PR #12 fixture-derived PDFs** · **PR #13 product UI** · **PR #14 Supabase provisioning**
+- ✅ **MGH real-data adoption** — benchmarks reconciled to real MGH: cash $2,633.25 / neg-median $999.30 / upcode $2,011.21; arc endpoints unchanged. Boston MA location, BCBS-MA, Bay State ER.
+- ✅ Engine facts: demo case → exactly 4 flags (412/2011.21/642/412); dossier anchor $657 / target $876 / floor $1,700; $1,650 settle ⇒ `escalation_required`; hangup ⇒ terminal documented_decline
+- ✅ **Backend wiring (PR #18/#19):** Supabase persistence + simulated call driver + report endpoint. Frontend launch/confirm/report wired. 58/58 tests green.
+- ✅ **Document parsing (PR #24):** POST /documents/parse with OpenAI vision (gpt-5.6-terra), structured outputs, reconciliation. Both demo PDFs parse to exact match, all 4 flags fire on parsed data.
+- ✅ **Data hardening (PR #27):** NCCI table extended with production bundles + subsumption logic, extraction prompt doc, unicode apostrophe fix, TODO markers cleared.
+- ✅ **Test use-cases + voice tuning (PR #20):** Persona probes (L1), negotiator conduct rules, only-if-asked disclosure mode, eval harness with call-efficiency soft check.
+- ✅ **Intake + login (PR #25):** Supabase password auth, document parse flow, voice interview widget.
+- ✅ Provisioning: ElevenLabs 6 agents live · Supabase live (migration 15/15, buckets, realtime, benchmarks+personas seeded w/ agent IDs) · Demo auth user (maya@hagglfor.me)
+- ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on J's Trust Hub KYC (must reach "Twilio Approved"); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
+- ⏳ Remaining: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC). Browser-session calls work now.
+- ✅ Product name: **Haggl** (design-system.md is styling law)
+- ⏳ hagglfor.me (Cloudflare, Hamza's account) — after deployment; never critical path
+- Known nit parked: duplicate-detection modifier exemption (real bills only, not demo-blocking).
 
 ## Decision log
 | Date | Decision | By |
@@ -29,7 +37,13 @@
 | 07-18 | Stack: Next.js + FastAPI + Supabase; all calls over Twilio PSTN | Hamza |
 | 07-18 | Scope: provider ladder + collections + charity + 3 levers; insurer call cut | Hamza |
 | 07-18 | Raw MRFs (450MB+) never hosted: filter locally, commit slim extract; R2 only if sharing needed | Hamza |
-| 07-18 | Demo numbers locked: $8,432 billed / $4,287 balance / EOB $3,875 / Medicare $438 / MRF cash $1,890 / settle $1,650 (−62%) — change ONLY together with `data/seed/demo_answer_key.json` + PRD §10.3 + §14 | — |
+| 07-18 | Demo numbers locked: $8,432 billed / $4,287 balance / EOB $3,875 / Medicare $438 / settle $1,650 (−62%) — change ONLY together with `data/seed/demo_answer_key.json` + PRD §10.3 + §14. **Adopted 07-18: real MGH MRF cash $2,633.25 / negotiated median $999.30 / upcode $2,011.21** (arc endpoints unchanged) | Hamza |
+| 07-18 | Demo relocated to Boston MA (Maya, facility, insurer BCBSMA, ER group "Bay State Emergency Physicians") | Hamza |
+| 07-18 | Facility name stays fictional ("Mercy General Hospital", Boston); MGH named only as the data source — benchmarks labeled "derived from a real Boston hospital's published price file", never the negotiation counterparty | Hamza |
+| 07-18 | **Submission format: 60-second UI/UX demo video + 60-second tech demo video** (replaces the 3:30 single video — Kar Shin's script + deck need restructuring; compliance auditor producing both shot lists) | Hamza |
+| 07-18 | Page copy must pass Hamza's voice guide (docs/voice/ — "Page copy" register in voice-profile-addendum.md; standing rules: no em-dashes, no "not just X, it's Y" framing). Copy pass runs after the current build round merges | Hamza |
+| 07-18 | Susy keeps pushing UI work — orchestrator consolidates (watch origin/susy + PRs, merge + reconcile) | Hamza |
+| 07-18 | Telephony: J's Twilio account is the path (Hamza's KYC unfixable); J's Trust Hub profile must reach "Twilio Approved" before scripts/provision_twilio.py can buy numbers. Browser-session calls are the working baseline meanwhile | Hamza |
 
 ## Key facts Claude must not re-derive
 - Contracts frozen per PRD §12 (H2/H3/H8 schedule); `data/seed/demo_answer_key.json` is the single source of demo truth (`transform.py --check` gates it).

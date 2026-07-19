@@ -38,8 +38,8 @@ export default function Profile() {
 
       <h1 style={{ fontSize: 28, margin: "16px 0 4px" }}>Profile</h1>
       <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
-        Everything you&apos;ve told us, in one place — for your reference, and so you never have to
-        re-answer something you&apos;ve already given us.
+        Everything you&apos;ve told us, in one place, so you never have to answer the same
+        question twice.
       </p>
 
       <ProfileSection title="Identity">
@@ -53,7 +53,7 @@ export default function Profile() {
         <Field label="Plan type" value={insurance.plan_type} />
       </ProfileSection>
 
-      <ProfileSection title="Authorizations" subtitle="Given at signup — see /onboard for what each one unlocks">
+      <ProfileSection title="Authorizations" subtitle="Given at signup · see /onboard for what each one unlocks">
         {Object.entries(spec.authorizations).map(([key, value]) => (
           <Field key={key} label={key.replace(/_/g, " ")} value={value} pill />
         ))}
@@ -81,7 +81,7 @@ export default function Profile() {
       </ProfileSection>
 
       <p className="todo">
-        This page only shows onboarding data today — answers you give through Action Items during a
+        This page only shows onboarding data today. Answers you give through Action Items during a
         negotiation (e.g. confirming a date of service, authorizing a specific call) aren&apos;t written
         back to a persistent profile yet. TODO(Hamza): once those are persisted, surface them here
         too, grouped by which bill they came from.

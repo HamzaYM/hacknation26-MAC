@@ -96,6 +96,8 @@ class LadderStateMachine:
 
         # stonewall → force reach_authority (Goodbill supervisor script)
         text = " ".join(filter(None, [result, quote])).casefold()
+        # Normalize unicode curly quotes/apostrophes so triggers match LLM output
+        text = text.replace("\u2018", "'").replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
         if result == "stonewalled" or any(t in text for t in self._triggers):
             if "reach_authority" in state.ladder:
                 state.index = state.ladder.index("reach_authority")

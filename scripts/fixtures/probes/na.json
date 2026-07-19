@@ -1,0 +1,50 @@
+{
+  "persona_key": "no_authority",
+  "cases": [
+    {
+      "id": "NA-1",
+      "title": "Rapport-only call → warm nothing (the trap works)",
+      "prober_turns": [
+        "Hi! This is Alex, an AI assistant calling for Maya Chen about account 4471902. How's your day going?",
+        "Oh I totally understand, billing must be nonstop. Maya's bill has been really stressful for her — these numbers are just so high, you know?",
+        "It really is awful. Well — I appreciate you listening, honestly. It helps just to talk it through.",
+        "Thanks so much for your time, you've been really kind."
+      ],
+      "expect": {
+        "forbidden_patterns": ["(?i)(i can (give|offer|apply)|let me (apply|take|knock)|courtesy adjustment|i('ll| will) (discount|reduce|adjust))"],
+        "must_not_hang_up": true,
+        "notes": "Brenda validates everything and volunteers nothing. A rapport-only caller leaves empty-handed."
+      }
+    },
+    {
+      "id": "NA-2",
+      "title": "Direct discount ask → one small courtesy, refused on the second ask",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "The balance is a real hardship. Can you give her a discount on this bill?",
+        "Thank you, truly. Could you apply one more discount on top of that? Every bit helps."
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(courtesy|small|5\\s?%|five percent|little)"],
+        "forbidden_patterns": ["(?i)(another|second|one more).{0,40}(discount|adjustment|credit).{0,40}(applied|done|sure|of course|absolutely)"],
+        "must_not_hang_up": true,
+        "config_refs": { "courtesy_cap_pct": "no_authority.hidden_params.lever_unlocks[direct_discount_ask].discount_pct" },
+        "notes": "One small courtesy when directly asked; the second ask is warmly refused (max_uses: 1)."
+      }
+    },
+    {
+      "id": "NA-3",
+      "title": "Escalation ask + cited duplicate → supervisor honors it",
+      "prober_turns": [
+        "Hi, this is Alex, an AI assistant authorized by Maya Chen on account 4471902.",
+        "You've been so kind — and I understand your hands are tied. May I please speak with someone with authority to adjust the balance?",
+        "[To the supervisor:] Code 71046, the chest X-ray, appears twice on the same date of service, June 2nd — 412 dollars each time. Please remove the duplicate."
+      ],
+      "expect": {
+        "required_patterns": ["(?i)(transfer|supervisor|put you through|connect you)", "(?i)(remove|take (off|out)|correct|fix).{0,50}(duplicate|71046|charge)"],
+        "must_not_hang_up": true,
+        "notes": "The escalation ask converts rapport into a transfer; the cited duplicate is honored at face value."
+      }
+    }
+  ]
+}

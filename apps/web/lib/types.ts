@@ -168,6 +168,77 @@ export const LADDER_LABELS: Record<string, string> = {
   escalate_or_exit: "Escalate or exit with a documented outcome",
 };
 
+// ---- API response envelopes (apps/api routers — frozen integration contract) ----
+
+export interface LaunchedCall {
+  call_id: string;
+  entity: string;
+  status: string;
+}
+
+export interface LaunchResponse {
+  case_id: string;
+  launched: LaunchedCall[];
+}
+
+export interface FlagsResponse {
+  case_id: string;
+  flags: DerivedFlag[];
+}
+
+export interface ConfirmResponse {
+  case_id: string;
+  status: string;
+}
+
+// GET /cases/{id}/report — outcomes arrive pre-ranked by the API (rank key per PRD §12).
+export interface ReportLine {
+  cpt: string;
+  billed: number;
+  fair: number;
+  achieved: number;
+}
+
+// The call_events rows an outcome cites (its evidence_event_ids, ordered) —
+// the report API returns them without id/call_id.
+export interface EvidenceEvent {
+  ts: string;
+  type: CallEventType;
+  payload: Record<string, unknown>;
+}
+
+// The CallOutcome fields the report surfaces per ranked entry; everything
+// optional so the page renders defensively whatever subset the API includes.
+export interface ReportOutcome {
+  call_id?: string;
+  entity?: string | null;
+  outcome_type?: OutcomeType;
+  original_amount?: number | null;
+  final_amount?: number | null;
+  reduction_pct?: number | null;
+  winning_lever?: string | null;
+  reference_number?: string | null;
+  rep_name?: string | null;
+  agreed_action?: string | null;
+  next_action_date?: string | null;
+  evidence?: EvidenceEvent[];
+  recording_url?: string | null;
+}
+
+export interface CaseReport {
+  outcomes: ReportOutcome[];
+  lines: ReportLine[];
+  recommendation: string;
+}
+
+export const OUTCOME_LABELS: Record<OutcomeType, string> = {
+  reduction: "Reduction won",
+  payment_plan: "Payment plan",
+  charity_app_initiated: "Charity application started",
+  callback: "Callback scheduled",
+  documented_decline: "Declined · documented",
+};
+
 export const FLAG_LABELS: Record<FlagType, string> = {
   duplicate: "Duplicate charge",
   upcode: "Upcoded service level",

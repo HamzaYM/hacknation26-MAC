@@ -8,6 +8,7 @@ with the next move. Signatures FROZEN at H3 (PRD §12).
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from .. import db
 from ..config import load_vertical
 from ..engine.state_machine import LadderStateMachine
 from ..fixtures import DEMO_JOB_SPEC, demo_benchmarks, demo_dossier, demo_flags
@@ -19,7 +20,9 @@ state_machine = LadderStateMachine(load_vertical())
 
 
 class LeverResult(BaseModel):
-    call_id: str
+    # PSTN calls placed outside /calls/launch have no calls row; the stable
+    # default keys the in-memory ladder state for the single live demo call.
+    call_id: str = "live-call"
     lever: str
     result: str  # accepted | rejected | partial | stonewalled | escalated | hangup
     offer_amount: float | None = None  # what the agent is about to offer/settle at
@@ -27,7 +30,7 @@ class LeverResult(BaseModel):
 
 
 class LogEvent(BaseModel):
-    call_id: str
+    call_id: str = "live-call"
     type: str  # transcript | tool_call | state_change | quote | escalation
     payload: dict = {}
 
@@ -59,26 +62,60 @@ def report_lever_result(body: LeverResult) -> dict:
     (fixtures) until real per-case dossiers are persisted.
     """
     state_machine.ensure_call(body.call_id, demo_dossier())
-    return state_machine.advance(
+    resp = state_machine.advance(
         body.call_id, body.lever, body.result,
         offer_amount=body.offer_amount, quote=body.quote,
     )
+    # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
+    db.insert_event(body.call_id, "state_change",
+                    {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
+    if resp.get("escalation") or resp.get("escalation_required"):
+        db.insert_event(body.call_id, "escalation", {"reason": resp.get("notes", "")})
+    return resp
 
 
 @router.post("/log_quote")
 def log_quote(body: LogEvent) -> dict:
-    # TODO(Hamza): insert call_events row (type=quote) → Supabase Realtime → War Room
+    payload = dict(body.payload)
+    if "amount" in payload:  # the War Room ticker needs a number
+        try:
+            payload["amount"] = float(payload["amount"])
+        except (TypeError, ValueError):
+            pass
+    db.insert_event(body.call_id, "quote", payload)
     return {"logged": True}
 
 
 @router.post("/log_event")
 def log_event(body: LogEvent) -> dict:
-    # TODO(Hamza): insert call_events row → Realtime
+    db.insert_event(body.call_id, body.type, body.payload)
     return {"logged": True}
 
 
 @router.post("/end_call_summary")
 def end_call_summary(body: dict) -> dict:
-    """Agent's structured wrap-up before hang-up: ref #, rep name, agreed action."""
-    # TODO(Hamza): stage partial CallOutcome; final extraction happens on the post-call webhook
+    """Agent's structured wrap-up before hang-up: ref #, rep name, agreed action.
+    Stages the outcome row; final extraction still happens on the post-call webhook."""
+    call_id = body.get("call_id")
+    if call_id:
+        db.insert_event(call_id, "tool_call",
+                        {"name": "end_call_summary",
+                         "result": body.get("agreed_action") or body.get("outcome_type") or "received"})
+        if body.get("outcome_type"):
+            original, final = body.get("original_amount"), body.get("final_amount")
+            reduction_pct = (  # computed by code, never the LLM (contract)
+                round(100 * (1 - float(final) / float(original)), 1)
+                if original and final is not None else None
+            )
+            db.insert_outcome({
+                "call_id": call_id,
+                "outcome_type": body["outcome_type"],
+                "original_amount": original,
+                "final_amount": final,
+                "reduction_pct": reduction_pct,
+                "winning_lever": body.get("winning_lever"),
+                "reference_number": body.get("reference_number"),
+                "rep_name": body.get("rep_name"),
+                "next_action": body.get("agreed_action"),
+            })
     return {"received": True}

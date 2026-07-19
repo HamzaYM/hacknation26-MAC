@@ -1,0 +1,117 @@
+{
+  "call_id": "long-call-duration-warn",
+  "entity": "facility",
+  "meta": {
+    "allowed_numbers": [
+      438,
+      2633.25,
+      999.3,
+      4287,
+      3875,
+      2400,
+      1650,
+      412,
+      71046
+    ],
+    "number_tolerance": 1.0,
+    "disclosure_required": true,
+    "disclosure_max_agent_turn": 3
+  },
+  "transcript": [
+    {
+      "speaker": "agent",
+      "text": "Hi, my name is Alex \u2014 I'm an AI assistant calling on behalf of your patient Maya Chen, who has authorized me to discuss account 4-4-7-1-9-0-2. This call may be recorded on both ends."
+    },
+    {
+      "speaker": "counterparty",
+      "text": "Okay... I see a note here. What is it you're asking for?"
+    },
+    {
+      "speaker": "agent",
+      "text": "Thanks. First, code seven-one-zero-four-six, the chest X-ray, appears twice on the same date of service \u2014 412 dollars each time. Can you remove the duplicate?"
+    },
+    {
+      "speaker": "counterparty",
+      "text": "Hang on. Let me pull that up... yeah, I see that. I can remove one. That takes it to 3875."
+    },
+    {
+      "speaker": "agent",
+      "text": "Appreciate it. Now \u2014 Medicare pays 438 dollars for these exact codes, and your own hospital's posted cash price for them is 2633 dollars, on your public price-transparency file \u2014 commercial insurers pay you less than that. Is this negotiable?"
+    },
+    {
+      "speaker": "counterparty",
+      "text": "Our rates are our rates. But... I could do 2400."
+    },
+    {
+      "speaker": "agent",
+      "text": "I hear you. She can pay 1650 today, settled as paid in full. Can you take that to your supervisor?"
+    },
+    {
+      "speaker": "counterparty",
+      "text": "Let me put you on a brief hold... okay. Approved at 1650, paid in full."
+    },
+    {
+      "speaker": "agent",
+      "text": "Thank you. Can I get a reference number and your name for our records?"
+    },
+    {
+      "speaker": "counterparty",
+      "text": "Reference M-G-A-D-J-2-2-4-7, this is Pat. You'll see it in 3 to 5 business days."
+    }
+  ],
+  "call_events": [
+    {
+      "type": "disclosure_given",
+      "payload": {
+        "turn": 1
+      }
+    },
+    {
+      "type": "lever_attempted",
+      "payload": {
+        "lever": "error_duplicate_71046"
+      }
+    },
+    {
+      "type": "quote_logged",
+      "payload": {
+        "cpt": "71046",
+        "billed": 412,
+        "adjusted": 0
+      }
+    },
+    {
+      "type": "lever_attempted",
+      "payload": {
+        "lever": "benchmark_anchor"
+      }
+    },
+    {
+      "type": "lever_attempted",
+      "payload": {
+        "lever": "lump_sum_settlement"
+      }
+    },
+    {
+      "type": "outcome",
+      "payload": {
+        "outcome_type": "reduction"
+      }
+    }
+  ],
+  "outcome": {
+    "call_id": "demo-facility-showstopper",
+    "outcome_type": "reduction",
+    "original_amount": 4287,
+    "final_amount": 1650,
+    "winning_lever": "lump_sum_settlement",
+    "reference_number": "MG-ADJ-2247",
+    "rep_name": "Pat",
+    "agreed_action": "balance settled as paid in full",
+    "next_action_date": "2026-07-23"
+  },
+  "call_metadata": {
+    "duration_seconds": 1260,
+    "ended_by": "agent"
+  }
+}

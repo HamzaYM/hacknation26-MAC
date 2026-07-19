@@ -3,55 +3,55 @@
     "cpt": "99283",
     "description": "Emergency dept visit, moderate severity (records-supported level for the demo's upcoded 99285)",
     "medicare_rate": 245.0,
-    "fh_estimate": 622.0,
-    "mrf_cash": 1050.0,
-    "mrf_negotiated_median": 1450.0,
+    "fh_estimate": 622.3,
+    "mrf_cash": 1409.25,
+    "mrf_negotiated_median": 328.79,
     "band_low": 367.5,
     "band_high": 612.5,
-    "source_url": "PLACEHOLDER — replace via data/pipeline (CMS PFS/OPPS + hospital MRF)"
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   },
   {
     "cpt": "71046",
     "description": "Chest X-ray, 2 views (duplicated on the demo bill: $412 billed twice)",
     "medicare_rate": 63.0,
-    "fh_estimate": 160.0,
-    "mrf_cash": 260.0,
-    "mrf_negotiated_median": 360.0,
+    "fh_estimate": 160.02,
+    "mrf_cash": 354.0,
+    "mrf_negotiated_median": 180.78,
     "band_low": 94.5,
     "band_high": 157.5,
-    "source_url": "PLACEHOLDER"
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   },
   {
     "cpt": "80053",
     "description": "Comprehensive metabolic panel (unbundled into components on the demo bill: $690 vs $48)",
     "medicare_rate": 14.5,
-    "fh_estimate": 37.0,
-    "mrf_cash": 95.0,
-    "mrf_negotiated_median": 130.0,
+    "fh_estimate": 36.83,
+    "mrf_cash": 133.5,
+    "mrf_negotiated_median": 94.87,
     "band_low": 21.75,
     "band_high": 36.25,
-    "source_url": "PLACEHOLDER"
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   },
   {
     "cpt": "85025",
     "description": "Complete blood count w/ differential",
     "medicare_rate": 10.8,
-    "fh_estimate": 27.0,
-    "mrf_cash": 60.0,
-    "mrf_negotiated_median": 85.0,
+    "fh_estimate": 27.43,
+    "mrf_cash": 93.75,
+    "mrf_negotiated_median": 66.63,
     "band_low": 16.2,
     "band_high": 27.0,
-    "source_url": "PLACEHOLDER"
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   },
   {
     "cpt": "96374",
     "description": "IV push, single drug",
     "medicare_rate": 104.7,
-    "fh_estimate": 266.0,
-    "mrf_cash": 425.0,
-    "mrf_negotiated_median": 575.0,
+    "fh_estimate": 265.94,
+    "mrf_cash": 642.75,
+    "mrf_negotiated_median": 328.23,
     "band_low": 157.05,
     "band_high": 261.75,
-    "source_url": "PLACEHOLDER"
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
   }
 ]

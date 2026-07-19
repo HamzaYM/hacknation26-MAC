@@ -1,0 +1,57 @@
+[
+  {
+    "cpt": "71046",
+    "description": "Radiologic Exam Chest 2 Views",
+    "medicare_rate": 63.0,
+    "fh_estimate": 160.02,
+    "mrf_cash": 354.0,
+    "mrf_negotiated_median": 180.78,
+    "band_low": 94.5,
+    "band_high": 157.5,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  },
+  {
+    "cpt": "80053",
+    "description": "Comprehensive Metabolic Panel",
+    "medicare_rate": 14.5,
+    "fh_estimate": 36.83,
+    "mrf_cash": 133.5,
+    "mrf_negotiated_median": 94.87,
+    "band_low": 21.75,
+    "band_high": 36.25,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  },
+  {
+    "cpt": "85025",
+    "description": "Blood Count Cbc Auto W/Auto Diff",
+    "medicare_rate": 10.8,
+    "fh_estimate": 27.43,
+    "mrf_cash": 93.75,
+    "mrf_negotiated_median": 66.63,
+    "band_low": 16.2,
+    "band_high": 27.0,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  },
+  {
+    "cpt": "96374",
+    "description": "Ivp/ IV < 16 Min Initial Drug - 96374",
+    "medicare_rate": 104.7,
+    "fh_estimate": 265.94,
+    "mrf_cash": 642.75,
+    "mrf_negotiated_median": 328.23,
+    "band_low": 157.05,
+    "band_high": 261.75,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  },
+  {
+    "cpt": "99283",
+    "description": "Emergency Department Visit Low Mdm",
+    "medicare_rate": 245.0,
+    "fh_estimate": 622.3,
+    "mrf_cash": 1409.25,
+    "mrf_negotiated_median": 328.79,
+    "band_low": 367.5,
+    "band_high": 612.5,
+    "source_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip"
+  }
+]

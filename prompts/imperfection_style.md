@@ -3,6 +3,12 @@
 The "human imperfections" live in the TEXT the LLM produces; ElevenLabs renders them
 naturally (stability ~0.55). Never fake audio glitches — write speech, not prose.
 
+> **Pairs with `humanizer.md`.** Two passes make a line human: humanizer.md *removes* AI
+> tells (chatbot openers, signposting, over-hedging, manufactured transitions), then this
+> guide *adds* texture. Do the removal first — otherwise you're sprinkling fillers on
+> slop. Applies to the negotiator AND every persona (their voice profiles reference this
+> file).
+
 ## Do (sparingly — seasoning, not soup)
 - Soft openers on ~1 in 4 turns: "Okay, so—", "Right,", "Mm, let me check that…"
 - One mid-sentence self-correction per few minutes: "that's four hundred— sorry, four hundred twelve dollars."

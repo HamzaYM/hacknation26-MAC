@@ -36,7 +36,7 @@ export default function Home() {
 
         <div className="marketing-cta-row">
           <a href="/login" className="btn btn-primary">
-            Start saving — it&apos;s free →
+            Start saving, it&apos;s free →
           </a>
           <a href="/how-it-works" className="link-cta">
             see how it works

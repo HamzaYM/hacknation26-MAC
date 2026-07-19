@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDemoCase } from "../../../lib/api";
+import { useRouter } from "next/navigation";
+import { getDemoCase, launchCalls } from "../../../lib/api";
 import { subscribeToCallsForCase } from "../../../lib/realtime";
 import { facilitySavings, money } from "../../../lib/savings";
 import { procedureLabel } from "../../../lib/procedures";
@@ -41,9 +42,9 @@ export default function BillDetail() {
   // server-side, both views should read/write the same source of truth).
   const [completedActionIds, setCompletedActionIds] = useState<Set<string>>(new Set());
   // Real state, not a guess — only true when a `calls` row for this case is
-  // actually ringing/live. Nothing currently writes to that table (call
-  // launching isn't wired — TODO Hamza, POST /calls/launch), so this stays
-  // null and the live-call card correctly stays hidden until it's real.
+  // actually ringing/live (via the Realtime subscription below), so the
+  // live-call card only shows when a call genuinely is. "Start the calls" on
+  // the Plan tab (POST /calls/launch) is what makes that happen.
   const [liveCall, setLiveCall] = useState<Call | null>(null);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export default function BillDetail() {
             {procedureLabel(spec.bill.facility_name, "facility")}
           </div>
           <span className={`pill ${cashedIn ? "pill-muted" : wrappingUp ? "pill-flag" : "pill-accent"}`}>
-            {cashedIn ? "Settled — confirmed in writing" : wrappingUp ? "Confirming your savings…" : "In progress"}
+            {cashedIn ? "Settled · confirmed in writing" : wrappingUp ? "Confirming your savings…" : "In progress"}
           </span>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -103,7 +104,7 @@ export default function BillDetail() {
       <div className="stat-pair">
         <div className="stat">
           <div className="stat-num accent">{money(savings.savedSoFar)} · {savings.percentSavedSoFar}%</div>
-          <div className="stat-cap">Saved so far — confirmed</div>
+          <div className="stat-cap">Saved so far · confirmed</div>
         </div>
         <div className="stat">
           <div className="stat-num">{money(savings.projectedLow)}–{money(savings.projectedHigh)}</div>
@@ -124,7 +125,7 @@ export default function BillDetail() {
 
       {!cashedIn && !confirming && !wrappingUp && (
         <button className="btn btn-secondary" onClick={() => setConfirming(true)}>
-          I&apos;m done — cash in {money(savings.savedSoFar)} ({savings.percentSavedSoFar}%) now →
+          I&apos;m done, cash in {money(savings.savedSoFar)} ({savings.percentSavedSoFar}%) now →
         </button>
       )}
       {confirming && (
@@ -245,8 +246,8 @@ function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
       <div className="finding-evidence">
         <strong style={{ color: "var(--text-tertiary)", fontSize: 12, textTransform: "uppercase" }}>Evidence</strong>
         <div style={{ marginTop: 4 }}>
-          {flag.type === "duplicate" && "Itemized bill lists this code twice on the same date of service — a clean duplicate."}
-          {flag.type === "upcode" && `Diagnosis and documentation support a lower visit level (${(flag.evidence.supported as string) ?? "—"}) than what was billed.`}
+          {flag.type === "duplicate" && "Itemized bill lists this code twice on the same date of service. A clean duplicate."}
+          {flag.type === "upcode" && `Diagnosis and documentation support a lower visit level (${(flag.evidence.supported as string) ?? "–"}) than what was billed.`}
           {flag.type === "unbundle" && `Component tests total ${money(flag.evidence.components_billed as number)}; the bundled panel code prices at ${money(flag.evidence.bundled as number)}.`}
           {flag.type === "eob_mismatch" && `Your bill shows ${money(flag.evidence.bill as number)}; your insurer's EOB shows ${money(flag.evidence.eob as number)} owed.`}
           {(flag.type === "nsa" || flag.type === "markup" || flag.type === "phantom") && "See dossier citation for this line."}
@@ -267,12 +268,33 @@ function PlanTab({
   wrappingUp: boolean;
   liveCall: Call | null;
 }) {
+  const router = useRouter();
+  const [launching, setLaunching] = useState(false);
+  const [launchedCallId, setLaunchedCallId] = useState<string | null>(null);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const currentIndex = PROVIDER_LADDER.indexOf(DEMO_CURRENT_RUNG as (typeof PROVIDER_LADDER)[number]);
+
+  async function startCalls() {
+    setLaunching(true);
+    setLaunchError(null);
+    try {
+      const { launched } = await launchCalls(spec.case_id, { simulate: true });
+      const first = launched[0];
+      if (!first) throw new Error("no calls launched");
+      setLaunchedCallId(first.call_id);
+      router.push(`/warroom?call_id=${first.call_id}`);
+    } catch {
+      setLaunching(false);
+      setLaunchError(
+        "Couldn't start the calls. The API at :8000 didn't answer. Nothing was dialed; try again in a moment."
+      );
+    }
+  }
 
   if (cashedIn) {
     return (
       <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
-        Settled. Your {money(facilitySavings(spec).savedSoFar)} reduction was confirmed in writing —
+        Settled. Your {money(facilitySavings(spec).savedSoFar)} reduction was confirmed in writing,
         reference <span className="mono-figure">{WRAP_UP_REF}</span>. See Call History for the wrap-up call, and
         Documents for the confirmation letter. Reopen negotiation anytime from the bill header above.
       </p>
@@ -282,7 +304,7 @@ function PlanTab({
   if (wrappingUp) {
     return (
       <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
-        Wrapping up — placing a final call to get your {money(facilitySavings(spec).savedSoFar)} reduction confirmed
+        Wrapping up: placing a final call to get your {money(facilitySavings(spec).savedSoFar)} reduction confirmed
         in writing before this bill closes out.
       </p>
     );
@@ -291,6 +313,8 @@ function PlanTab({
   return (
     <div>
       {liveCall ? (
+        // Honest live-call gating: this strip only appears when a `calls` row
+        // for this case is actually ringing/live (Realtime subscription).
         <div className="live-strip">
           <div>
             <span className="live-dot"><span className="dot" />LIVE CALL</span>
@@ -299,14 +323,33 @@ function PlanTab({
             </div>
           </div>
           <a href={`/warroom?call_id=${liveCall.id}`} className="btn btn-secondary" style={{ textDecoration: "none" }}>
-            Watch & listen live →
+            Watch &amp; listen live →
           </a>
         </div>
       ) : (
-        <p className="todo" style={{ marginBottom: 16, borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
-          No call in progress right now. This card lights up the moment an agent dials — call
-          launching isn&apos;t wired to the UI yet (TODO Hamza — <code>POST /calls/launch</code>).
-        </p>
+        <div className="live-strip">
+          <div>
+            <span className="pill pill-muted">Next scheduled call</span>
+            <div style={{ marginTop: 6, fontWeight: 600 }}>
+              Continuing the {LADDER_LABELS[PROVIDER_LADDER[currentIndex]]?.toLowerCase()} step with {spec.bill.facility_name}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn btn-primary" onClick={startCalls} disabled={launching} style={launching ? { opacity: 0.7 } : undefined}>
+              {launching ? "Dialing…" : "Start the calls"}
+            </button>
+            <a
+              href={launchedCallId ? `/warroom?call_id=${launchedCallId}` : "/warroom"}
+              className="btn btn-secondary"
+              style={{ textDecoration: "none" }}
+            >
+              Open War Room →
+            </a>
+          </div>
+        </div>
+      )}
+      {launchError && (
+        <p className="todo" style={{ marginBottom: 16 }}>{launchError}</p>
       )}
 
       <div className="stepper">
@@ -323,7 +366,7 @@ function PlanTab({
                 {state === "active" && (
                   <div className="step-detail">
                     Agent is arguing Medicare pays $438 for these codes and the facility&apos;s own posted
-                    cash price is $2,633 — is this negotiable?
+                    cash price is $2,633. Is this negotiable?
                   </div>
                 )}
               </div>
@@ -354,7 +397,7 @@ function HistoryTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
             <div><dt>Confirmed</dt><dd>{money(savings.savedSoFar)} reduction, in writing</dd></div>
             <div><dt>Reference #</dt><dd className="mono-figure">{WRAP_UP_REF}</dd></div>
             <div><dt>New balance</dt><dd className="mono-figure">{money(savings.currentBalance)}</dd></div>
-            <div><dt>Next action</dt><dd>None — case closed at your request</dd></div>
+            <div><dt>Next action</dt><dd>None · case closed at your request</dd></div>
           </div>
         </div>
       )}
@@ -422,8 +465,8 @@ function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) 
       url: "/demo-docs/mercy_general_bill.pdf",
       meta: [
         ["Account #", spec.bill.account_number],
-        ["Statement date", spec.bill.statement_date ?? "—"],
-        ["Due date", spec.bill.due_date ?? "—"],
+        ["Statement date", spec.bill.statement_date ?? "–"],
+        ["Due date", spec.bill.due_date ?? "–"],
         ["Line items", String(spec.bill.line_items.length)],
       ],
     },
@@ -432,7 +475,7 @@ function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) 
       type: "PDF",
       url: "/demo-docs/bcbs_eob.pdf",
       meta: [
-        ["Claim #", spec.eob.claim_number ?? "—"],
+        ["Claim #", spec.eob.claim_number ?? "–"],
         ["Patient responsibility", money(spec.eob.patient_responsibility_total)],
         ["Denial codes", spec.eob.denial_codes.length ? spec.eob.denial_codes.join(", ") : "None"],
       ],
@@ -464,11 +507,11 @@ function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) 
       <div style={{ marginTop: 16 }}>
         <UploadCard
           title="Add another document"
-          hint="Drag a PDF or photo — a follow-up letter, a second EOB, anything relevant to this bill"
+          hint="Drag a PDF or photo: a follow-up letter, a second EOB, anything relevant to this bill"
         />
       </div>
       <p className="todo" style={{ marginTop: 16 }}>
-        These are this demo case&apos;s real documents (data/demo_docs/) — a real user&apos;s own uploads
+        These are this demo case&apos;s real documents (data/demo_docs/). A real user&apos;s own uploads
         aren&apos;t wired to Supabase Storage yet (TODO Hamza/J).
       </p>
     </div>

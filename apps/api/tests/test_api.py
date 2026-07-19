@@ -31,7 +31,7 @@ def test_get_case_brief_serves_computed_flags(client):
     assert resp.status_code == 200
     spec = resp.json()["job_spec"]
     assert {f["type"]: f["dollar_impact"] for f in spec["derived_flags"]} == {
-        "duplicate": 412.00, "upcode": 890.00, "unbundle": 642.00, "eob_mismatch": 412.00,
+        "duplicate": 412.00, "upcode": 2011.21, "unbundle": 642.00, "eob_mismatch": 412.00,
     }
 
 

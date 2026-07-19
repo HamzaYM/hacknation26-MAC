@@ -9,5 +9,12 @@ venv/
 dist/
 build/
 .DS_Store
-data/raw/
 apps/web/next-env.d.ts
+
+# Large data files — raw MRFs, chargemasters, and pipeline intermediates
+data/raw/
+*.db
+*.sqlite
+*.csv.gz
+*.zip
+chargemasters*
