@@ -33,7 +33,6 @@ export const VOICES: Voice[] = [
       "Against a collector working a quota, friendly can be taken as an opening to brush you off.",
     ],
     preview: "/voices/alex.mp3",
-    isDefault: true,
   },
   {
     key: "adam",
@@ -51,6 +50,7 @@ export const VOICES: Voice[] = [
       "Less natural room for the fillers and softeners our humanization layer leans on, so small talk can read scripted.",
     ],
     preview: "/voices/adam.mp3",
+    isDefault: true,
   },
   {
     key: "riley",
@@ -71,7 +71,7 @@ export const VOICES: Voice[] = [
   },
 ];
 
-export const DEFAULT_VOICE_ID = "jTWqplUkOPQwOegNjhal";
+export const DEFAULT_VOICE_ID = "pNInz6obpgDQGcFmaJgB"; // Adam (Hamza's pick, 07-18 late)
 
 export function voiceById(voiceId: string | null | undefined): Voice | undefined {
   return VOICES.find((v) => v.voiceId === voiceId);

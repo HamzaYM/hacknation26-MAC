@@ -238,6 +238,9 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 .tm{background:var(--bg-surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-card); padding:20px;}
 .tm .nm{font-family:var(--font-d); font-weight:700; font-size:20px; color:var(--ink);}
 .tm .rl{font-size:13px; color:var(--text-2); margin-top:4px;}
+.tm .qr{margin-top:12px; display:flex; align-items:center; gap:8px;}
+.tm .qr img{width:74px; height:74px; display:block; border-radius:6px;}
+.tm .qr .qrlab{font-family:var(--font-m); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); writing-mode:vertical-rl;}
 .close-line{font-family:var(--font-d); font-weight:800; font-size:52px; line-height:1.05; letter-spacing:-.02em; color:var(--ink); max-width:820px;}
 .close-line .coral{color:var(--accent); position:relative;}
 .close-line .coral::after{content:""; position:absolute; left:0; right:0; bottom:2px; height:5px; background:var(--accent); border-radius:3px; opacity:.85;}
@@ -452,10 +455,10 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       <div class="rain" id="rain"></div>
       <div class="mask" style="position:relative;z-index:1"><span class="riseline eyebrow">The team</span></div>
       <div class="team-grid" style="position:relative;z-index:1">
-        <div class="tm r"><div class="nm">Hamza</div><div class="rl">product + engine</div></div>
-        <div class="tm r"><div class="nm">Susy</div><div class="rl">UX + frontend</div></div>
-        <div class="tm r"><div class="nm">Jay</div><div class="rl">data</div></div>
-        <div class="tm r"><div class="nm">Kar Shin</div><div class="rl">personas + voice</div></div>
+        <div class="tm r"><div class="nm">Hamza</div><div class="rl">product + engine</div><div class="qr"><img src="/pitch-assets/qr/hamza.png" alt="Hamza Malik on LinkedIn"><span class="qrlab">LinkedIn</span></div></div>
+        <div class="tm r"><div class="nm">Susy</div><div class="rl">UX + frontend</div><div class="qr"><img src="/pitch-assets/qr/susy.png" alt="Susy Liu on LinkedIn"><span class="qrlab">LinkedIn</span></div></div>
+        <div class="tm r"><div class="nm">Jay</div><div class="rl">data</div><div class="qr"><img src="/pitch-assets/qr/jay.png" alt="Jay Vachhani on LinkedIn"><span class="qrlab">LinkedIn</span></div></div>
+        <div class="tm r"><div class="nm">Kar Shin</div><div class="rl">personas + voice</div><div class="qr"><img src="/pitch-assets/qr/karshin.png" alt="Kar Shin Cheo on LinkedIn"><span class="qrlab">LinkedIn</span></div></div>
       </div>
       <div class="close-line" style="position:relative;z-index:1">
         <span class="mask"><span class="riseline">your medical bill</span></span>
