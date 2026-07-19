@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { confirmCase, getDemoCase, getFlags } from "../../lib/api";
+import { getVoicePref, voiceById } from "../../lib/voice";
 import { facilitySavings, money } from "../../lib/savings";
 import { FLAG_LABELS } from "../../lib/types";
 import type { DerivedFlag, JobSpec } from "../../lib/types";
@@ -14,6 +15,7 @@ export default function Confirm() {
   const router = useRouter();
   const [spec, setSpec] = useState<JobSpec | null>(null);
   const [flags, setFlags] = useState<DerivedFlag[] | null>(null);
+  const [voiceId, setVoiceId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
@@ -22,6 +24,7 @@ export default function Confirm() {
     getDemoCase()
       .then((s) => {
         setSpec(s);
+        void getVoicePref(s.case_id).then(setVoiceId);
         return getFlags(s.case_id).then((r) => setFlags(r.flags));
       })
       .catch(() => setLoadError(true));
@@ -104,6 +107,19 @@ export default function Confirm() {
         <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
           Estimated savings if the calls go our way: {pctLow}–{pctHigh}% off your {money(savings.originalBalance)} balance.
         </div>
+      </div>
+
+      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
+        <div>
+          <h3 style={{ marginBottom: 4 }}>The voice we&apos;ll call in</h3>
+          <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            {voiceById(voiceId ?? undefined)?.name ?? "Alex"}
+            <span style={{ color: "var(--text-tertiary)" }}> · {voiceById(voiceId ?? undefined)?.tagline ?? "warm and polite"}</span>
+          </div>
+        </div>
+        <a href="/voice" className="btn btn-secondary" style={{ padding: "8px 18px", fontSize: 14 }}>
+          Change voice
+        </a>
       </div>
 
       {confirmError && (

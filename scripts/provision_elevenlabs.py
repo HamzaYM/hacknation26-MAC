@@ -201,6 +201,26 @@ def negotiator_first_message() -> str:
     return " ".join(d.get("opening_line_unused", d.get("opening_line", "")).split()) + " Am I through to the billing department?"
 
 
+def allow_voice_override(platform_settings: dict | None) -> dict:
+    """Enable the per-call tts.voice_id override in the agent's security settings,
+    merging into any existing platform_settings so dashboard tweaks survive.
+
+    The Voice Picker applies the chosen voice at call initiation via
+    conversation_config_override.tts.voice_id (never by PATCHing this shared
+    agent — that races across concurrent calls). ElevenLabs ignores an override
+    the agent has not explicitly allowed here, so this flag is required.
+    """
+    ps = dict(platform_settings or {})
+    overrides = dict(ps.get("overrides") or {})
+    cco = dict(overrides.get("conversation_config_override") or {})
+    tts = dict(cco.get("tts") or {})
+    tts["voice_id"] = True
+    cco["tts"] = tts
+    overrides["conversation_config_override"] = cco
+    ps["overrides"] = overrides
+    return ps
+
+
 def pick_voice(voices_by_name: dict[str, str], prefs: list[str], fallback: str) -> str:
     for pref in prefs:
         for name, vid in voices_by_name.items():
@@ -264,7 +284,10 @@ def main() -> None:
             if tools is not None:
                 cc["agent"]["prompt"]["tools"] = tools
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
-            s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, {"conversation_config": cc})
+            patch_body: dict = {"conversation_config": cc}
+            if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
+                patch_body["platform_settings"] = allow_voice_override(live.get("platform_settings"))
+            s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
             action = "updated (voice/llm preserved)"
         else:
             conversation_config = {
@@ -281,8 +304,10 @@ def main() -> None:
                     "speed": vcfg.get("speed", 1.0),
                 },
             }
-            s, resp = call("POST", "/v1/convai/agents/create", key,
-                           {"name": name, "conversation_config": conversation_config})
+            create_body: dict = {"name": name, "conversation_config": conversation_config}
+            if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
+                create_body["platform_settings"] = allow_voice_override(None)
+            s, resp = call("POST", "/v1/convai/agents/create", key, create_body)
             agent_id = resp.get("agent_id") if isinstance(resp, dict) else None
             action = "created"
         if s not in (200, 201) or not agent_id:

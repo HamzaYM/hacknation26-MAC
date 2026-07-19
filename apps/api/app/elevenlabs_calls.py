@@ -23,7 +23,27 @@ def enabled() -> bool:
     return os.environ.get("ELEVENLABS_OUTBOUND_ENABLED", "").lower() in ("1", "true")
 
 
-def outbound_call(agent_id: str, agent_phone_number_id: str, to_number: str) -> dict:
+def build_outbound_body(agent_id: str, agent_phone_number_id: str, to_number: str,
+                        voice_id: str | None = None) -> dict:
+    """The outbound-call request body. When voice_id is set, the chosen voice
+    rides along as a per-call override (conversation_config_override.tts.voice_id)
+    inside conversation_initiation_client_data — the agent itself is never PATCHed,
+    so concurrent calls each get their own voice without racing.
+    """
+    body: dict = {
+        "agent_id": agent_id,
+        "agent_phone_number_id": agent_phone_number_id,
+        "to_number": to_number,
+    }
+    if voice_id:
+        body["conversation_initiation_client_data"] = {
+            "conversation_config_override": {"tts": {"voice_id": voice_id}},
+        }
+    return body
+
+
+def outbound_call(agent_id: str, agent_phone_number_id: str, to_number: str,
+                  voice_id: str | None = None) -> dict:
     """Start a native-Twilio outbound call from an ElevenLabs agent.
 
     Returns the API response ({"conversation_id": ..., "callSid": ...} per docs)
@@ -38,11 +58,7 @@ def outbound_call(agent_id: str, agent_phone_number_id: str, to_number: str) -> 
     resp = httpx.post(
         OUTBOUND_URL,
         headers={"xi-api-key": api_key},
-        json={
-            "agent_id": agent_id,
-            "agent_phone_number_id": agent_phone_number_id,
-            "to_number": to_number,
-        },
+        json=build_outbound_body(agent_id, agent_phone_number_id, to_number, voice_id),
         timeout=30,
     )
     resp.raise_for_status()

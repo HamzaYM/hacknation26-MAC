@@ -137,6 +137,33 @@ def set_case_status(case_id: str, status: str):
     return _run("update cases set status = %s where id = %s", (status, case_id))
 
 
+# ── voice preference (per case) ───────────────────────────────────────────
+def get_case_voice(case_id: str) -> str | None:
+    """The chosen voice_id for a case, or None (no row / no DB / table absent)."""
+    if not _is_uuid(case_id):
+        return None
+    rows = _run("select voice_id from case_voice_prefs where case_id = %s", (case_id,), fetch=True)
+    return rows[0]["voice_id"] if rows else None
+
+
+def set_case_voice(case_id: str, voice_id: str, voice_label: str | None = None) -> bool:
+    """Upsert the chosen voice. Returns True only when it actually persisted."""
+    if not _is_uuid(case_id):
+        return False
+    result = _run(
+        """
+        insert into case_voice_prefs (case_id, voice_id, voice_label, updated_at)
+        values (%s, %s, %s, now())
+        on conflict (case_id) do update
+          set voice_id = excluded.voice_id,
+              voice_label = excluded.voice_label,
+              updated_at = now()
+        """,
+        (case_id, voice_id, voice_label),
+    )
+    return result is True
+
+
 # ── documents ─────────────────────────────────────────────────────────────
 def insert_document(document_id: str, case_id: str, kind: str, storage_path: str, parsed: dict):
     if not _is_uuid(document_id) or not _is_uuid(case_id):
