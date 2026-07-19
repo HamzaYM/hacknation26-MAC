@@ -6,6 +6,7 @@ import UploadCard from "../../components/UploadCard";
 import { getDemoCase, parseDocument, saveFinancialProfile } from "../../lib/api";
 import type { FinancialProfileInput, ParseDocumentResponse, Reconciliation } from "../../lib/api";
 import { money } from "../../lib/savings";
+import { evidenceLine } from "../../lib/evidence";
 import { FLAG_LABELS } from "../../lib/types";
 
 // ElevenLabs conversation widget — standard custom element, script loaded below.
@@ -79,9 +80,12 @@ export default function Intake() {
         <span style={{ fontSize: 13, color: "var(--text-tertiary)" }}>takes ~5 min</span>
       </div>
       <h1 style={{ fontSize: 30, marginBottom: 8 }}>Add your documents</h1>
-      <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
+      <p style={{ color: "var(--text-secondary)", marginBottom: 8 }}>
         We read the bill and EOB line by line, check them against your case records, and flag
         anything worth arguing. Then a short voice interview covers what documents can&apos;t tell us.
+      </p>
+      <p style={{ fontSize: 13, color: "var(--text-tertiary)", marginBottom: 24 }}>
+        🔒 Encrypted in transit and at rest. Used only to negotiate this bill.
       </p>
 
       {(["bill", "eob"] as DocKind[]).map((kind) => (
@@ -348,6 +352,9 @@ function ParseResult({
                   <strong>{FLAG_LABELS[flag.type] ?? flag.type}</strong>
                 </div>
                 <span className="impact">+{money(flag.dollar_impact)}</span>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 6 }}>
+                {evidenceLine(flag)}
               </div>
             </div>
           ))}

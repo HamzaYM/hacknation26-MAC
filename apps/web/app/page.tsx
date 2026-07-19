@@ -1,5 +1,6 @@
 import MoneyRain from "../components/MoneyRain";
 import Logo from "../components/Logo";
+import { FEE_LINE } from "../lib/fees";
 
 export default function Home() {
   return (
@@ -34,7 +35,7 @@ export default function Home() {
           no hold music, no PhD in insurance.
         </p>
 
-        <div className="marketing-cta-row">
+        <div className="marketing-cta-row" style={{ marginBottom: "var(--space-md)" }}>
           <a href="/login" className="btn btn-primary">
             Start saving, it&apos;s free →
           </a>
@@ -43,12 +44,18 @@ export default function Home() {
           </a>
         </div>
 
+        <p
+          style={{
+            fontSize: 14,
+            color: "var(--text-secondary)",
+            maxWidth: 480,
+            margin: "0 auto var(--space-2xl)",
+          }}
+        >
+          {FEE_LINE}
+        </p>
+
         <div className="stat-row">
-          <div>
-            <div className="stat-value">$1,240</div>
-            <div className="stat-label">avg. saved per bill</div>
-          </div>
-          <div className="stat-div" />
           <div>
             <div className="stat-value">3 min</div>
             <div className="stat-label">to upload &amp; go</div>
