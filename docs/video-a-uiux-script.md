@@ -1,0 +1,81 @@
+# VIDEO A — UI/UX Showcase · 60s Shooting Script
+
+> Director/VO: **Kar Shin** · Phone rep: **Jay as "Pat"** (live human role-play, `prompts/personas/human_role_play_guide.md`)
+> Record on the **live site https://hagglfor.me** (address bar visible — it's real).
+> Focus: user experience + product flow, with a **~30s continuous live call** at the center.
+> Numbers reconcile with `data/seed/demo_answer_key.json`. Supersedes Video A in `docs/demo-shot-lists.md` (keeps its S-criteria coverage; restructured for one continuous call instead of fast cuts).
+
+## The one-line story
+Upload a confusing hospital bill → Haggl finds the errors → you approve → an AI voice negotiates it down **live on a real call** → ranked, cited report. −62%.
+
+## VO word budget
+Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block — the call audio is the star. Record VO after the screen capture, to picture.
+
+---
+
+## SHOT LIST
+
+### SHOT 1 · 0:00–0:03 · The brand (3s)
+**SCREEN:** `hagglfor.me` landing hero — "your medical bill just met its match," floating bill motif, URL in the address bar.
+**Screenshot ref:** `deck/assets/home-hero.png` (frame it exactly like this).
+**VO:** *"Maya owes $4,287 for one ER visit — with insurance."*
+**On-screen text:** none (the hero speaks).
+
+### SHOT 2 · 0:03–0:11 · Intake: document + voice (8s) — proves S2
+**SCREEN:** `/intake` (logged in as `maya@hagglfor.me`): drag `data/demo_docs/mercy_general_bill.pdf` into the upload card → parse animation ("line items extracted") → **quick cut** to the embedded ElevenLabs voice-interview widget mid-question.
+**Screenshot ref:** capture live at `hagglfor.me/intake` (no repo PNG yet — REHEARSAL NOTE: the vision parse takes ~10s real time; start the upload before the in-point and film the tail of it).
+**AUDIO (real widget, 3s):** Intake: *"…what could you comfortably pay today?"* → Maya: *"Maybe seventeen hundred."*
+**VO (over the upload, before the audio):** *"Upload the bill. A short voice interview asks only what documents can't answer."*
+
+### SHOT 3 · 0:11–0:19 · Diagnosis: the findings (8s) — proves S2 (spec) + sets up S4
+**SCREEN:** Bill detail → **Diagnosis** tab (`/bills/…0001`): "THE CENTRAL ARGUMENT" card, then the **4 findings** with dollar chips — Duplicate 71046 **+$412** · Upcode 99285 **+$2,011** · Unbundle 80053 **+$642** · EOB mismatch **+$412** · "TOTAL FLAGGED: $3,065". Slow scroll down the findings; end on the projected-savings bar ($1,327–$2,653 possible).
+**Screenshot ref:** live capture of the Diagnosis tab (layout as toured 07-18: title row $3,875/$4,287, savings bar, findings cards).
+**VO:** *"Haggl reads it like an auditor: four billing errors, three thousand dollars flagged — each one with evidence."*
+
+### SHOT 4 · 0:19–0:24 · Approve + the War Room fills (5s) — proves S2 gate, S3 setup
+**SCREEN:** The approve moment (Plan tab → confirm/"make the calls" control), **1s beat** on the Voice picker strip if it fits (`/voice` — "ON CALLS WE'LL USE — Adam · Assertive and unbudging"), then cut to the **War Room** (`/warroom`): dark theme, call cards going ● LIVE, Advocates panel on the right.
+**Screenshot refs:** `deck/assets/warroom.png` + live `/voice` capture. CUT-IF-OVER: the voice-picker beat is the first thing to drop if the edit runs long.
+**VO:** *"Maya approves — nothing dials until she does. Then Haggl picks up the phone."*
+
+### SHOT 5 · 0:24–0:55 · THE LIVE CALL (31s, continuous) — proves S4, S5, S6
+**SCREEN:** War Room call view, full frame. The through-line is the **price ticker** — it must be readable the whole time: **$4,287 → $3,875 → $2,400 → $1,650**, lever chips arming before each move, `escalation_required` event firing at $1,650. Picture-in-picture (small): Jay on a real phone, or the phone screen with the inbound call — sells "live human on the line."
+**AUDIO:** the call IS the audio. No VO. Record the full call with Jay as Pat (concession rules in `human_role_play_guide.md`); cut to these beats, ticker carrying continuity:
+
+| ~t | Beat (agent = Adam's voice) | Ticker |
+|---|---|---|
+| 0:24 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat: *"…what is it you're asking for?"* | $4,287 |
+| 0:29 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* Pat checks… *"…yeah, I see that. I can remove one."* | **→ $3,875** |
+| 0:37 | The benchmark, slow and clean: *"Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, grumbling: *"…I could do 2,400."* | **→ $2,400** |
+| 0:46 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* — hold — Pat: *"…approved at 1,650."* | **→ $1,650** |
+| 0:52 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
+
+**On-screen text (small, bottom):** at 0:29 "finding #1: duplicate charge" · at 0:37 "the hospital's own posted price" · at 0:52 "every call ends structured: ref MG-ADJ-2247".
+**FALLBACK:** if the live take breaks twice, use the best golden recording replayed through the identical War Room view (the UI is the same code path) — label honestly in the submission text, not on screen.
+
+### SHOT 6 · 0:55–1:00 · The receipt (5s) — proves S7 + closes S1
+**SCREEN:** `/report` (or bill → Call History/outcome view): ranked outcomes with ref#s + rep names, **billed vs fair vs achieved** per line, Evidence expanded to a cited transcript line, then the savings headline.
+**Screenshot ref:** `deck/assets/report.png`.
+**VO:** *"Ranked, cited, in plain English. $4,287 became $1,650 — sixty-two percent off. Haggl."*
+**End card (1s):** Haggl logo + `hagglfor.me`.
+
+---
+
+## Success-criteria map (Challenge.pdf) — what this 60s proves on camera
+
+| Criterion | Where |
+|---|---|
+| S1 loop closed (intake → calls → negotiation → recommendation) | Shots 2→6, whole arc |
+| S2 one spec: voice interview + document, user-confirmed, reused | Shots 2 (both paths), 4 (the gate) |
+| S3 ≥3 styles / structured quotes | Shot 4 (parallel cards) — fully covered in Video B; here we show the *fleet*, prove one deeply |
+| S4 price moves mid-call from leverage | Shot 5 — the entire block, ticker on screen |
+| S5 disclosure + honesty | Shot 5 (if Pat asks "robot?", Adam confirms honestly — Jay may inject it per the guide); honesty audit shown in Video B |
+| S6 structured outcomes | Shot 5 close (ref MG-ADJ-2247 outcome card) + Shot 6 |
+| S7 ranked, cited report | Shot 6 |
+
+## Pre-shoot checklist
+- [ ] Jay rehearsed the role-play guide twice (concessions ONLY on the cited cues; floor $1,500)
+- [ ] Demo reset run (Maya's case fresh; War Room clean); logged in as `maya@hagglfor.me`
+- [ ] Screen capture at 1080p+, address bar visible; phone PiP framed if using it
+- [ ] Voice = Adam (Voice tab shows "In use"); intake widget mic-checked
+- [ ] Full call recorded once uncut (it's also golden-call + eval material), then edit to the beat map
+- [ ] VO recorded to picture, −14 LUFS-ish, call audio ducked never muted
