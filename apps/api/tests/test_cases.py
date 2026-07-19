@@ -97,3 +97,23 @@ def test_demo_case_still_works_unaffected(client):
     resp = client.get("/cases/demo")
     assert resp.status_code == 200
     assert resp.json()["bill"]["patient_balance"] == 4287.00
+
+
+def test_benchmark_report_endpoint(client):
+    """GET /cases/{id}/benchmark_report: 404 for unknown cases and cases
+    without a stored report; serves the case_store report verbatim otherwise
+    (scenario loads populate it — see test_scenario_suite)."""
+    from app import case_store
+
+    assert client.get("/cases/nope/benchmark_report").status_code == 404
+
+    resp = client.post("/cases", json=_job_spec_body())
+    case_id = resp.json()["case_id"]
+    assert client.get(f"/cases/{case_id}/benchmark_report").status_code == 404
+
+    report = {"case_id": case_id, "hospital": "Massachusetts General Hospital",
+              "lines": [], "totals": {"billed": 0}, "data_version": {}}
+    case_store.put(case_id, "benchmark_report", report)
+    got = client.get(f"/cases/{case_id}/benchmark_report")
+    assert got.status_code == 200
+    assert got.json() == report

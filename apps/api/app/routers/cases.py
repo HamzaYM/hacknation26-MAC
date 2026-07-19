@@ -120,6 +120,19 @@ def get_case_flags(case_id: str) -> dict:
     return {"case_id": case_id, "flags": [f.model_dump() for f in flags_for_spec(spec)]}
 
 
+@router.get("/{case_id}/benchmark_report")
+def get_case_benchmark_report(case_id: str) -> dict:
+    """The case's BenchmarkReport (contracts/anchor_set.schema.json) — the
+    per-line anchor sets the evidence toggle and multiples table render.
+    Scenario-loaded cases serve their code-generated report verbatim; cases
+    without one get 404 so the frontend keeps its graceful-degradation path."""
+    _resolve_spec(case_id)  # 404s unknown cases first
+    report = case_store.get(case_id, "benchmark_report")
+    if not report:
+        raise HTTPException(status_code=404, detail="no benchmark report for this case")
+    return report
+
+
 class FinancialProfileInput(BaseModel):
     """The financial answers the documents can't provide — from the voice
     interview or the manual card on /intake. All optional; only the answered
