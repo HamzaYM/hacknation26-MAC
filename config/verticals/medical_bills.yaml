@@ -76,12 +76,12 @@ voice:
   # NOTE: Adam (stock workspace voice) — Hamza's pick 07-18 late, was the Alex clone. Susy's original
   # (PK6t0r2iXSJEz1l0Gy4k) lives in her personal account and is not assignable here.
   default_voice_id: pNInz6obpgDQGcFmaJgB
-  stability: 0.55
-  speed: 0.9                                 # Hamza (07-18): slower so numbers stay legible; keep within 0.9–1.1
+  stability: 0.5                              # Kar Shin (07-18 call feedback): a touch lower so fillers + prosody render more naturally (numbers still delivered clean/slow by the text layer)
+  speed: 0.85                                # Kar Shin (07-18 call feedback): slower still — Adam read too fast at 0.9. If it drags, step back toward 0.9.
+  target_wpm: 130                             # was 150; slower, unhurried delivery
   # Brain LLM for the negotiator, pinned by provisioning (Hamza, 07-18 evening:
   # quality over latency for live calls; was gemini-2.5-flash on cost).
   negotiator_llm: gpt-5.4
-  target_wpm: 150
   endpointing_ms: 400                        # bias toward waiting; barge-in on
   delivery_notes: prompts/verbalization_guide.md
 
