@@ -51,6 +51,43 @@ export async function getFlags(caseId: string): Promise<FlagsResponse> {
   return res.json();
 }
 
+// ---- GET /cases/{id}/action_plan (the pre-dial Action Plan for /confirm) ----
+// `input` values are all engine-computed (numbers/dates/statutes); `copy` is the
+// user-facing text — warm `claude -p` prose when honest, deterministic fallback
+// otherwise. Every figure in `copy` is verbatim from `input` (server-side guard).
+
+export interface ActionPlanCopy {
+  headline: string;
+  summary: string;
+  flag_chips: { cpt?: string | null; label: string }[];
+  savings_line: string;
+  boost_panel?: { missing: string; copy: string }[];
+  per_call_descriptions?: { entity: string; copy: string }[];
+  timeline_copy: string;
+  call_log_notes?: { call_ref?: string; copy: string }[];
+  next_step_line: string;
+  _source?: string;
+}
+
+export interface ActionPlanResponse {
+  case_id: string;
+  input: {
+    balance: number;
+    savings_estimate: { low: number | null; high: number | null; confidence: string };
+    levers_armed: { id: string; citation: string | null; dollar_ask: number | null; armed_by: string }[];
+    timeline: Record<string, string | null>;
+    [k: string]: unknown;
+  };
+  copy: ActionPlanCopy;
+}
+
+// null = endpoint unavailable (the page falls back to flags-only rendering).
+export async function getActionPlan(caseId: string): Promise<ActionPlanResponse | null> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/action_plan`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 // ---- POST /documents/parse (frozen intake contract — backend may land after this) ----
 
 export interface ParsedLineItem {
