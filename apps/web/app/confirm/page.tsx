@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { confirmCase, getActionPlan, getDemoCase, getFlags } from "../../lib/api";
+import { confirmCase, getActionPlan, getDemoCase, getFlags, launchCalls } from "../../lib/api";
 import type { ActionPlanResponse } from "../../lib/api";
 import { getVoicePref, voiceById } from "../../lib/voice";
 import { facilitySavings, money } from "../../lib/savings";
@@ -41,7 +41,17 @@ export default function Confirm() {
     setConfirmError(false);
     try {
       await confirmCase(spec.case_id);
-      router.push("/bills");
+      // The button's promise: confirming launches the simulated calls, then the
+      // War Room shows them dialing live. A launch failure must not strand the
+      // user on a dead confirm screen — the case is already confirmed, so route
+      // to the War Room either way (it renders whatever calls exist, or its idle
+      // "waiting for the calls" state — nothing looks broken).
+      try {
+        await launchCalls(spec.case_id, { simulate: true });
+      } catch {
+        // swallow — routing to /warroom below is the graceful fallback
+      }
+      router.push("/warroom");
     } catch {
       setConfirming(false);
       setConfirmError(true);

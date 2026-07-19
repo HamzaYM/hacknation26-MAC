@@ -1,3 +1,9 @@
+> **⚠️ DEPRECATED — superseded.** This single 3:30 script no longer matches the demo, which is now
+> **two 60-second videos**. Use Kar Shin's current scripts instead:
+> [`docs/video-a-uiux-script.md`](video-a-uiux-script.md) (Video A · UI/UX) ·
+> [`docs/tech-video-script.md`](tech-video-script.md) (the technical video) ·
+> [`docs/demo-shot-lists.md`](demo-shot-lists.md) (shot lists for both). Kept for reference only.
+
 # Demo Video — Shot-for-Shot Script (3:30) · Owner: Kar Shin
 
 Every number reconciles with `data/seed/demo_answer_key.json`. Narration ~150 wpm.

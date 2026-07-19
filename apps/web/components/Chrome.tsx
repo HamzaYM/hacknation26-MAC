@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/voice", label: "Voice" },
   { href: "/profile", label: "Profile" },
   { href: "/warroom", label: "War Room" },
+  { href: "/report", label: "Case file" },
 ];
 
 export default function Chrome({ children }: { children: React.ReactNode }) {
