@@ -18,9 +18,17 @@
   --ink:#1a1410; --text-2:#6b6058; --text-3:#a69c91;
   --accent:#ef6b45; --accent-hover:#d95a34; --accent-tint:#fce3d8;
   --flag:#c98a2e; --flag-tint:#f6e7cc; --border:#e8ddd3;
+  /* Lyna-style pastel node palette (mint / peach / lavender / blue / amber / neutral) */
+  --mint-bg:#e8f4ee; --mint-bd:#bfe0cf; --mint-ink:#2f6b4f;
+  --coral-bg:#fdeae1; --coral-bd:#f3c1a8; --coral-ink:#c25a34;
+  --lav-bg:#efe9f6; --lav-bd:#d5c8e6; --lav-ink:#6b53a1;
+  --blue-bg:#e9eff8; --blue-bd:#bfd2ec; --blue-ink:#3a6099;
+  --amber-bg:#f8efd7; --amber-bd:#e6d29c; --amber-ink:#9a7623;
+  --neutral-bg:#f1ede7; --neutral-bd:#ddd3c8; --neutral-ink:#6b6058;
   --font-d:"Bricolage Grotesque", ui-sans-serif, sans-serif;
   --font-b:"General Sans", ui-sans-serif, system-ui, sans-serif;
   --font-m:"IBM Plex Mono", ui-monospace, monospace;
+  --font-s:ui-serif, Georgia, "Times New Roman", serif;
   --shadow-card:0 1px 2px rgba(26,20,16,.06), 0 1px 8px rgba(26,20,16,.04);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -71,28 +79,28 @@ body{font-family:var(--font-b);color:var(--ink);-webkit-font-smoothing:antialias
 #clock{color:var(--ink);font-weight:500;}
 
 /* slides + transitions */
-.slide{position:absolute;inset:0;padding:96px 64px 92px;display:flex;flex-direction:column;
+.slide{position:absolute;inset:0;padding:92px 64px 88px;display:flex;flex-direction:column;
   opacity:0;pointer-events:none;transform:translateY(34px) scale(.988);z-index:2;
   transition:opacity .5s cubic-bezier(.2,.7,.2,1), transform .5s cubic-bezier(.2,.7,.2,1);}
 .slide.on{opacity:1;pointer-events:auto;transform:none;z-index:3;}
 .slide.out{opacity:0;transform:translateY(-40px) scale(1.012);z-index:2;pointer-events:none;}
 .slide .an{opacity:0;}
-.slide.on .an{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.1s);}
-.slide.on h1.an{animation:riseH .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.1s);}
+.slide.on .an{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.09s);}
+.slide.on h1.an{animation:riseH .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.09s);}
 @keyframes rise{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;}}
 @keyframes riseH{from{opacity:0;transform:translateY(44px);filter:blur(12px);}
   to{opacity:1;transform:none;filter:blur(0);}}
 
-.kicker{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.kicker{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
 .chip{display:inline-block;padding:7px 17px;border-radius:9999px;font-size:14px;font-weight:500;
   letter-spacing:.02em;}
 .chip.cat{background:var(--accent-tint);color:var(--accent-hover);text-transform:uppercase;}
 .chip.crit{background:var(--flag-tint);color:var(--flag);}
 .chip.neutral{background:var(--bg-surface-muted);color:var(--text-2);}
-h1{font-family:var(--font-d);font-weight:800;font-size:70px;line-height:1.02;letter-spacing:-.015em;
-  margin-bottom:18px;}
+h1{font-family:var(--font-d);font-weight:800;font-size:64px;line-height:1.02;letter-spacing:-.015em;
+  margin-bottom:16px;}
 h1 .a{color:var(--accent);}
-.lede{font-size:23px;line-height:1.45;color:var(--text-2);max-width:1000px;}
+.lede{font-size:22px;line-height:1.42;color:var(--text-2);max-width:1020px;}
 .lede b{color:var(--ink);font-weight:500;}
 .grow{flex:1;display:flex;flex-direction:column;justify-content:center;}
 
@@ -103,92 +111,115 @@ h1 .a{color:var(--accent);}
 .mono{font-family:var(--font-m);}
 .path{font-family:var(--font-m);font-size:16px;color:var(--text-2);}
 .files{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--font-m);font-size:14px;
-  color:var(--text-3);margin-top:26px;}
+  color:var(--text-3);margin-top:24px;}
 .files b{color:var(--text-2);font-weight:500;}
 .arrow{font-family:var(--font-b);color:var(--text-3);font-size:26px;align-self:center;}
 
 /* S1 stack strip */
-.strip{display:flex;align-items:stretch;gap:14px;}
-.strip .card{flex:1;padding:32px 26px;min-height:238px;display:flex;flex-direction:column;justify-content:center;}
-.svc{font-family:var(--font-d);font-weight:700;font-size:29px;margin-bottom:16px;}
-.strip .sub{font-size:18px;}
-.models{margin-top:24px;font-family:var(--font-m);font-size:14.5px;color:var(--text-2);line-height:1.5;}
-.models b{color:var(--ink);font-weight:500;}
+.strip{display:flex;align-items:stretch;gap:12px;}
+.strip .card{flex:1;padding:30px 22px;min-height:230px;display:flex;flex-direction:column;justify-content:center;}
+.svc{font-family:var(--font-d);font-weight:700;font-size:27px;margin-bottom:14px;}
+.strip .sub{font-size:17px;}
+.strip .arrow{font-size:22px;}
 
-/* S2 loop + ladder */
-.cols{display:flex;gap:28px;align-items:stretch;}
-.loopcol{flex:1.18;display:flex;flex-direction:column;gap:14px;justify-content:center;}
-.turn{display:flex;gap:16px;align-items:flex-start;}
-.who{flex:0 0 108px;font-family:var(--font-m);font-size:13px;color:var(--text-3);padding-top:16px;
-  text-align:right;}
-.bubble{flex:1;background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;
-  padding:17px 21px;font-size:18.5px;line-height:1.4;box-shadow:var(--shadow-card);}
-.bubble.tool{background:var(--bg-surface-muted);font-family:var(--font-m);font-size:16px;}
-.bubble.engine{border-color:var(--accent);}
-.bubble .tag{display:inline-block;margin-left:8px;padding:3px 13px;border-radius:9999px;
-  background:var(--accent-tint);color:var(--accent-hover);font-family:var(--font-b);
-  font-size:13px;font-weight:500;}
-.laddercol{flex:1;display:flex;}
-.laddercol .card{flex:1;display:flex;flex-direction:column;justify-content:center;}
-.laddercol h3{font-size:19px;}
-.ladder{list-style:none;counter-reset:rung;}
-.ladder li{counter-increment:rung;display:flex;gap:13px;align-items:baseline;
-  font-family:var(--font-m);font-size:16px;color:var(--text-2);padding:6.5px 0 6.5px 16px;
-  border-left:2px solid var(--border);}
-.ladder li::before{content:counter(rung,decimal-leading-zero);font-size:13px;color:var(--text-3);}
-.ladder li.hot{border-left-color:var(--accent);color:var(--ink);font-weight:500;}
+/* ---------- Lyna-style editorial diagram slides (S2, S4) ---------- */
+.slide.lyna{padding:70px 60px 76px;}
+.edito{margin-bottom:20px;}
+.sectlabel{font-family:var(--font-m);font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent-hover);margin-bottom:12px;}
+.serif-h{font-family:var(--font-s);font-weight:700;font-size:47px;line-height:1.05;color:var(--ink);
+  letter-spacing:-.01em;position:relative;display:inline-block;padding-bottom:12px;}
+.serif-h .ltr{color:var(--accent);}
+.serif-h::after{content:"";position:absolute;left:0;bottom:0;width:78px;height:4px;
+  background:var(--accent);border-radius:2px;}
+.serif-sub{margin-top:16px;font-size:20px;color:var(--text-2);line-height:1.4;max-width:1000px;}
 
-/* S3 the bluff story */
-.story{display:flex;gap:16px;align-items:stretch;}
-.story .step{flex:1;border-radius:16px;padding:28px 26px;display:flex;flex-direction:column;gap:12px;}
-.step .n{font-family:var(--font-m);font-size:14px;letter-spacing:.04em;}
-.step h3{font-family:var(--font-d);font-weight:700;font-size:26px;line-height:1.15;}
-.step p{font-size:18px;line-height:1.5;}
-.step.fail{background:var(--flag-tint);border:1px solid var(--flag);}
-.step.fail .n{color:var(--flag);}
-.step.fix{background:var(--ink);color:#fff;}
-.step.fix .n{color:#f0a58e;}
-.step.fix p{color:#e8ddd3;}
-.step.prove{background:var(--bg-surface);border:1px solid var(--border);box-shadow:var(--shadow-card);}
-.step.prove .n{color:var(--accent-hover);}
-.toolpills{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;}
-.toolpill{font-family:var(--font-m);font-size:14px;padding:7px 14px;border-radius:9999px;
-  background:rgba(255,255,255,.12);color:#fff;}
+.diagram{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;
+  background:var(--bg-surface);border:1px solid var(--border);border-radius:22px;
+  box-shadow:var(--shadow-card);padding:20px 30px;margin-top:14px;}
 
-/* S4 transport */
-.net{display:flex;gap:15px;align-items:center;}
-.net .card{flex:1;}
-.pstn{flex:0 0 176px;text-align:center;font-family:var(--font-d);font-weight:700;font-size:23px;
-  background:var(--ink);color:#fff;border-radius:9999px;padding:22px 0;}
-.slide.on .pstn{animation:rise .6s cubic-bezier(.2,.7,.2,1) .4s both, pulse 2.6s ease-in-out 1.4s infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,107,69,.35);}
-  50%{box-shadow:0 0 0 16px rgba(239,107,69,0);}}
-.stackrow{display:flex;gap:14px;align-items:center;margin-top:18px;}
-.stackrow .card{flex:1;padding:20px 22px;}
-.evt{font-family:var(--font-m);font-size:15px;color:var(--text-2);line-height:1.6;}
-.pull{margin-top:30px;font-family:var(--font-d);font-weight:700;font-size:30px;line-height:1.25;
-  max-width:1120px;}
-.pull .a{color:var(--accent);}
+/* soft rounded pastel nodes */
+.node{border-radius:15px;border:1.5px solid var(--neutral-bd);background:var(--neutral-bg);
+  padding:15px 18px;position:relative;display:flex;flex-direction:column;justify-content:center;}
+.node .nt{font-weight:600;font-size:18px;line-height:1.15;color:var(--neutral-ink);}
+.node .nc{font-size:13.5px;line-height:1.32;color:var(--text-2);margin-top:5px;}
+.node.mint{background:var(--mint-bg);border-color:var(--mint-bd);}   .node.mint .nt{color:var(--mint-ink);}
+.node.coral{background:var(--coral-bg);border-color:var(--coral-bd);} .node.coral .nt{color:var(--coral-ink);}
+.node.lav{background:var(--lav-bg);border-color:var(--lav-bd);}       .node.lav .nt{color:var(--lav-ink);}
+.node.blue{background:var(--blue-bg);border-color:var(--blue-bd);}    .node.blue .nt{color:var(--blue-ink);}
+.node.amber{background:var(--amber-bg);border-color:var(--amber-bd);} .node.amber .nt{color:var(--amber-ink);}
+.node .badge{position:absolute;top:-11px;left:-9px;width:26px;height:26px;border-radius:50%;
+  background:var(--ink);color:#fff;font-family:var(--font-m);font-size:13px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-card);}
+.node.mono .nt{font-family:var(--font-m);font-size:16px;}
+
+.flowrow{display:flex;align-items:stretch;gap:12px;}
+.flowrow .node{flex:1;}
+.fa{align-self:center;color:var(--text-3);font-size:22px;flex:0 0 auto;}
+.dn{align-self:center;color:var(--text-3);font-size:16px;line-height:1;text-align:center;}
+
+/* S2 gate panel */
+.gate{border:1.5px solid var(--accent);background:linear-gradient(180deg,#fff,#fdf4ef);
+  border-radius:16px;padding:16px 20px 18px;position:relative;}
+.gate .gh{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.gate .gh .badge{position:static;}
+.gate .gt{font-family:var(--font-m);font-size:17px;font-weight:500;color:var(--accent-hover);}
+.gate .gm{font-size:13.5px;color:var(--text-3);margin-left:auto;}
+.checks{display:flex;gap:12px;}
+.check{flex:1;background:var(--bg-surface-muted);border:1px solid var(--border);border-radius:11px;
+  padding:12px 14px;}
+.check .ct{font-weight:600;font-size:15px;color:var(--ink);margin-bottom:3px;}
+.check .cs{font-size:13px;line-height:1.3;color:var(--text-2);}
+.tagline{text-align:center;font-family:var(--font-d);font-weight:700;font-size:24px;color:var(--ink);
+  margin-top:2px;}
+.tagline .a{color:var(--accent);}
+
+/* S4 topology groups */
+.tgroup{display:flex;flex-direction:column;gap:9px;}
+.glabel{font-family:var(--font-m);font-size:12px;letter-spacing:.14em;text-transform:uppercase;}
+.glabel.screen{color:var(--mint-ink);}
+.glabel.call{color:var(--coral-ink);}
+.datastrip{display:flex;gap:12px;align-items:stretch;}
+.dcard{flex:1;border-radius:13px;border:1.5px solid var(--lav-bd);background:var(--lav-bg);padding:13px 16px;}
+.dcard .dt{font-weight:600;font-size:16px;color:var(--lav-ink);}
+.dcard .ds{font-family:var(--font-m);font-size:13px;color:var(--text-2);margin-top:4px;}
+.datacap{font-size:13.5px;color:var(--text-3);align-self:center;flex:0 0 168px;line-height:1.35;}
+
+/* S3 guardrail grid */
+.gguard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.gcard{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:var(--shadow-card);padding:20px 22px;display:flex;flex-direction:column;}
+.gcard .gi{font-family:var(--font-m);font-size:12px;color:var(--accent-hover);margin-bottom:9px;
+  letter-spacing:.04em;}
+.gcard h4{font-family:var(--font-d);font-weight:700;font-size:20px;line-height:1.12;margin-bottom:8px;}
+.gcard p{font-size:15px;line-height:1.4;color:var(--text-2);}
+.gcard p code{font-family:var(--font-m);font-size:13.5px;color:var(--accent-hover);}
 
 /* S5 config */
-.yamls{display:flex;gap:22px;align-items:center;}
-.yaml{flex:1;background:var(--ink);color:#e8ddd3;border-radius:16px;padding:28px 30px;
-  font-family:var(--font-m);font-size:16px;line-height:1.95;}
-.yaml .fn{color:#fff;font-weight:500;margin-bottom:12px;display:block;font-size:17px;}
+.cfgcols{display:flex;gap:22px;align-items:stretch;}
+.yaml{flex:1;background:var(--ink);color:#e8ddd3;border-radius:16px;padding:26px 28px;
+  font-family:var(--font-m);font-size:15.5px;line-height:1.95;}
+.yaml .fn{color:#fff;font-weight:500;margin-bottom:10px;display:block;font-size:17px;}
 .yaml .k{color:#f0a58e;}
 .yaml .c{color:#8b7d70;}
-.swap{flex:0 0 76px;text-align:center;font-family:var(--font-d);font-size:40px;color:var(--accent);}
-.slide.on .swap{animation:rise .6s cubic-bezier(.2,.7,.2,1) .4s both, sway 2.2s ease-in-out 1.4s infinite;}
-@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+.proof{flex:1;display:flex;flex-direction:column;}
+.proof h3{font-size:21px;font-weight:600;margin-bottom:6px;}
+.proof .psub{font-size:16px;color:var(--text-2);line-height:1.4;margin-bottom:16px;}
+.scgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
+.scchip{font-family:var(--font-m);font-size:14px;background:var(--bg-surface-muted);
+  border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text-2);text-align:center;}
+.scchip b{color:var(--ink);font-weight:500;}
+.proof .foot{font-size:15px;line-height:1.42;color:var(--text-2);margin-top:auto;}
+.proof .foot code{font-family:var(--font-m);font-size:13.5px;color:var(--accent-hover);}
 
 /* S6 close */
 .slide.dark{background:var(--ink);color:#fff;align-items:center;justify-content:center;
   text-align:center;}
-.closer{font-family:var(--font-d);font-weight:800;font-size:64px;line-height:1.1;
+.closer{font-family:var(--font-d);font-weight:800;font-size:60px;line-height:1.1;
   letter-spacing:-.015em;max-width:1040px;}
 .closer .a{color:var(--accent);}
-.wordmark{margin-top:52px;font-family:var(--font-d);font-weight:800;font-size:38px;}
-.url{margin-top:18px;font-family:var(--font-m);font-size:16px;color:#a69c91;}
+.wordmark{margin-top:48px;font-family:var(--font-d);font-weight:800;font-size:38px;}
+.url{margin-top:16px;font-family:var(--font-m);font-size:16px;color:#a69c91;}
 </style>
 </head>
 <body>
@@ -198,14 +229,14 @@ h1 .a{color:var(--accent);}
   <div class="brand"><span class="lh">H</span>aggl</div>
   <div class="slot">TECH VIDEO · 60s · stack / architecture / implementation</div>
 
-  <!-- S1 · 0:00–0:08 · Stack -->
+  <!-- S1 · 0:00–0:09 · Stack + it's live -->
   <section class="slide" data-t="0">
-    <div class="kicker an" style="--i:0"><span class="chip cat">Stack</span><span class="chip crit">boring on purpose</span></div>
-    <h1 class="an" style="--i:1">we kept the stack <span class="a">boring</span></h1>
-    <p class="lede an" style="--i:2">The hard part was never the plumbing. It was the phone call. So we spent our cleverness there.</p>
+    <div class="kicker an" style="--i:0"><span class="chip cat">Stack</span><span class="chip crit">live at hagglfor.me</span></div>
+    <h1 class="an" style="--i:1">the whole thing is <span class="a">live</span></h1>
+    <p class="lede an" style="--i:2">Next.js, FastAPI, Supabase, ElevenLabs voice agents, and Twilio. We use an LLM only where a human voice has to be. Everything else is plain, deterministic code.</p>
     <div class="grow">
       <div class="strip">
-        <div class="card an" style="--i:3"><div class="svc">Next.js</div><div class="sub">The app plus the live War Room</div></div>
+        <div class="card an" style="--i:3"><div class="svc">Next.js</div><div class="sub">The app and the live War Room</div></div>
         <div class="arrow an" style="--i:3">→</div>
         <div class="card an" style="--i:4"><div class="svc">FastAPI</div><div class="sub">The engine and the call tools</div></div>
         <div class="arrow an" style="--i:4">→</div>
@@ -215,121 +246,139 @@ h1 .a{color:var(--accent);}
         <div class="arrow an" style="--i:6">→</div>
         <div class="card an" style="--i:7"><div class="svc">Twilio</div><div class="sub">Every call is a real call</div></div>
       </div>
-      <div class="files an" style="--i:9"><span>Four of us built four parts against frozen schemas in <span class="path">contracts/</span>, and they just fit.</span></div>
+      <div class="files an" style="--i:9"><span>This is not a demo rig. It is hosted at <b>hagglfor.me</b> right now, taking real calls on a real phone number.</span></div>
     </div>
   </section>
 
-  <!-- S2 · 0:08–0:22 · The model never picks the price -->
-  <section class="slide" data-t="8">
-    <div class="kicker an" style="--i:0"><span class="chip cat">Architecture</span><span class="chip crit">the price moves for real reasons</span></div>
-    <h1 class="an" style="--i:1">the AI never <span class="a">picks the price</span></h1>
-    <p class="lede an" style="--i:2">You don't hand a chatbot someone's money. A state machine runs the deal. The voice just does the talking.</p>
-    <div class="grow">
-      <div class="cols">
-        <div class="loopcol">
-          <div class="turn an" style="--i:3"><div class="who">rep</div><div class="bubble">“I can’t change charges. That’s our policy.”</div></div>
-          <div class="turn an" style="--i:4"><div class="who">agent → tool</div><div class="bubble tool">report_lever_result(stonewalled)</div></div>
-          <div class="turn an" style="--i:5"><div class="who">engine</div><div class="bubble engine mono">advance() <span class="tag">forced move</span></div></div>
-          <div class="turn an" style="--i:6"><div class="who">server → agent</div><div class="bubble tool">next: reach_authority</div></div>
-        </div>
-        <div class="laddercol an" style="--i:5">
-          <div class="card">
-            <h3>The negotiation ladder lives in YAML</h3>
-            <ol class="ladder">
-              <li>open_and_hold_account</li>
-              <li>reach_authority</li>
-              <li>financial_assistance_screen</li>
-              <li class="hot">line_item_disputes</li>
-              <li class="hot">benchmark_anchor</li>
-              <li>lump_sum_settlement</li>
-              <li>escalate_or_exit</li>
-            </ol>
-          </div>
+  <!-- S2 · 0:09–0:22 · Lyna diagram: one negotiation turn, where the LLM fires -->
+  <section class="slide lyna" data-t="9">
+    <div class="edito an" style="--i:0">
+      <div class="sectlabel">Architecture</div>
+      <div class="serif-h"><span class="ltr">a.</span> One negotiation turn</div>
+      <div class="serif-sub">Where the LLM fires, and where it never gets a vote.</div>
+    </div>
+    <div class="diagram">
+      <div class="flowrow an" style="--i:2">
+        <div class="node mint"><span class="badge">1</span><div class="nt">Rep speaks</div><div class="nc">hits a wall: "that's just our policy"</div></div>
+        <div class="fa">→</div>
+        <div class="node coral"><span class="badge">2</span><div class="nt">The LLM, the mouth</div><div class="nc">hears the stonewall, reaches for a tool</div></div>
+        <div class="fa">→</div>
+        <div class="node lav mono"><span class="badge">3</span><div class="nt">report_lever_result()</div><div class="nc">hands the turn to the server</div></div>
+      </div>
+      <div class="dn an" style="--i:3">↓</div>
+      <div class="gate an" style="--i:3">
+        <div class="gh"><span class="badge">4</span><span class="gt">advance() · the deterministic gate</span><span class="gm">no model in this loop</span></div>
+        <div class="checks">
+          <div class="check"><div class="ct">Floor</div><div class="cs">no offer above what the patient can pay</div></div>
+          <div class="check"><div class="ct">Plan math</div><div class="cs">monthly x months x interest, done server-side</div></div>
+          <div class="check"><div class="ct">Repetition</div><div class="cs">same point three times, parked, move on</div></div>
+          <div class="check"><div class="ct">Coverage</div><div class="cs">cannot skip a required question</div></div>
         </div>
       </div>
-      <div class="files an" style="--i:8"><span>An offer under the patient's floor gets rejected before the agent can even say it.</span></div>
+      <div class="dn an" style="--i:4">↓</div>
+      <div class="flowrow an" style="--i:4">
+        <div class="node mint"><span class="badge">5</span><div class="nt">Allowed, or a forced move</div><div class="nc">the server picks the next step, then the LLM says it out loud</div></div>
+      </div>
     </div>
+    <div class="tagline an" style="--i:6">The AI never picks the price. <span class="a">Code does.</span></div>
   </section>
 
-  <!-- S3 · 0:22–0:35 · Never bluffs -->
+  <!-- S3 · 0:22–0:35 · Guardrails as capabilities -->
   <section class="slide" data-t="22">
-    <div class="kicker an" style="--i:0"><span class="chip cat">Implementation</span><span class="chip crit">honest about the hard parts</span></div>
-    <h1 class="an" style="--i:1">we made sure it <span class="a">never bluffs</span></h1>
-    <p class="lede an" style="--i:2">It tried once. On our very first call, it made up a billing code out of thin air. So we shut that down for good.</p>
+    <div class="kicker an" style="--i:0"><span class="chip cat">Guardrails</span><span class="chip crit">the model is on a short leash</span></div>
+    <h1 class="an" style="--i:1">the code holds the <span class="a">line</span></h1>
+    <p class="lede an" style="--i:2">The LLM does the talking. It does not get to decide anything that touches money or truth. Six hard rules run in code, around it.</p>
     <div class="grow">
-      <div class="story">
-        <div class="step fail an" style="--i:3">
-          <span class="n">THE SCARE</span>
-          <h3>It invented a code.</h3>
-          <p>A tool-less agent will make things up. We watched ours do it, live on a phone line.</p>
-        </div>
-        <div class="step fix an" style="--i:4">
-          <span class="n">THE FIX</span>
-          <h3>Every number goes through a tool.</h3>
-          <p>Now these are the only things it can say out loud:</p>
-          <div class="toolpills"><span class="toolpill">get_case_brief</span><span class="toolpill">get_benchmark</span><span class="toolpill">report_lever_result</span><span class="toolpill">end_call_summary</span></div>
-        </div>
-        <div class="step prove an" style="--i:5">
-          <span class="n">THE PROOF</span>
-          <h3>Real hospital prices.</h3>
-          <p>We pulled Mass General's machine-readable price file. Their own published cash price, $2,633.25, is the number the agent negotiates against.</p>
-        </div>
+      <div class="gguard">
+        <div class="gcard an" style="--i:3"><div class="gi">numbers</div><h4>Only through tools</h4><p><code>get_benchmark</code> and the dossier are the only prices it can speak. Any other number, it cannot say.</p></div>
+        <div class="gcard an" style="--i:4"><div class="gi">the ceiling</div><h4>An impossible offer</h4><p>An offer above what the patient can pay is rejected before the agent is allowed to speak it.</p></div>
+        <div class="gcard an" style="--i:5"><div class="gi">payment plans</div><h4>Math, server-side</h4><p>Monthly times months times interest is multiplied out in code. A plan that clears the ceiling only with interest is refused.</p></div>
+        <div class="gcard an" style="--i:6"><div class="gi">injection</div><h4>Refused by policy</h4><p>The rep on the phone is not its operator. Attempts to rewrite its rules get one polite no, then an exit.</p></div>
+        <div class="gcard an" style="--i:7"><div class="gi">disclosure</div><h4>Never denies the AI</h4><p>Asked if it is a bot, it says yes, every time. <code>never_deny_ai: true</code>, no exceptions.</p></div>
+        <div class="gcard an" style="--i:8"><div class="gi">after the call</div><h4>Every call audited</h4><p>When the call ends, a deterministic check re-reads every number it spoke. The result lands in the War Room.</p></div>
       </div>
-      <div class="files an" style="--i:7"><span>After the call, an eval re-checks every number it spoke. And it always admits it's an AI. <span class="path">never_deny_ai: true</span></span></div>
     </div>
   </section>
 
-  <!-- S4 · 0:35–0:45 · No demo mode -->
-  <section class="slide" data-t="35">
-    <div class="kicker an" style="--i:0"><span class="chip cat">Implementation</span><span class="chip crit">three styles, one real path</span></div>
-    <h1 class="an" style="--i:1">there is <span class="a">no demo mode</span></h1>
-    <p class="lede an" style="--i:2">No canned audio. No faked dashboard. Persona calls and the live human call ride the exact same wire.</p>
-    <div class="grow">
-      <div class="net">
-        <div class="card an" style="--i:3"><h3>Negotiator</h3><div class="sub">Dials out from our real number</div></div>
-        <div class="pstn an" style="--i:4">PSTN</div>
-        <div class="card an" style="--i:5"><h3>Personas</h3><div class="sub">Stonewaller, policy-citer, collections</div></div>
-        <div class="card an" style="--i:6"><h3>A real human</h3><div class="sub">On a cell, for the showstopper</div></div>
+  <!-- S4 · 0:35–0:45 · Lyna diagram: runtime topology -->
+  <section class="slide lyna" data-t="35">
+    <div class="edito an" style="--i:0">
+      <div class="sectlabel">Architecture</div>
+      <div class="serif-h"><span class="ltr">b.</span> Runtime topology</div>
+      <div class="serif-sub">Every box is live. hagglfor.me talks to all of it, right now.</div>
+    </div>
+    <div class="diagram">
+      <div class="tgroup an" style="--i:2">
+        <div class="glabel screen">The screen path</div>
+        <div class="flowrow">
+          <div class="node blue"><div class="nt">Browser</div><div class="nc">hagglfor.me</div></div>
+          <div class="fa">→</div>
+          <div class="node mint"><div class="nt">Next.js</div><div class="nc">app + War Room</div></div>
+          <div class="fa">→</div>
+          <div class="node coral"><div class="nt">FastAPI</div><div class="nc">the engine and tools</div></div>
+          <div class="fa">→</div>
+          <div class="node mint"><div class="nt">Supabase</div><div class="nc">Postgres + Realtime, streaming to the live War Room</div></div>
+        </div>
       </div>
-      <div class="stackrow">
-        <div class="card an" style="--i:7"><h3 class="mono">call_events</h3><div class="evt">status · transcript · quote · state_change · outcome</div></div>
-        <div class="arrow an" style="--i:7">→</div>
-        <div class="card an" style="--i:8"><h3>Supabase Realtime</h3><div class="sub">Streams straight to the screen</div></div>
-        <div class="arrow an" style="--i:8">→</div>
-        <div class="card an" style="--i:9"><h3>War Room</h3><div class="sub">Live tickers and price moves</div></div>
+      <div class="tgroup an" style="--i:3">
+        <div class="glabel call">The call path</div>
+        <div class="flowrow">
+          <div class="node coral"><div class="nt">FastAPI</div><div class="nc">same engine</div></div>
+          <div class="fa">→</div>
+          <div class="node amber"><div class="nt">ElevenLabs</div><div class="nc">voice agent, gpt-5.4 brain</div></div>
+          <div class="fa">→</div>
+          <div class="node lav"><div class="nt">Twilio</div><div class="nc">PSTN</div></div>
+          <div class="fa">→</div>
+          <div class="node blue"><div class="nt">A real phone</div><div class="nc">it actually rings</div></div>
+        </div>
       </div>
-      <p class="pull an" style="--i:10">When the calls went real, the War Room needed <span class="a">zero changes</span>.</p>
+      <div class="datastrip an" style="--i:4">
+        <div class="datacap">Every number it cites is loaded from data consolidated by code:</div>
+        <div class="dcard"><div class="dt">881,668-row chargemaster</div><div class="ds">3 Boston hospitals: MGH · Brigham &amp; Women's · Newton-Wellesley</div></div>
+        <div class="dcard"><div class="dt">Real CMS Medicare rates</div><div class="ds">PFS · OPPS · CLFS, keyed by code</div></div>
+      </div>
     </div>
   </section>
 
-  <!-- S5 · 0:45–0:55 · One file -->
+  <!-- S5 · 0:45–0:55 · Config not code -->
   <section class="slide" data-t="45">
-    <div class="kicker an" style="--i:0"><span class="chip cat">Architecture</span><span class="chip crit">config, not code</span></div>
+    <div class="kicker an" style="--i:0"><span class="chip cat">Config, not code</span><span class="chip crit">the engine doesn't know it's medicine</span></div>
     <h1 class="an" style="--i:1">new market? <span class="a">one file</span></h1>
-    <p class="lede an" style="--i:2">The brief asked for config over code. We actually built it. The engine reads YAML and knows nothing about medicine.</p>
+    <p class="lede an" style="--i:2">The engine reads one YAML per market and nothing else. Medical bills today, moving quotes next, the same code underneath.</p>
     <div class="grow">
-      <div class="yamls">
-        <div class="yaml an" style="--i:3"><span class="fn">medical_bills.yaml</span>
+      <div class="cfgcols">
+        <div class="yaml an" style="--i:3"><span class="fn">config/verticals/medical_bills.yaml</span>
 <span class="k">red_flags:</span> duplicate · upcode · unbundle<br/>
-<span class="k">ladder:</span> 9 rungs <span class="c"># + 5 for collections</span><br/>
-<span class="k">personas:</span> stonewaller · policy_citer<br/>
+<span class="k">ladder:</span> open → assistance → dispute → settle<br/>
+<span class="k">personas:</span> stonewaller · policy_citer · collections<br/>
+<span class="k">citable_sources_only:</span> [dossier, get_benchmark]<br/>
 <span class="k">never_deny_ai:</span> true</div>
-        <div class="swap an" style="--i:4">⇄</div>
-        <div class="yaml an" style="--i:5"><span class="fn">moving.yaml</span>
-<span class="k">red_flags:</span> lowball <span class="c"># 30% under = warning</span><br/>
-<span class="k">ladder:</span> describe_job → close_or_decline<br/>
-<span class="k">personas:</span> hard_sell · lowballer<br/>
-<span class="k">opening_line:</span> “…quote for my client…”</div>
+        <div class="proof card an" style="--i:5">
+          <h3>9 scenarios, keys computed by code</h3>
+          <div class="psub">Every answer key is generated from real chargemaster rows and CMS rates, run through the real engine. Nothing typed by hand.</div>
+          <div class="scgrid">
+            <div class="scchip"><b>sc01</b> baseline</div>
+            <div class="scchip"><b>sc02</b> duplicate</div>
+            <div class="scchip"><b>sc03</b> upcode</div>
+            <div class="scchip"><b>sc04</b> unbundle</div>
+            <div class="scchip"><b>sc05</b> self-pay</div>
+            <div class="scchip"><b>sc06</b> eob</div>
+            <div class="scchip"><b>sc07</b> oon</div>
+            <div class="scchip"><b>sc08</b> overpriced</div>
+            <div class="scchip"><b>sc09</b> denial</div>
+          </div>
+          <div class="foot"><code>generate.py --check</code> keeps all nine byte-stable, so the numbers can never quietly drift.</div>
+        </div>
       </div>
-      <div class="files an" style="--i:6"><span>Same engine. Same tools. Swap the YAML, swap the market.</span></div>
+      <div class="files an" style="--i:6"><span>The second market already lives in <span class="path">config/verticals/moving.yaml</span>. Same engine, same tools, swap the file.</span></div>
     </div>
   </section>
 
   <!-- S6 · 0:55–1:00 · Close -->
   <section class="slide dark" data-t="55">
-    <div class="closer an" style="--i:0">Code decides what’s true.<br/>The model decides <span class="a">how to say it</span>.</div>
+    <div class="closer an" style="--i:0">Code decides what's true.<br/>The model decides <span class="a">how to say it</span>.</div>
     <div class="wordmark an" style="--i:2"><span class="lh">H</span>aggl</div>
-    <div class="url an" style="--i:3">hagglfor.me · docs/architecture.md</div>
+    <div class="url an" style="--i:3">hagglfor.me · live now</div>
   </section>
 
   <div id="rail">
