@@ -11,7 +11,7 @@ from app.engine.state_machine import LadderStateMachine
 from app.fixtures import demo_dossier
 from app.main import app
 
-OPEN_TAGS = {"account_hold_requested", "itemized_bill_status", "rep_name_captured"}
+OPEN_TAGS = {"account_hold_requested", "records_alignment_confirmed", "rep_name_captured"}
 
 
 # ── state machine (A1 coverage gate, A2 already-asked, A3 repeat cap) ───────
@@ -40,7 +40,7 @@ def test_gate_blocks_first_time_when_tags_missing(machine, call):
     assert resp["move_allowed"] is False
     assert resp["next_move"] == "open_and_hold_account"  # stays on the rung
     assert "before moving on, cover:" in resp["notes"]
-    assert "itemized bill status" in resp["notes"]      # humanized tag
+    assert "records alignment confirmed" in resp["notes"]      # humanized tag
     assert "account hold requested" in resp["notes"]
 
 
@@ -50,7 +50,7 @@ def test_gate_allows_second_time_and_flags_incomplete(machine, call):
     resp = machine.advance(call, "open_and_hold_account", "accepted")
     assert resp["move_allowed"] is True
     assert resp["next_move"] == "reach_authority"       # advanced this time
-    assert set(resp["coverage_incomplete"]) == {"account_hold_requested", "itemized_bill_status"}
+    assert set(resp["coverage_incomplete"]) == {"account_hold_requested", "records_alignment_confirmed"}
 
 
 def test_full_coverage_advances_clean(machine, call):
@@ -213,4 +213,4 @@ def test_report_lever_result_surfaces_coverage_incomplete(client):
     assert r1.json()["move_allowed"] is False
     r2 = client.post("/tools/report_lever_result", json={
         "call_id": "qg-endpoint", "lever": "open_and_hold_account", "result": "accepted"})
-    assert set(r2.json()["coverage_incomplete"]) == {"account_hold_requested", "itemized_bill_status"}
+    assert set(r2.json()["coverage_incomplete"]) == {"account_hold_requested", "records_alignment_confirmed"}
