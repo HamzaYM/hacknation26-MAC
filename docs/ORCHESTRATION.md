@@ -39,7 +39,15 @@ Live pitch deck: `apps/web/presentation/pitch.html` → route `/pitch-sf-2026` (
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after deployment; never critical path
 - Known nit parked: duplicate-detection modifier exemption (real bills only, not demo-blocking).
 
-## In-flight (pinned 07-18 ~17:45 for compaction recovery)
+## Endgame state (07-19, ~2h to submission deadline 9:00 AM ET)
+- ~45 PRs merged; suite **351 green**; live site clean post web-cleanup (#91): no Voice tab, War Room last in nav, no dev copy.
+- **The hero call is real**: conv_8701kxwv (212s, PSTN a2a, Jason negotiator vs Morgan persona-supervisor) ran the full arc $4,287 → $3,875 → $2,400 → $1,650, ref MG-ADJ-2247, archived into Maya's case file with audio. Ticker fix (#95) makes real calls emit quote events.
+- Case file /report: hero settlement leads Resolved; 5 real-call audio players + authorization clip. Demo DB reset applied (scripts/demo_reset.py).
+- Submission kit: docs/submission/ (form copy, checklist, gallery). Judge assets: deck/judge-guide.pdf (screenshot user guide), /technical-architecture live route, deck/haggl-pitch.pptx + .pdf.
+- In flight: feat/videos-v2 builder (tech + demo v2 with v3 multi-voice guide VO — Brian/Sarah/Bella/Jason — real hero-call audio block, Jay VO cadence docs, refreshed judge PDF).
+- Hamza uploads: team picture, team video (filmed), Account IDs, form copy paste, videos when v2 lands. Jay records VO from docs/vo/ cadence scripts; mux + finalize after.
+
+## In-flight (pinned 07-18 ~17:45 for compaction recovery — historical)
 - **Deck (PRIORITY)**: Opus agent building deck/haggl-pitch.pptx on branch feat/pitch-deck — 8-slide/4:45 plan from the research brief; captures own site screenshots; voice-guide enforced; PRs when done.
 - **Multi-user + real-call plumbing**: agent on feat/multi-user-and-realcall — Dan/Nina users+cases, /calls/place-real + conversation_id persistence (A1), UUID default call_id fix (A2), archive_call.py run on both real conversations (Jay-call conv_9301kxvs…, a2a conv_8001kxvt…), shot-list C3 wording fix.
 - **Visuals**: agent on feat/dashboard-warroom-visuals — /bills deadlines strip, multi-call War Room overview, price-flash, milestone icons. For Susy's review.
