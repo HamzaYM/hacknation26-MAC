@@ -9,7 +9,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .. import db, scheduler
 from ..config import load_vertical
@@ -118,8 +118,12 @@ class LeverResult(BaseModel):
 
 
 class LogEvent(BaseModel):
+    # extra="allow" captures fields the model put at the TOP LEVEL of the body
+    # instead of nested under payload (live finding: read_back arriving as
+    # {"type":"read_back","value":"MG-2247"}); log_event folds them into payload.
+    model_config = ConfigDict(extra="allow")
     call_id: str = LIVE_CALL_ID
-    type: str  # transcript | tool_call | state_change | quote | escalation
+    type: str  # transcript | tool_call | state_change | quote | escalation | read_back
     payload: dict = {}
 
 
@@ -174,13 +178,19 @@ def report_lever_result(body: LeverResult) -> dict:
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
     db.insert_event(call_id, "state_change",
                     {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
+    # Per-question coverage: one event per tag covered for the first time this
+    # exchange — the War Room panel flips each required-question row to green (A1).
+    for tag in resp.get("newly_covered", []):
+        db.insert_event(call_id, "question_covered", {"tag": tag, "rung": body.lever})
     if resp.get("escalation") or resp.get("escalation_required"):
         db.insert_event(call_id, "escalation", {"reason": resp.get("notes", "")})
     # Coverage gap: the agent walked off a required-questions rung still missing
-    # tags on the second pass — surface it to the War Room (A1).
+    # tags on the second pass — surface it to the War Room (A1). The rung is the
+    # one being LEFT (body.lever, whose required tags went uncovered), not the
+    # rung just advanced to — so the panel can flag those exact rows coral.
     if resp.get("coverage_incomplete"):
         db.insert_event(call_id, "coverage_gap",
-                        {"rung": resp["current_rung"], "missing": resp["coverage_incomplete"]})
+                        {"rung": body.lever, "missing": resp["coverage_incomplete"]})
     # Topic parked: an impasse set aside as an open item (escalation last resort).
     if resp.get("parked"):
         db.insert_event(call_id, "topic_parked", resp["parked"])
@@ -203,9 +213,14 @@ def log_quote(body: LogEvent) -> dict:
 
 @router.post("/log_event")
 def log_event(body: LogEvent) -> dict:
+    # Tolerant payload: the model often puts fields at the TOP LEVEL of the body
+    # (e.g. {"type":"read_back","value":"MG-2247"}) instead of nested under
+    # payload, which used to store {}. Fold any unknown top-level keys in; an
+    # explicit payload wins on collisions.
+    payload = {**(body.__pydantic_extra__ or {}), **(body.payload or {})}
     call_id = _resolve_call_id(body.call_id)
     _ensure_call_row(call_id)
-    db.insert_event(call_id, body.type, body.payload)
+    db.insert_event(call_id, body.type, payload)
     return {"logged": True}
 
 
