@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getCall } from "../../lib/api";
 import { fetchCallEvents, subscribeToActiveCalls, subscribeToCall, subscribeToCallEvents } from "../../lib/realtime";
 import Logo from "../../components/Logo";
 import ReferenceChip from "../../components/ReferenceChip";
+import ScenarioPicker from "../../components/ScenarioPicker";
 import { LADDER_LABELS } from "../../lib/types";
 import type { ActiveCall, Call, CallEvent } from "../../lib/types";
 
@@ -154,30 +155,61 @@ function isCurrent(call: ActiveCall): boolean {
   return Date.now() - endedAt < RECENT_ENDED_MS;
 }
 
-function CallsOverview() {
+function CallsOverview({ caseId }: { caseId: string }) {
+  const router = useRouter();
   const [allCalls, setAllCalls] = useState<ActiveCall[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const calls = allCalls.filter(isCurrent);
   const anyEnded = allCalls.some((c) => c.status === "ended" || c.status === "failed");
 
-  useEffect(() => subscribeToActiveCalls(DEMO_CASE_UUID, setAllCalls), []);
+  useEffect(() => {
+    setAllCalls([]);
+    return subscribeToActiveCalls(caseId, setAllCalls);
+  }, [caseId]);
+
+  function onScenarioLoaded(newCaseId: string) {
+    setPickerOpen(false);
+    router.push(`/warroom?case_id=${newCaseId}`);
+  }
+
+  const scenarioStrip = (
+    <div className="wr-panel" style={{ marginBottom: 20 }}>
+      <button
+        onClick={() => setPickerOpen((o) => !o)}
+        style={{ background: "none", border: "none", padding: 0, cursor: "pointer", width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <h2 style={{ marginBottom: 0 }}>Scenarios{caseId !== DEMO_CASE_UUID && <span style={{ marginLeft: 8 }} className="wr-sim-badge">case: {caseId.slice(0, 8)}</span>}</h2>
+        <span style={{ color: "rgba(245,241,236,0.5)", fontSize: 12 }}>{pickerOpen ? "▾ hide" : "▸ switch scenario"}</span>
+      </button>
+      {pickerOpen && (
+        <div style={{ marginTop: 16 }}>
+          <ScenarioPicker onLoaded={onScenarioLoaded} />
+        </div>
+      )}
+    </div>
+  );
 
   if (calls.length === 0) {
     return (
-      <div className="wr-idle">
-        <div className="wr-idle-icon">☎</div>
-        <h2>Waiting for the calls</h2>
-        <p>
-          This overview renders directly off the <code>calls</code> and <code>call_events</code> Realtime
-          streams. Nothing here is scripted. Launch from a bill&apos;s Plan tab (&quot;Start the
-          calls&quot;) and every line appears here as it dials. Or open{" "}
-          <code>?call_id=&lt;id&gt;</code> to watch a single one.
-        </p>
-      </div>
+      <>
+        {scenarioStrip}
+        <div className="wr-idle">
+          <div className="wr-idle-icon">☎</div>
+          <h2>Waiting for the calls</h2>
+          <p>
+            This overview renders directly off the <code>calls</code> and <code>call_events</code> Realtime
+            streams. Nothing here is scripted. Launch from a bill&apos;s Plan tab (&quot;Start the
+            calls&quot;) and every line appears here as it dials. Or open{" "}
+            <code>?call_id=&lt;id&gt;</code> to watch a single one — or pick a different scenario above.
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
     <>
+      {scenarioStrip}
       {anyEnded && (
         <div className="wr-report-cta" role="status">
           <div className="wr-report-cta-text">
@@ -251,7 +283,11 @@ function AdvocateRoster() {
 }
 
 function WarRoom() {
-  const callId = useSearchParams().get("call_id");
+  const searchParams = useSearchParams();
+  const callId = searchParams.get("call_id");
+  // Scenario picker (decision #11): ?case_id= drives which case's calls this
+  // board shows; absent it, the Maya demo case (unchanged default behavior).
+  const caseId = searchParams.get("case_id") ?? DEMO_CASE_UUID;
   const [call, setCall] = useState<Call | null>(null);
   const [events, setEvents] = useState<CallEvent[]>([]);
   const [connected, setConnected] = useState(false);
@@ -329,7 +365,10 @@ function WarRoom() {
             {call.counterparty === "agent" && (
               <span className="wr-sim-badge" style={{ marginLeft: 10 }}>simulated persona · replay</span>
             )}
-            <a href="/warroom" style={{ marginLeft: 14, fontSize: 12, color: "rgba(245,241,236,0.5)" }}>
+            <a
+              href={caseId !== DEMO_CASE_UUID ? `/warroom?case_id=${caseId}` : "/warroom"}
+              style={{ marginLeft: 14, fontSize: 12, color: "rgba(245,241,236,0.5)" }}
+            >
               ← all calls
             </a>
           </>
@@ -350,7 +389,7 @@ function WarRoom() {
       <div className="warroom-layout">
         <div>
           {!callId ? (
-            <CallsOverview />
+            <CallsOverview caseId={caseId} />
           ) : events.length === 0 ? (
             <div className="wr-idle">
               <div className="wr-idle-icon pulse">●</div>

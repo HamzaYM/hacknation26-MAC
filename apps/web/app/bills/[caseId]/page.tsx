@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getDemoCase, launchCalls } from "../../../lib/api";
+import { useParams, useRouter } from "next/navigation";
+import { getBenchmarkReport, getCase, launchCalls } from "../../../lib/api";
 import { subscribeToCallsForCase } from "../../../lib/realtime";
 import { facilitySavings, money } from "../../../lib/savings";
 import { procedureLabel } from "../../../lib/procedures";
 import UploadCard from "../../../components/UploadCard";
 import ActionItemCard from "../../../components/ActionItemCard";
+import MultiplesTable from "../../../components/MultiplesTable";
 import { itemsForEntity } from "../../../lib/actionItems";
 import { FLAG_LABELS, LADDER_LABELS, PROVIDER_LADDER } from "../../../lib/types";
-import type { JobSpec, DerivedFlag, Call } from "../../../lib/types";
+import type { JobSpec, DerivedFlag, Call, BenchmarkReport } from "../../../lib/types";
 
 function findLineItem(spec: JobSpec, cpt?: string | null) {
   return spec.bill.line_items.find((li) => li.cpt === cpt);
@@ -32,7 +33,10 @@ const DEMO_CURRENT_RUNG = "benchmark_anchor";
 const WRAP_UP_REF = "MG-CONF-8842";
 
 export default function BillDetail() {
+  const params = useParams<{ caseId: string }>();
+  const caseId = params.caseId;
   const [spec, setSpec] = useState<JobSpec | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [tab, setTab] = useState<"diagnosis" | "plan" | "history" | "documents" | "actions">("diagnosis");
   const [cashedIn, setCashedIn] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -46,10 +50,20 @@ export default function BillDetail() {
   // live-call card only shows when a call genuinely is. "Start the calls" on
   // the Plan tab (POST /calls/launch) is what makes that happen.
   const [liveCall, setLiveCall] = useState<Call | null>(null);
+  // Per-line multiples table data (decision #10) — a generalized-pipeline
+  // deliverable landing in a parallel worktree; null while unavailable, and
+  // the Diagnosis tab degrades to flags-only (no crash, no broken UI).
+  const [benchmarkReport, setBenchmarkReport] = useState<BenchmarkReport | null>(null);
 
   useEffect(() => {
-    getDemoCase().then(setSpec);
-  }, []);
+    if (!caseId) return;
+    setSpec(null);
+    setLoadError(false);
+    getCase(caseId)
+      .then(setSpec)
+      .catch(() => setLoadError(true));
+    getBenchmarkReport(caseId).then(setBenchmarkReport);
+  }, [caseId]);
 
   useEffect(() => {
     if (!spec) return;
@@ -70,6 +84,15 @@ export default function BillDetail() {
     return () => clearTimeout(t);
   }, [wrappingUp]);
 
+  if (loadError) {
+    return (
+      <p className="todo">
+        Couldn&apos;t load this case (<span className="mono-figure">{caseId}</span>). Either the API at :8000
+        isn&apos;t running, or this case hasn&apos;t been created there yet. Go back to{" "}
+        <a href="/bills">your bills</a> and try again.
+      </p>
+    );
+  }
   if (!spec) return <p className="todo">Loading case…</p>;
 
   const savings = facilitySavings(spec);
@@ -165,7 +188,7 @@ export default function BillDetail() {
               <button className={`tab ${tab === "documents" ? "active" : ""}`} onClick={() => setTab("documents")}>Documents</button>
             </div>
 
-            {tab === "diagnosis" && <DiagnosisTab spec={spec} />}
+            {tab === "diagnosis" && <DiagnosisTab spec={spec} benchmarkReport={benchmarkReport} />}
             {tab === "plan" && <PlanTab spec={spec} cashedIn={cashedIn} wrappingUp={wrappingUp} liveCall={liveCall} />}
             {tab === "history" && <HistoryTab spec={spec} cashedIn={cashedIn} />}
             {tab === "actions" && (
@@ -199,8 +222,8 @@ function ActionsTab({ items, onComplete }: { items: ReturnType<typeof itemsForEn
   );
 }
 
-function DiagnosisTab({ spec }: { spec: JobSpec }) {
-  const hasNsa = spec.derived_flags.some((f) => f.type === "nsa");
+function DiagnosisTab({ spec, benchmarkReport }: { spec: JobSpec; benchmarkReport: BenchmarkReport | null }) {
+  const hasNsa = spec.derived_flags.some((f) => f.type === "nsa" || f.type === "nsa_balance_billing");
   const eobMismatch = spec.derived_flags.find((f) => f.type === "eob_mismatch");
   const markupFlag = spec.derived_flags.find((f) => f.type === "markup");
   const totalFlagged = spec.derived_flags
@@ -227,6 +250,19 @@ function DiagnosisTab({ spec }: { spec: JobSpec }) {
       {spec.derived_flags.map((flag, i) => (
         <Finding key={i} flag={flag} spec={spec} />
       ))}
+
+      {benchmarkReport && (
+        <>
+          <h2 style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-tertiary)", margin: "24px 0 8px" }}>
+            Per-line benchmarks
+          </h2>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+            Every line against Medicare, a fair band, and what&apos;s available in {benchmarkReport.hospital}&apos;s
+            posted rates. Lines priced above the RAND overcharge threshold are highlighted.
+          </p>
+          <MultiplesTable report={benchmarkReport} />
+        </>
+      )}
     </div>
   );
 }
@@ -250,7 +286,10 @@ function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
           {flag.type === "upcode" && `Diagnosis and documentation support a lower visit level (${(flag.evidence.supported as string) ?? "–"}) than what was billed.`}
           {flag.type === "unbundle" && `Component tests total ${money(flag.evidence.components_billed as number)}; the bundled panel code prices at ${money(flag.evidence.bundled as number)}.`}
           {flag.type === "eob_mismatch" && `Your bill shows ${money(flag.evidence.bill as number)}; your insurer's EOB shows ${money(flag.evidence.eob as number)} owed.`}
-          {(flag.type === "nsa" || flag.type === "markup" || flag.type === "phantom") && "See dossier citation for this line."}
+          {flag.type === "absent_from_chargemaster" &&
+            "Not found on the hospital's own posted standard charges for this code — worth asking for the chargemaster reference; not an accusation of wrongdoing."}
+          {["nsa", "nsa_balance_billing", "markup", "phantom", "denial", "units_error"].includes(flag.type) &&
+            "See dossier citation for this line."}
         </div>
       </div>
     </div>

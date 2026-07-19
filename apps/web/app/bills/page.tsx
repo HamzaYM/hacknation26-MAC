@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyCase } from "../../lib/api";
+import { useRouter } from "next/navigation";
+import { createCase, getMyCase, parseDocument } from "../../lib/api";
+import type { ParseDocumentResponse } from "../../lib/api";
 import { useSession } from "../../lib/auth";
 import { entitySavings, facilitySavings, money } from "../../lib/savings";
 import { procedureLabel } from "../../lib/procedures";
 import { billStatus, sortByStatus, STATUS_META, type BillStatus } from "../../lib/billStatus";
 import UploadCard from "../../components/UploadCard";
+import ParsedDocPreview from "../../components/ParsedDocPreview";
 import { DeadlineStrip, daysLeft } from "../../components/DeadlineStrip";
 import type { JobSpec, Entity } from "../../lib/types";
-
-interface PendingBill {
-  id: string;
-  docNames: string[];
-  parsing: boolean;
-}
 
 const SECTION_ORDER: BillStatus[] = ["awaiting_you", "in_progress", "queued"];
 const SECTION_LABEL: Record<BillStatus, string> = {
@@ -48,9 +45,9 @@ function nextLine(entity: Entity, spec: JobSpec): string {
 export default function BillList() {
   const session = useSession();
   const email = session?.user?.email;
+  const router = useRouter();
   const [spec, setSpec] = useState<JobSpec | null>(null);
   const [error, setError] = useState(false);
-  const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -70,18 +67,6 @@ export default function BillList() {
         0
       )
     : 0;
-
-  function addPendingBill(docNames: string[]) {
-    const id = `pending-${Date.now()}`;
-    setPendingBills((prev) => [...prev, { id, docNames, parsing: false }]);
-    setCreating(false);
-    // "start parsing" — simulated; real extraction isn't wired to the vision
-    // pipeline yet (data/pipeline/README.md TODO J/Hamza). This never
-    // claims to finish, since we have nothing real to show once it "does."
-    setTimeout(() => {
-      setPendingBills((prev) => prev.map((b) => (b.id === id ? { ...b, parsing: true } : b)));
-    }, 900);
-  }
 
   const sortedEntities = spec ? sortByStatus(spec.entities) : [];
 
@@ -108,7 +93,10 @@ export default function BillList() {
             + Create new bill
           </button>
         ) : (
-          <CreateBillPanel onCancel={() => setCreating(false)} onCreate={addPendingBill} />
+          <CreateBillPanel
+            onCancel={() => setCreating(false)}
+            onCreated={(caseId) => router.push(`/bills/${caseId}`)}
+          />
         )}
       </div>
 
@@ -121,8 +109,7 @@ export default function BillList() {
 
       {SECTION_ORDER.map((status) => {
         const entities = sortedEntities.filter((e) => billStatus(e) === status);
-        const pendingHere = status === "queued" ? pendingBills : [];
-        if (entities.length === 0 && pendingHere.length === 0) return null;
+        if (entities.length === 0) return null;
         return (
           <div key={status} style={{ marginBottom: 28 }}>
             <div className="section-label">
@@ -130,9 +117,6 @@ export default function BillList() {
             </div>
             <div className="entity-grid">
               {entities.map((entity) => spec && <EntityCard key={entity.name} entity={entity} spec={spec} />)}
-              {pendingHere.map((pb) => (
-                <PendingBillCard key={pb.id} bill={pb} />
-              ))}
             </div>
           </div>
         );
@@ -141,10 +125,59 @@ export default function BillList() {
   );
 }
 
-function CreateBillPanel({ onCancel, onCreate }: { onCancel: () => void; onCreate: (docNames: string[]) => void }) {
-  const [bill, setBill] = useState<string | null>(null);
-  const [eob, setEob] = useState<string | null>(null);
-  const canCreate = bill || eob;
+type DocKind = "bill" | "eob";
+
+type SlotState =
+  | { status: "idle" }
+  | { status: "parsing"; fileName: string }
+  | { status: "error"; fileName: string; file: File }
+  | { status: "done"; fileName: string; result: ParseDocumentResponse };
+
+// Real upload → parse wiring: POST /cases (falls back to a client-generated
+// id if that endpoint isn't live yet on this build — a parallel worktree
+// is landing it) then POST /documents/parse per file against that case_id.
+// Line items, reconciliation, and flags all come back from the real engine
+// (ParsedDocPreview) — nothing here is simulated.
+function CreateBillPanel({ onCancel, onCreated }: { onCancel: () => void; onCreated: (caseId: string) => void }) {
+  const [caseId, setCaseId] = useState<string | null>(null);
+  const [slots, setSlots] = useState<Record<DocKind, SlotState>>({
+    bill: { status: "idle" },
+    eob: { status: "idle" },
+  });
+
+  async function ensureCaseId(): Promise<string> {
+    if (caseId) return caseId;
+    try {
+      const { case_id } = await createCase();
+      setCaseId(case_id);
+      return case_id;
+    } catch {
+      // POST /cases isn't live on this build yet — fall back to a
+      // client-generated id so the upload still lands somewhere; the case
+      // itself won't resolve on /bills/[caseId] until that endpoint merges.
+      const fallback =
+        typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `case-${Date.now()}`;
+      setCaseId(fallback);
+      return fallback;
+    }
+  }
+
+  function setSlot(kind: DocKind, state: SlotState) {
+    setSlots((prev) => ({ ...prev, [kind]: state }));
+  }
+
+  async function parse(kind: DocKind, file: File) {
+    setSlot(kind, { status: "parsing", fileName: file.name });
+    try {
+      const cid = await ensureCaseId();
+      const result = await parseDocument(file, kind, cid);
+      setSlot(kind, { status: "done", fileName: file.name, result });
+    } catch {
+      setSlot(kind, { status: "error", fileName: file.name, file });
+    }
+  }
+
+  const anyDone = slots.bill.status === "done" || slots.eob.status === "done";
 
   return (
     <div className="card">
@@ -153,51 +186,94 @@ function CreateBillPanel({ onCancel, onCreate }: { onCancel: () => void; onCreat
         Upload the medical bill and EOB. One is enough to start, add the other later.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-        <UploadCard
+        <BillDocSlot
+          kind="bill"
           title="Medical bill"
           hint="The itemized bill from the provider"
-          onSelect={(f) => setBill(f.name)}
           demoFile={{ url: "/demo-docs/mercy_general_bill.pdf", name: "mercy_general_bill.pdf" }}
+          state={slots.bill}
+          onFile={(f) => parse("bill", f)}
+          onReset={() => setSlot("bill", { status: "idle" })}
         />
-        <UploadCard
+        <BillDocSlot
+          kind="eob"
           title="Explanation of Benefits"
           hint="The EOB from your insurer"
-          onSelect={(f) => setEob(f.name)}
           demoFile={{ url: "/demo-docs/bcbs_eob.pdf", name: "bcbs_eob.pdf" }}
+          state={slots.eob}
+          onFile={(f) => parse("eob", f)}
+          onReset={() => setSlot("eob", { status: "idle" })}
         />
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          className="btn btn-primary"
-          disabled={!canCreate}
-          onClick={() => onCreate([bill, eob].filter((x): x is string => !!x))}
-        >
-          Create bill
-        </button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {anyDone && caseId && (
+          <button className="btn btn-primary" onClick={() => onCreated(caseId)}>
+            View parsed bill →
+          </button>
+        )}
         <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
 }
 
-function PendingBillCard({ bill }: { bill: PendingBill }) {
-  return (
-    <div className="entity-card" style={{ cursor: "default" }}>
+function BillDocSlot({
+  kind,
+  title,
+  hint,
+  demoFile,
+  state,
+  onFile,
+  onReset,
+}: {
+  kind: DocKind;
+  title: string;
+  hint: string;
+  demoFile: { url: string; name: string };
+  state: SlotState;
+  onFile: (file: File) => void;
+  onReset: () => void;
+}) {
+  if (state.status === "idle") {
+    return <UploadCard title={title} hint={hint} onSelect={onFile} demoFile={demoFile} />;
+  }
+  if (state.status === "parsing") {
+    return (
+      <div className="document-card" style={{ marginBottom: 0 }}>
+        <div className="document-icon">📄</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600 }}>{state.fileName}</div>
+          <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
+            <span className="live-dot" style={{ marginRight: 6 }}><span className="dot" /></span>
+            Reading the document: extracting line items and checking them against your case records…
+          </div>
+        </div>
+        <span className="pill pill-muted">Parsing</span>
+      </div>
+    );
+  }
+  if (state.status === "error") {
+    return (
       <div>
-        <h3>New bill</h3>
-        <div className="meta">{bill.docNames.join(", ")}</div>
+        <p className="todo" style={{ marginBottom: 8 }}>
+          Couldn&apos;t parse <strong>{state.fileName}</strong>. The API at :8000 didn&apos;t answer.
+          Your file is still here; nothing was lost.
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-secondary" onClick={() => onFile(state.file)}>Try again</button>
+          <button
+            type="button"
+            onClick={onReset}
+            style={{ background: "none", border: "none", color: "var(--text-tertiary)", fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
+          >
+            Choose a different file
+          </button>
+        </div>
       </div>
-      <div className="balance-block">
-        <span className="pill pill-muted">Queued</span>
-      </div>
-      <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-        {bill.parsing ? (
-          <span><span className="live-dot" style={{ marginRight: 6 }}><span className="dot" /></span>Parsing your documents…</span>
-        ) : (
-          "Uploaded · starting parse"
-        )}
-      </div>
-    </div>
+    );
+  }
+  return (
+    <ParsedDocPreview kind={kind} fileName={state.fileName} result={state.result} onReset={onReset} />
   );
 }
 
