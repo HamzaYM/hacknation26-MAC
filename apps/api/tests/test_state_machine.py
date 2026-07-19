@@ -101,3 +101,11 @@ def test_collections_route_walks_the_collections_ladder(machine):
     machine.ensure_call("call-c", dossier)
     resp = machine.advance("call-c", "diagnostic_questions", "accepted")
     assert resp["next_move"] == "debt_validation_posture"
+
+
+def test_stonewall_escalation_capped_at_two(machine, call):
+    machine.advance(call, "line_item_disputes", "stonewalled")
+    machine.advance(call, "reach_authority", "stonewalled")
+    resp = machine.advance(call, "reach_authority", "stonewalled")
+    assert resp["next_move"] == PROVIDER_LADDER[-1]  # escalate_or_exit
+    assert "escalation limit" in resp["notes"]

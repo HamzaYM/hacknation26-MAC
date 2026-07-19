@@ -1,8 +1,7 @@
 {
-  "_comment": "Seed for the `personas` table (supabase/migrations/0001_init.sql). Each object = one row; `hidden_params` is the §12 persona_config 'hidden concession function' — NEVER shown to the negotiator agent, consumed only by the counterparty persona agent + the eval harness. All monetary numbers reconcile with data/seed/demo_answer_key.json. Concession discipline: price/outcome moves ONLY when the agent earns it (the anti-'screenplay' defense). H3-FREEZE.",
-  "_reconciliation": "human_facility_supervisor.monetary_floor 1500 = answer_key.negotiation_arc.human_rep_floor; duplicate concession -> 3875 = after_duplicate_concession; benchmark cite -> 2400 = rep_counter (cash price cited = answer_key.expected_totals.mrf_cash_total $2,633.25, real MGH); settlement 1650 = settlement. collections.monetary_floor 245 = 25% of the $980 lab bill (PRD §3).",
-  "_ids_note": "elevenlabs_agent_id + twilio_number are provisioning placeholders — Hamza fills them at H0/H1 when the persona agents and inbound numbers are created. Voice recommendations are starting points; confirm each voice exists in the team's ElevenLabs library.",
-
+  "_comment": "Seed for the `personas` table (supabase/migrations/0001_init.sql). Each object = one row; `hidden_params` is the \u00a712 persona_config 'hidden concession function' \u2014 NEVER shown to the negotiator agent, consumed only by the counterparty persona agent + the eval harness. All monetary numbers reconcile with data/seed/demo_answer_key.json. Concession discipline: price/outcome moves ONLY when the agent earns it (the anti-'screenplay' defense). H3-FREEZE.",
+  "_reconciliation": "human_facility_supervisor.monetary_floor 1500 = answer_key.negotiation_arc.human_rep_floor; duplicate concession -> 3875 = after_duplicate_concession; benchmark cite -> 2400 = rep_counter (cash price cited = answer_key.expected_totals.mrf_cash_total $2,633.25, real MGH); settlement 1650 = settlement. collections.monetary_floor 245 = 25% of the $980 lab bill (PRD \u00a73).",
+  "_ids_note": "elevenlabs_agent_id + twilio_number are provisioning placeholders \u2014 Hamza fills them at H0/H1 when the persona agents and inbound numbers are created. Voice recommendations are starting points; confirm each voice exists in the team's ElevenLabs library.",
   "personas": [
     {
       "key": "stonewaller",
@@ -18,15 +17,30 @@
         "personal_authority": "none",
         "hardship_value_pct": 0,
         "lever_unlocks": [
-          { "lever": "factual_question", "response": "answers precisely if asked (balance, whether itemized bill was sent, that a financial-assistance dept exists)", "grants": null },
-          { "lever": "escalation_request", "condition": "caller stays polite AND explicitly asks for someone with authority", "response": "transfers to a supervisor", "grants": "transfer" }
+          {
+            "lever": "factual_question",
+            "response": "answers precisely if asked (balance, whether itemized bill was sent, that a financial-assistance dept exists)",
+            "grants": null
+          },
+          {
+            "lever": "escalation_request",
+            "condition": "caller stays polite AND explicitly asks for someone with authority",
+            "response": "transfers to a supervisor",
+            "grants": "transfer"
+          },
+          {
+            "lever": "error_dispute_post_transfer",
+            "condition": "AFTER the one allowed supervisor transfer, caller cites exact code + date of a duplicate",
+            "response": "as supervisor 'Pat': concedes the duplicate line, gives ref MG-ADJ-2247, then wraps the call",
+            "grants": "line_correction"
+          }
         ],
-        "escalation_behavior": "transfer ONLY on a polite + explicit authority ask; pushiness without the ask is not rewarded",
+        "escalation_behavior": "transfer ONLY on a polite + explicit authority ask; pushiness without the ask is not rewarded; transfer at most ONCE per call \u2014 post-transfer, the same agent answers as supervisor Pat (role switch, never a loop)",
         "hang_up_condition": "after ~4 stonewalled turns if the caller keeps pushing WITHOUT the escalation ask",
         "proves": "friction + hang-up survival -> negotiator exits with a documented_decline (next action: callback)"
       },
       "voice": {
-        "recommended_voice": "a flatter, hurried male/neutral stock voice (e.g. 'Bill' or 'Eric') — deliberately NOT warm",
+        "recommended_voice": "a flatter, hurried male/neutral stock voice (e.g. 'Bill' or 'Eric') \u2014 deliberately NOT warm",
         "model": "eleven_flash_v2_5",
         "stability": 0.4,
         "speed": 1.1,
@@ -47,14 +61,33 @@
         "monetary_floor": null,
         "hardship_value_pct": 0,
         "lever_unlocks": [
-          { "lever": "statutory_501r", "response": "offers to open a FAP / financial-assistance application", "grants": "charity_app_initiated" },
-          { "lever": "statutory_nsa", "condition": "if the charge is NSA-applicable", "response": "escalates internally", "grants": "internal_review" },
-          { "lever": "benchmark_cite", "condition": "cites the group's OWN posted cash price OR the Medicare rate for the EXACT code (vague 'prices are high' does nothing)", "response": "authorizes matching the cash rate", "grants": "cash_rate_match" },
-          { "lever": "error_dispute", "condition": "caller cites code + date + evidence", "response": "corrects the specific coding error", "grants": "line_correction" }
+          {
+            "lever": "statutory_501r",
+            "response": "offers to open a FAP / financial-assistance application",
+            "grants": "charity_app_initiated"
+          },
+          {
+            "lever": "statutory_nsa",
+            "condition": "if the charge is NSA-applicable",
+            "response": "escalates internally",
+            "grants": "internal_review"
+          },
+          {
+            "lever": "benchmark_cite",
+            "condition": "cites the group's OWN posted cash price OR the Medicare rate for the EXACT code (vague 'prices are high' does nothing)",
+            "response": "authorizes matching the cash rate",
+            "grants": "cash_rate_match"
+          },
+          {
+            "lever": "error_dispute",
+            "condition": "caller cites code + date + evidence",
+            "response": "corrects the specific coding error",
+            "grants": "line_correction"
+          }
         ],
         "asks_are_you_a_robot": true,
         "robot_reaction": "honest confirmation + competence -> continues professionally; evasion/denial -> becomes hostile and unmovable",
-        "escalation_behavior": "no transfer needed — is the authority; moves only on statute/benchmark/error, never on emotion",
+        "escalation_behavior": "no transfer needed \u2014 is the authority; moves only on statute/benchmark/error, never on emotion",
         "hang_up_condition": null,
         "proves": "disclosure grace under 'are you a robot?' (C1) + the statutory lever doing real work"
       },
@@ -64,7 +97,7 @@
         "stability": 0.6,
         "speed": 0.95,
         "similarity": 0.8,
-        "profile_notes": "precise, never interrupts, quotes policy verbatim; almost no fillers; downward, final intonation — reads as bureaucratic authority"
+        "profile_notes": "precise, never interrupts, quotes policy verbatim; almost no fillers; downward, final intonation \u2014 reads as bureaucratic authority"
       }
     },
     {
@@ -80,9 +113,24 @@
         "monetary_floor": null,
         "hardship_value_pct": 0,
         "lever_unlocks": [
-          { "lever": "direct_discount_ask", "response": "grants a one-time courtesy adjustment", "grants": "discount", "discount_pct": 5, "max_uses": 1 },
-          { "lever": "escalation_request", "response": "transfers to a supervisor who honors error disputes (duplicate/unbundle at face value with code+date) and can approve a prompt-pay discount", "grants": "transfer", "supervisor_prompt_pay_pct": 15 },
-          { "lever": "statutory_501r", "response": "warmly provides the FAP application info", "grants": "charity_app_initiated" }
+          {
+            "lever": "direct_discount_ask",
+            "response": "grants a one-time courtesy adjustment",
+            "grants": "discount",
+            "discount_pct": 5,
+            "max_uses": 1
+          },
+          {
+            "lever": "escalation_request",
+            "response": "transfers to a supervisor who honors error disputes (duplicate/unbundle at face value with code+date) and can approve a prompt-pay discount",
+            "grants": "transfer",
+            "supervisor_prompt_pay_pct": 15
+          },
+          {
+            "lever": "statutory_501r",
+            "response": "warmly provides the FAP application info",
+            "grants": "charity_app_initiated"
+          }
         ],
         "escalation_behavior": "if the caller mistakes sympathy for progress and never asks to escalate, the call ends warmly with nothing gained (a trap for weak negotiators)",
         "hang_up_condition": null,
@@ -109,17 +157,30 @@
       "hidden_params": {
         "balance": 980.0,
         "monetary_floor": 245.0,
-        "monetary_floor_note": "25% of the $980 lab bill — never below, never volunteered",
+        "monetary_floor_note": "25% of the $980 lab bill \u2014 never below, never volunteered",
         "anchor_pct": 85,
         "hardship_value_pct": 0,
         "lever_unlocks": [
-          { "lever": "lump_sum_today", "response": "concedes in shrinking steps against cash-today offers; worth 15-20 extra percentage points of movement vs. a payment plan", "grants": "settlement" },
-          { "lever": "debt_validation", "response": "dodges once, then complies when pressed (did you buy this debt? interest accruing? predetermined settlement floor?)", "grants": "validation" },
-          { "lever": "written_pif_demand", "condition": "caller explicitly demands paid-in-full / pay-for-delete in writing BEFORE payment", "response": "agrees; otherwise stays vague", "grants": "written_confirmation" }
+          {
+            "lever": "lump_sum_today",
+            "response": "concedes in shrinking steps against cash-today offers; worth 15-20 extra percentage points of movement vs. a payment plan",
+            "grants": "settlement"
+          },
+          {
+            "lever": "debt_validation",
+            "response": "dodges once, then complies when pressed (did you buy this debt? interest accruing? predetermined settlement floor?)",
+            "grants": "validation"
+          },
+          {
+            "lever": "written_pif_demand",
+            "condition": "caller explicitly demands paid-in-full / pay-for-delete in writing BEFORE payment",
+            "response": "agrees; otherwise stays vague",
+            "grants": "written_confirmation"
+          }
         ],
         "escalation_behavior": "responds to lump-sum economics + month-end quota pressure, NOT to hardship stories",
         "hang_up_condition": null,
-        "proves": "strategy switching (PRD §8.3): the negotiator drops hardship framing entirely and plays lump-sum economics + quota timing"
+        "proves": "strategy switching (PRD \u00a78.3): the negotiator drops hardship framing entirely and plays lump-sum economics + quota timing"
       },
       "voice": {
         "recommended_voice": "a fast, transactional, harder-edged male voice (e.g. 'Chris' or 'Liam')",
@@ -135,7 +196,7 @@
       "name": "Pat",
       "style": "human_role_play",
       "entity": "facility",
-      "role": "billing SUPERVISOR — LIVE HUMAN (J plays; Suzy backup)",
+      "role": "billing SUPERVISOR \u2014 LIVE HUMAN (J plays; Suzy backup)",
       "prompt_file": "prompts/personas/human_role_play_guide.md",
       "is_human": true,
       "elevenlabs_agent_id": null,
@@ -144,24 +205,41 @@
         "monetary_floor": 1500.0,
         "hardship_value_pct": 0,
         "lever_unlocks": [
-          { "lever": "error_dispute", "condition": "duplicate 71046 cited with code + date", "response": "removes one", "grants": "line_correction", "balance_after": 3875.0 },
-          { "lever": "benchmark_cite", "condition": "cites BOTH Medicare ($438 total) AND the hospital's own posted cash price ($2,633.25)", "response": "grumbles, counters", "grants": "counter", "counter_amount": 2400.0 },
-          { "lever": "lump_sum_settlement", "condition": "offer >= $1,500, asked as paid-in-full with supervisor framing", "response": "puts caller on hold, returns approved", "grants": "settlement", "settlement_amount": 1650.0 }
+          {
+            "lever": "error_dispute",
+            "condition": "duplicate 71046 cited with code + date",
+            "response": "removes one",
+            "grants": "line_correction",
+            "balance_after": 3875.0
+          },
+          {
+            "lever": "benchmark_cite",
+            "condition": "cites BOTH Medicare ($438 total) AND the hospital's own posted cash price ($2,633.25)",
+            "response": "grumbles, counters",
+            "grants": "counter",
+            "counter_amount": 2400.0
+          },
+          {
+            "lever": "lump_sum_settlement",
+            "condition": "offer >= $1,500, asked as paid-in-full with supervisor framing",
+            "response": "puts caller on hold, returns approved",
+            "grants": "settlement",
+            "settlement_amount": 1650.0
+          }
         ],
         "escalation_behavior": "if the agent skips the ladder (jumps straight to a lowball), refuse flat and get gruffer",
-        "closeout": "always give reference number MG-ADJ-2247, name 'Pat', agreed action, 'you'll see it in 3-5 business days' — if the agent forgets to ask, the eval flags it",
+        "closeout": "always give reference number MG-ADJ-2247, name 'Pat', agreed action, 'you'll see it in 3-5 business days' \u2014 if the agent forgets to ask, the eval flags it",
         "proves": "the live showstopper: a real price move on a real Twilio call, every step caused by earned leverage"
       },
       "voice": {
-        "recommended_voice": "LIVE HUMAN — no TTS voice",
+        "recommended_voice": "LIVE HUMAN \u2014 no TTS voice",
         "model": null,
         "profile_notes": "gruff-then-movable; inject 2-3 frictions per run (one interruption over the codes, 'how do I know you're authorized?', a skeptical 'am I talking to a robot?', one long 'let me pull that up')"
       }
     }
   ],
-
   "negotiator_voice": {
-    "_note": "The advocate agent 'Alex' — not a persona, but its voice spec lives here for one-stop provisioning. See prompts/negotiator_system.md + verbalization_guide.md.",
+    "_note": "The advocate agent 'Alex' \u2014 not a persona, but its voice spec lives here for one-stop provisioning. See prompts/negotiator_system.md + verbalization_guide.md.",
     "recommended_voice": "a warm-but-competent professional voice; research picks: 'Stuart' (professional & friendly) or 'Archer' (grounded, friendly, with charm)",
     "model": "eleven_flash_v2_5",
     "stability": 0.55,
@@ -169,22 +247,21 @@
     "similarity": 0.75,
     "profile_notes": "competence leads (high-severity call); ~150 wpm, 4-5 short pauses/min; pitch-down + falling intonation on numbers and the settlement ask; warmer during rapport; imperfections per imperfection_style.md rendered naturally at this stability",
     "humanization_provisioning_notes": {
-      "_for": "Hamza — apply at provisioning (scripts/provision_elevenlabs.py / medical_bills.yaml voice block)",
-      "voice_casting": "Prefer a voice with real character texture — slight rasp, age, a little mouth noise — over a pristine studio voice. Pristine audio on a phone line is itself a bot tell.",
+      "_for": "Hamza \u2014 apply at provisioning (scripts/provision_elevenlabs.py / medical_bills.yaml voice block)",
+      "voice_casting": "Prefer a voice with real character texture \u2014 slight rasp, age, a little mouth noise \u2014 over a pristine studio voice. Pristine audio on a phone line is itself a bot tell.",
       "per_turn_stability": "If per-turn settings are ever wired: drop stability ~0.55 -> ~0.45 on rapport/small-talk turns for more prosodic life, hold >=0.6 on number recitals and the AI-confirmation so they stay clean. Static 0.55 is the safe default until then."
     }
   },
-
   "negotiator_conduct": {
     "_note": "Behavioral guiding principles for the negotiator agent 'Alex'. Mirrored into prompts/negotiator_system.md so they actually reach the agent (this block is for provisioning reference).",
     "call_efficiency": {
-      "principle": "Respect the rep's time and keep the call moving — under ~10 minutes is ideal; beyond ~15-20 minutes is too long. No hard cutoff or timer; treat these as soft guides, not rules.",
+      "principle": "Respect the rep's time and keep the call moving \u2014 under ~10 minutes is ideal; beyond ~15-20 minutes is too long. No hard cutoff or timer; treat these as soft guides, not rules.",
       "how": "Get to the account and the ask quickly; don't over-dwell on rapport or small talk; drive toward this call's one structured outcome and, once it's secured (or clearly won't be this call), capture the reference number + rep name and close. Prefer scheduling a callback over letting a call drag.",
-      "pushiness": "It's fine to be a bit pushy on PACE — politely reassert the ask, name the next step, gently move past stalls to keep momentum. This is about tempo, NOT tone: stay polite-persistent and low-power (per §8.4); never become aggressive, angry, or rude, which backfires for a disclosed AI. Pushy about moving forward, warm about how."
+      "pushiness": "It's fine to be a bit pushy on PACE \u2014 politely reassert the ask, name the next step, gently move past stalls to keep momentum. This is about tempo, NOT tone: stay polite-persistent and low-power (per \u00a78.4); never become aggressive, angry, or rude, which backfires for a disclosed AI. Pushy about moving forward, warm about how."
     },
     "turn_length": {
-      "principle": "Speak in short, one-beat turns — a phone call is bit-by-bit back-and-forth, not a monologue.",
-      "how": "One point or one ask per turn, then stop and let the rep respond. Never stack multiple asks (remove the duplicate + hold the account + name + reference + date) into a single breath — get through the checklist across several short exchanges. Usually 1-3 sentences; often one. Exception: the closing recap."
+      "principle": "Speak in short, one-beat turns \u2014 a phone call is bit-by-bit back-and-forth, not a monologue.",
+      "how": "One point or one ask per turn, then stop and let the rep respond. Never stack multiple asks (remove the duplicate + hold the account + name + reference + date) into a single breath \u2014 get through the checklist across several short exchanges. Usually 1-3 sentences; often one. Exception: the closing recap."
     },
     "stall_pushback": {
       "principle": "Don't passively accept a brush-off or an unreasonable wait (e.g., '20 working days', a vague 'I'll try', a refused hold).",
@@ -192,11 +269,11 @@
     },
     "no_over_repetition": {
       "principle": "Make any single point or ask at most ~3 times, then move on.",
-      "how": "Rephrase rather than parrot; if it still isn't landing after ~3 tries, pivot — escalate, switch levers, or bank a documented outcome. Repeating past that reads as desperate and burns the call."
+      "how": "Rephrase rather than parrot; if it still isn't landing after ~3 tries, pivot \u2014 escalate, switch levers, or bank a documented outcome. Repeating past that reads as desperate and burns the call."
     },
     "register": {
-      "principle": "Casual and warm, not corporate/formal — sound like a real person who read their bill, not a call-center script.",
-      "how": "Contractions, everyday words, plain phrasing ('take one off', not 'remove the duplicative line item'). Ease into the call slowly; don't front-load all the info. Lean on filler words per imperfection_style.md — but keep numbers, codes, and the AI-confirmation clean. Name a charge as treatment → date → code → cost (verbalization_guide.md)."
+      "principle": "Casual and warm, not corporate/formal \u2014 sound like a real person who read their bill, not a call-center script.",
+      "how": "Contractions, everyday words, plain phrasing ('take one off', not 'remove the duplicative line item'). Ease into the call slowly; don't front-load all the info. Lean on filler words per imperfection_style.md \u2014 but keep numbers, codes, and the AI-confirmation clean. Name a charge as treatment \u2192 date \u2192 code \u2192 cost (verbalization_guide.md)."
     }
   }
 }
