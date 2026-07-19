@@ -91,3 +91,28 @@ def test_error_lever_asks_equal_flag_impacts(dossier):
 def test_citations_cover_every_corrected_cpt(answer_key, dossier):
     for cpt in answer_key["demo_cpt_list"]:
         assert any(f"CPT {cpt}" in c for c in dossier.citations), f"no citation for {cpt}"
+
+
+# ── dual-framing ask surface (decision #10), built from a BenchmarkReport ──
+def test_dossier_ask_table_and_band_framing_are_none_by_default(dossier):
+    """Backward compatible: no BenchmarkReport supplied → fields stay None."""
+    assert dossier.ask_table is None and dossier.band_framing is None
+
+
+def test_dossier_exposes_per_line_ask_table_from_benchmark_report():
+    from app.engine.anchors import build_benchmark_report
+    from app.engine.dossier import build_dossier
+    from app.engine.lookup import FIXTURE_HOSPITAL, FixtureLookup
+
+    spec = demo_job_spec()
+    spec.bill.facility_name = FIXTURE_HOSPITAL  # so the fixture lookup resolves rates
+    report = build_benchmark_report(spec, FixtureLookup(), load_vertical())
+    flags = detect_flags(spec, load_vertical(), demo_benchmarks())
+    d = build_dossier(spec, flags, demo_benchmarks(), load_vertical(),
+                      entity=spec.entities[0], benchmark_report=report)
+    assert d.ask_table is not None and len(d.ask_table) == len(report["lines"])
+    row = d.ask_table[0]
+    assert {"code", "billed", "medicare_multiple", "fair_band", "excess_above_band",
+            "rand_flag", "coverage"} <= set(row)
+    assert d.band_framing["ask_anchor"] == report["totals"]["ask_anchor"]
+    assert d.band_framing["medicare_multiple"] == report["totals"]["medicare_multiple"]
