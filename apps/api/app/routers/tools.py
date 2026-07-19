@@ -41,6 +41,22 @@ def _ensure_call_row(call_id: str | None) -> dict | None:
     return row
 
 
+def _resolve_call_id(call_id: str | None) -> str:
+    """ElevenLabs webhook tools don't know our internal call ids, so tool hits
+    from real PSTN calls arrive with the LIVE_CALL_ID default. When a real call
+    is ringing/live (conversation id set), attach them to it instead — and flip
+    ringing → live on first contact so the War Room picks it up immediately."""
+    if call_id and call_id != LIVE_CALL_ID:
+        return call_id
+    row = db.get_active_real_call() if db.available() else None
+    if row:
+        resolved = str(row["id"])
+        if row.get("status") == "ringing":
+            db.update_call_status(resolved, "live")
+        return resolved
+    return LIVE_CALL_ID
+
+
 def _dossier_for_call(row: dict | None) -> StrategyDossier:
     """The launched call's persisted dossier when present; demo fixture fallback."""
     if row and row.get("dossier_id"):
@@ -80,7 +96,7 @@ def get_case_brief(body: dict) -> dict:
     call_id, the launched call's stored case resolves the spec (fixture
     fallback: Maya's demo case)."""
     spec_dict = DEMO_JOB_SPEC
-    call_id = (body or {}).get("call_id")
+    call_id = _resolve_call_id((body or {}).get("call_id"))
     if call_id:
         row = db.get_call(call_id)
         if row is not None:
@@ -106,17 +122,18 @@ def report_lever_result(body: LeverResult) -> dict:
 
     Per-call state is created on first contact from the call's persisted
     dossier (real launches) or the demo dossier (fixtures)."""
-    row = _ensure_call_row(body.call_id)
-    state_machine.ensure_call(body.call_id, _dossier_for_call(row))
+    call_id = _resolve_call_id(body.call_id)
+    row = _ensure_call_row(call_id)
+    state_machine.ensure_call(call_id, _dossier_for_call(row))
     resp = state_machine.advance(
-        body.call_id, body.lever, body.result,
+        call_id, body.lever, body.result,
         offer_amount=body.offer_amount, quote=body.quote,
     )
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
-    db.insert_event(body.call_id, "state_change",
+    db.insert_event(call_id, "state_change",
                     {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
     if resp.get("escalation") or resp.get("escalation_required"):
-        db.insert_event(body.call_id, "escalation", {"reason": resp.get("notes", "")})
+        db.insert_event(call_id, "escalation", {"reason": resp.get("notes", "")})
     return resp
 
 
@@ -128,15 +145,17 @@ def log_quote(body: LogEvent) -> dict:
             payload["amount"] = float(payload["amount"])
         except (TypeError, ValueError):
             pass
-    _ensure_call_row(body.call_id)
-    db.insert_event(body.call_id, "quote", payload)
+    call_id = _resolve_call_id(body.call_id)
+    _ensure_call_row(call_id)
+    db.insert_event(call_id, "quote", payload)
     return {"logged": True}
 
 
 @router.post("/log_event")
 def log_event(body: LogEvent) -> dict:
-    _ensure_call_row(body.call_id)
-    db.insert_event(body.call_id, body.type, body.payload)
+    call_id = _resolve_call_id(body.call_id)
+    _ensure_call_row(call_id)
+    db.insert_event(call_id, body.type, body.payload)
     return {"logged": True}
 
 
@@ -144,7 +163,7 @@ def log_event(body: LogEvent) -> dict:
 def end_call_summary(body: dict) -> dict:
     """Agent's structured wrap-up before hang-up: ref #, rep name, agreed action.
     Stages the outcome row; final extraction still happens on the post-call webhook."""
-    call_id = body.get("call_id")
+    call_id = _resolve_call_id(body.get("call_id"))
     if call_id:
         _ensure_call_row(call_id)
         db.insert_event(call_id, "tool_call",
