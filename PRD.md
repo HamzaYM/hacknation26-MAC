@@ -1,5 +1,5 @@
 # The Negotiator — Medical Bills · PRD
-**Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs) · Team: Susy · J · Hamza · Kar Shin**
+**Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs) · Team: Susy · Jay · Hamza · Kar Shin**
 
 ---
 
@@ -14,7 +14,7 @@ We build the challenge's three modules — **Estimator → Caller → Closer** �
 | Person | Start here | Then |
 |---|---|---|
 | **Susy** (UX/frontend) | §11 | §12, §8.2 (ladder rungs the War Room renders), §6, `docs/workplans/susy.md` |
-| **J** (data) | §10 | §12, §7, `docs/workplans/j.md` |
+| **Jay** (data) | §10 | §12, §7, `docs/workplans/jay.md` |
 | **Hamza** (engine/orchestration/scaffold) | §7–§9 | §6, §12, `docs/workplans/hamza.md` |
 | **Kar Shin** (narrative/personas/video) | §14, §9 | §15, §12, §8.4–8.6 (the style layer he applies), `docs/workplans/kar-shin.md` |
 
@@ -82,7 +82,7 @@ We are deliberately not chasing 100% literal compliance. This table is the hones
 | C4 | Every call ends in a structured outcome | ✅ Meeting | Enum: settlement / payment plan / charity-app initiated / callback commitment / documented decline — each with reference #, rep name, next action. |
 | S1–S7 | The 7 success criteria (closed loop, spec reuse, 3 styles, price movement, disclosure/honesty, structured outcomes, evidence report) | ✅ | Each maps to R1–C4 above; §14's demo hits all seven on camera. |
 | — | Real businesses called about a real problem | ❌ Not doing | We hold no real active bill, and calling a hospital about a fake account is impossible and unethical. The brief blesses role-play and counter-agents. *Everything downstream of the dial tone is production-shaped; only the far end is simulated.* |
-| — | Config-not-code vertical portability | 🔶 Partial | `config/verticals/medical_bills.yaml` drives red flags, levers, thresholds, personas, voice; a stub `moving.yaml` (J writes it, same schema, by H10) + one slide (Kar Shin) demonstrates the swap. Only medical is actually built. |
+| — | Config-not-code vertical portability | 🔶 Partial | `config/verticals/medical_bills.yaml` drives red flags, levers, thresholds, personas, voice; a stub `moving.yaml` (Jay writes it, same schema, by H10) + one slide (Kar Shin) demonstrates the swap. Only medical is actually built. |
 | — | Batch calling at scale | 🔶 Adapting | 3 concurrent calls, not a campaign engine; the architecture note shows where ElevenLabs batch calling slots in. |
 | — | FAIR Health benchmark data | 🔶 Adapting | Paywalled → approximated and **labeled as an estimate** in the UI; Medicare and hospital-MRF numbers are real. |
 | — | Multi-call campaign over weeks (gather → negotiate → confirm) | 🔶 Adapting | Compressed to one call per entity; the case timeline UI shows where calls 2–3 and the regulatory deadlines (240-day FAP, 120-day GFE, FDCPA 30-day) would sit. |
@@ -153,7 +153,7 @@ flowchart LR
 | Fair-price-band computation | **Code** | Arithmetic: band = configurable multiples of Medicare (default 150–250%) |
 | Savings estimate ranges | **Code** | Config percentages × case facts |
 | Duplicate-charge detection | **Code** | Exact rule: same CPT + date (+ amount) |
-| Unbundling detection | **Code + data** | NCCI pair-table lookup (J ships the table for demo codes) |
+| Unbundling detection | **Code + data** | NCCI pair-table lookup (Jay ships the table for demo codes) |
 | Upcode *candidate* flagging | **Code heuristic** | E/M level vs. diagnosis rule fires the flag; LLM writes the explanation only |
 | EOB ↔ bill reconciliation | **Code** | Join on CPT+date, diff patient responsibility |
 | Phantom-charge detection | **Code** | Line items with no matching EOB line / no supporting record (supported flag type; not seeded in the demo bill) |
@@ -216,19 +216,19 @@ Four ElevenLabs persona agents, each bound to its own inbound Twilio number, eac
 | **Sympathetic-No-Authority** (rep) | Warm, apologetic, powerless | Personally grants ≤5%; escalation request reaches a supervisor who honors error disputes | Escalation ladder works |
 | **Collections Agent** | Fast, transactional, month-end quota pressure | Floor 25% of balance; hardship stories worth 0; lump-sum-today offers worth 15–20 extra points | Strategy switching (economics mode) |
 
-**5th style — live human role-play:** J plays a gruff-then-movable billing supervisor on a real cell phone (Susy backup), rehearsed against a persona guide (Kar Shin writes it alongside the four agent personas) with the same hidden-concession discipline: concede the duplicate only when cited; counter at $2,400 only after the MRF cite; accept only a today-payment ≥ their floor ($1,500). The human numbers to dial are rows in the `personas` table, entered during H1 provisioning.
+**5th style — live human role-play:** Jay plays a gruff-then-movable billing supervisor on a real cell phone (Susy backup), rehearsed against a persona guide (Kar Shin writes it alongside the four agent personas) with the same hidden-concession discipline: concede the duplicate only when cited; counter at $2,400 only after the MRF cite; accept only a today-payment ≥ their floor ($1,500). The human numbers to dial are rows in the `personas` table, entered during H1 provisioning.
 
 Persona prompts + concession configs: `prompts/personas/` + `personas` table (Kar Shin owns content, Hamza wires; the `persona_config` shape — floor, lever→discount unlock map, escalation behavior, agent/Twilio IDs — freezes at H3, see §12).
 
 ---
 
-## §10 · Data Plan (J)
+## §10 · Data Plan (Jay)
 
 ### 10.1 Real pipeline (`data/pipeline/`)
-1. **CMS Medicare fee schedule** (PFS/OPPS): download CSV → `transform.py` → `benchmarks` rows for the demo CPT set (rate localized to MA — `TODO(J-verify)`).
-2. **Hospital price-transparency MRFs**: **done with real data** — we hold a real Boston hospital's published CMS price-transparency file (MGH, `042697983_Massachusetts-General-Hospital_StandardCharges.csv`, ~159k rows) and a working, MGH-verified extractor (`data/pipeline/mrf_extract.py`: payer-class segmentation, outpatient setting filter, commercial-only count-weighted medians). The demo seed's cash price + negotiated median are extracted from it — real, citable, and the single most confrontational number the agent can say out loud ("your own posted cash price is…"). *(The earlier NC targets — Atrium/Novant URLs in `data/pipeline/fetch_mrf.py` — are legacy; J may retarget the fetcher to MGB/MGH or drop it.)*
+1. **CMS Medicare fee schedule** (PFS/OPPS): download CSV → `transform.py` → `benchmarks` rows for the demo CPT set (rate localized to MA — `TODO(Jay-verify)`).
+2. **Hospital price-transparency MRFs**: **done with real data** — we hold a real Boston hospital's published CMS price-transparency file (MGH, `042697983_Massachusetts-General-Hospital_StandardCharges.csv`, ~159k rows) and a working, MGH-verified extractor (`data/pipeline/mrf_extract.py`: payer-class segmentation, outpatient setting filter, commercial-only count-weighted medians). The demo seed's cash price + negotiated median are extracted from it — real, citable, and the single most confrontational number the agent can say out loud ("your own posted cash price is…"). *(The earlier NC targets — Atrium/Novant URLs in `data/pipeline/fetch_mrf.py` — are legacy; Jay may retarget the fetcher to MGB/MGH or drop it.)*
 3. **FAIR Health**: paywalled → estimate (e.g., midpoint of MRF median and 254%-of-Medicare) and **label it "estimated"** everywhere it renders.
-4. **Statute pack** — `config/levers.json` (shape: `lever_id · citable_string (verbatim) · arming_condition · source`; Hamza defines the shape, J fills it, freezes H2): NSA (emergency/ancillary bans, GFE $400/120-day/$25, complaint line 1-800-985-3059, penalties to $10,000/violation), §501(r) (FAP, AGB, 240-day window), price-transparency rule, 2022–2023 credit-bureau changes.
+4. **Statute pack** — `config/levers.json` (shape: `lever_id · citable_string (verbatim) · arming_condition · source`; Hamza defines the shape, Jay fills it, freezes H2): NSA (emergency/ancillary bans, GFE $400/120-day/$25, complaint line 1-800-985-3059, penalties to $10,000/violation), §501(r) (FAP, AGB, 240-day window), price-transparency rule, 2022–2023 credit-bureau changes.
 5. **NCCI pairs** for the demo codes (unbundle detection table).
 
 ### 10.2 Benchmark table shape
@@ -238,9 +238,9 @@ Persona prompts + concession configs: `prompts/personas/` + `personas` table (Ka
 - **Synthetic itemized bill (PDF)** — Mercy General, statement total **$8,432** charges / **$4,287** patient balance. Seeded findables: **(a)** duplicate chest X-ray CPT **71046** — $412 billed twice; **(b)** ER E/M upcoded **99285** where records support **99283**; **(c)** comprehensive metabolic panel **80053** unbundled into component labs ($690 vs ~$48 bundled); **(d)** balance exceeds EOB patient responsibility.
 - **Matching EOB (PDF)** — patient responsibility **$3,875**; the $412 delta vs. the bill *is* seeded error (a) — reconciliation must catch it. Includes plan-paid, allowed amounts, deductible/coinsurance split.
 - **`demo_answer_key.json`** — every seeded flag + its dollar impact + the benchmark row that prices it. The demo is deterministic: parse → 4 flags → quantified asks.
-- **Anonymized real bill** — a teammate volunteers one at the H0 kickoff; J redacts and parses it, shown on camera briefly as generalization proof (descope candidate #1).
+- **Anonymized real bill** — a teammate volunteers one at the H0 kickoff; Jay redacts and parses it, shown on camera briefly as generalization proof (descope candidate #1).
 - **Benchmark reconciliation (must hold exactly):** Medicare total for demo codes **$438** → **ask target $657–$876** (§8.1's 150–200% ask target; the §10.2 fair-price *band* at 150–250% is $657–$1,095); Mercy MRF cash price **$2,633.25**; commercial negotiated median **$999.30** — commercial insurers actually pay *below* the cash price here ($999.30 vs $2,633.25), a stronger fairness argument the agent can speak. Upcode impact = billed $2,340 − $328.79 (negotiated median of the supported 99283) = **$2,011.21**. The §14 arc ($4,287 → $3,875 → $2,400 → **$1,650**) sits provably inside these rails: below both MRF cash and the negotiated median → settlement defensible as "fair," and −62% for Maya.
-- **Provenance & provisionality:** the demo CPT list is the five codes in `data/seed/` (99283, 71046, 80053, 85025, 96374). The cash-price and negotiated-median figures are **REAL MGH numbers**, extracted from Mass General's published price-transparency file via `data/pipeline/mrf_extract.py` (outpatient, commercial-only medians). The facility name stays fictional — "Mercy General Hospital" (Boston) — with its benchmarks labeled **"derived from a real Boston hospital's published price file"**; we never name MGH as the negotiation counterparty. Medicare rates are still `TODO(J-verify)` against the real MA PFS. Any change to these totals updates `demo_answer_key.json`, this section, and §14 *together*, never one alone.
+- **Provenance & provisionality:** the demo CPT list is the five codes in `data/seed/` (99283, 71046, 80053, 85025, 96374). The cash-price and negotiated-median figures are **REAL MGH numbers**, extracted from Mass General's published price-transparency file via `data/pipeline/mrf_extract.py` (outpatient, commercial-only medians). The facility name stays fictional — "Mercy General Hospital" (Boston) — with its benchmarks labeled **"derived from a real Boston hospital's published price file"**; we never name MGH as the negotiation counterparty. Medicare rates are still `TODO(Jay-verify)` against the real MA PFS. Any change to these totals updates `demo_answer_key.json`, this section, and §14 *together*, never one alone.
 - **Upcode determinism:** the bill carries a seeded low-acuity diagnosis (ICD-10 J06.9, upper respiratory infection) so the code rule "dx ∈ low-acuity list AND E/M ≥ 99285 → upcode candidate" fires deterministically; both the dx list and the rule live in `medical_bills.yaml` + `demo_answer_key.json`.
 
 ---
@@ -265,7 +265,7 @@ Six screens (mapping the whiteboard journey from `negotiator-intake-data-schema.
 | Area | Owner | Directory |
 |---|---|---|
 | Frontend (5 screens, Realtime wiring) | **Susy** | `apps/web/` |
-| Data pipeline, benchmarks, statutes, demo documents | **J** | `data/`, `config/` (contents) |
+| Data pipeline, benchmarks, statutes, demo documents | **Jay** | `data/`, `config/` (contents) |
 | FastAPI engine, state machine, ElevenLabs/Twilio wiring, scaffold, integration | **Hamza** (+ Claude Code as orchestrator) | `apps/api/`, `supabase/`, `contracts/` |
 | Personas, imperfection style, eval pass, deck, video | **Kar Shin** | `prompts/`, `docs/` |
 
@@ -277,7 +277,7 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 |---|---|---|
 | `job_spec` | patient/insurance/financial profile, bill+EOB line items (CPT-keyed), derived flags, entities | **H2** |
 | `benchmark_row` | §10.2 shape | **H2** |
-| `medical_bills.yaml` key schema | red-flag thresholds, lever arming conditions, stonewall triggers, persona refs, voice settings — **Hamza defines keys, J owns values** | **H2** |
+| `medical_bills.yaml` key schema | red-flag thresholds, lever arming conditions, stonewall triggers, persona refs, voice settings — **Hamza defines keys, Jay owns values** | **H2** |
 | `levers.json` | statute pack: `lever_id · citable_string · arming_condition · source` | **H2** |
 | `call_events` | typed event stream the War Room renders: `type ∈ {disclosure_given, lever_attempted, rung_advanced (§8.2 enum), quote_logged, escalation, outcome, transcript_chunk}` + payload per type (ticker reads `quote_logged.amount`) | **H3** |
 | Tool signatures | `get_case_brief`, `get_benchmark(cpt)`, `report_lever_result(lever,result)→next_move`, `log_quote`, `log_event`, `end_call_summary` | **H3** |
@@ -286,9 +286,9 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 | Demo CPT list | the exact codes on the synthetic bill | **H3** |
 | `report` | ranking + per-line comparison + citations. **Rank key (defined now, not at H8):** primary = achieved amount as % of the fair band per entity; non-monetary terminal states ordered by expected-value rules in `medical_bills.yaml` (charity-app > callback > decline) | **H8** |
 
-**Ownership clarifications:** Hamza implements the red-flag detection functions in `apps/api` against J's config thresholds + NCCI table — J's DoD is satisfied when his data makes Hamza's engine fire all 4 flags. Negotiator + intake agent prompt templates: **Hamza drafts** (encoding §8.4–8.6), **Kar Shin applies the imperfection/style layer** and reviews; files live in `prompts/`. Kar Shin's **eval pass** = a per-criterion checklist (S1–S7, C1–C4) run against a full E2E call: persona distinctness, disclosure timing, honesty-audit pass, every demo CPT resolving to a benchmark cite.
+**Ownership clarifications:** Hamza implements the red-flag detection functions in `apps/api` against Jay's config thresholds + NCCI table — Jay's DoD is satisfied when his data makes Hamza's engine fire all 4 flags. Negotiator + intake agent prompt templates: **Hamza drafts** (encoding §8.4–8.6), **Kar Shin applies the imperfection/style layer** and reviews; files live in `prompts/`. Kar Shin's **eval pass** = a per-criterion checklist (S1–S7, C1–C4) run against a full E2E call: persona distinctness, disclosure timing, honesty-audit pass, every demo CPT resolving to a benchmark cite.
 
-**Definition of done per person:** Susy — full click-through on live data; price move visible at distance. J — demo bill parses → all 4 flags fire → each flag carries a benchmark row and a quantified ask; agent can cite Medicare *and* Mercy's own cash price for every demo CPT. Hamza — one command boots web+api; a provider call completes with a lever-caused price move **twice in a row**; 3 parallel calls reach structured outcomes; report generates with citations. Kar Shin — all four counter-agent styles are audibly distinct (the §14 montage features three: Stonewaller, Policy-Citer, Collections; Sympathetic-No-Authority is built and eval'd but not shown on camera); a cold viewer of the video can check off every success criterion.
+**Definition of done per person:** Susy — full click-through on live data; price move visible at distance. Jay — demo bill parses → all 4 flags fire → each flag carries a benchmark row and a quantified ask; agent can cite Medicare *and* Mercy's own cash price for every demo CPT. Hamza — one command boots web+api; a provider call completes with a lever-caused price move **twice in a row**; 3 parallel calls reach structured outcomes; report generates with citations. Kar Shin — all four counter-agent styles are audibly distinct (the §14 montage features three: Stonewaller, Policy-Citer, Collections; Sympathetic-No-Authority is built and eval'd but not shown on camera); a cold viewer of the video can check off every success criterion.
 
 ---
 
@@ -296,15 +296,15 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 
 | Hours | Work |
 |---|---|
-| **H0–H1** | Kickoff sync (30 min): confirm schemas, storyline, descope order. Then in parallel: **provision immediately** — Twilio off-trial + all numbers purchased, ElevenLabs agents created; J starts CMS download (longest lead); Susy wireframes; Kar Shin drafts personas; Hamza scaffolds. |
+| **H0–H1** | Kickoff sync (30 min): confirm schemas, storyline, descope order. Then in parallel: **provision immediately** — Twilio off-trial + all numbers purchased, ElevenLabs agents created; Jay starts CMS download (longest lead); Susy wireframes; Kar Shin drafts personas; Hamza scaffolds. |
 | **H1–H2** | Scaffold lands: repo + Supabase migrations + **H2 contracts frozen** (`job_spec`, `benchmark_row`, yaml keys, `levers.json`) + README. Remaining contracts freeze per §12 (H3: events/tools/outcome/personas/CPT list; H8: report). Everyone pulls. |
-| **H2–H6** | Parallel build. Hamza: tool endpoints, negotiator agent, Twilio wiring — *first agent-vs-persona test call by H4* (catches double-talk/deadlock ahead of CP1). J: benchmarks v0 (5 codes) by H3 → full seed + demo bill by H5. Susy: screens 2/3/4 skeletons. Kar Shin: personas v0 by H3, refined by H4 + style guide. |
+| **H2–H6** | Parallel build. Hamza: tool endpoints, negotiator agent, Twilio wiring — *first agent-vs-persona test call by H4* (catches double-talk/deadlock ahead of CP1). Jay: benchmarks v0 (5 codes) by H3 → full seed + demo bill by H5. Susy: screens 2/3/4 skeletons. Kar Shin: personas v0 by H3, refined by H4 + style guide. |
 | **H6 — CP1 (go/no-go)** | **Gate: one full provider call with a lever-caused price move and a logged outcome.** Failing → cut collections + real-bill parse now; Hamza+Kar Shin pair on the loop until green. |
-| **H6–H8** | Integration: live call renders in War Room; in-call benchmark cites from J's table; charity screening branch; collections persona if on schedule. |
+| **H6–H8** | Integration: live call renders in War Room; in-call benchmark cites from Jay's table; charity screening branch; collections persona if on schedule. |
 | **H8 — CP2 (full E2E)** | **Gate: upload → parse → confirm → 3 parallel calls → draft report.** Descope order if behind: ① real-bill parse ② collections call ③ charity branch ④ parallel→sequential. **Never cut:** provider ladder · live price move · AI disclosure · cited report · ElevenLabs voice intake. |
 | **H8–H10** | Demo hardening: two clean golden recordings per scenario into playback mode (= fallback + video footage); human role-play rehearsal; Kar Shin's eval checklist run, fixes applied. |
 | **H10 — CP3** | **Hard feature freeze.** Bugfixes only. Kar Shin takes the room: video script → capture. |
-| **H10–H13** | Video cut + deck (reuse Visual Brief diagrams). Susy cosmetics. Hamza/J: reliability runs + one-command demo-reset script + offline bundle. |
+| **H10–H13** | Video cut + deck (reuse Visual Brief diagrams). Susy cosmetics. Hamza/Jay: reliability runs + one-command demo-reset script + offline bundle. |
 | **H13–H14** | Submission + two full live-demo dry runs. |
 
 ---
@@ -317,10 +317,10 @@ Seeded around Maya's bill (§10.3); every number below reconciles with the answe
 - **0:20–0:55 · Estimator.** Bill + EOB dropped in; ElevenLabs voice interview asks what PDFs can't answer (income → 250% FPL; "about $1,700 today"). Red flags fire live: duplicate 71046, upcode 99285→99283, unbundled 80053, EOB mismatch $4,287≠$3,875. Maya taps **Confirm** — "this exact JSON goes into every call."
 - **0:55–1:15 · War Room.** Dossier renders: three armed levers with real numbers (Medicare **$438** · Mercy's own posted cash price **$2,633.25**, and commercial insurers actually pay *below* that cash price — **$999.30** negotiated median · §501(r) + 250% FPL at a nonprofit). Three call cards queue: Facility · ER Physician Group · Collections.
 - **1:15–1:55 · Montage (counter-agents, 3 styles, entity-labeled).** (a) **Facility, front-line** — Stonewaller stonewalls, then **hangs up mid-call**; the disconnect webhook still lands a clean *documented decline* badge (next action: callback scheduled) — friction + hang-up survival on camera. (b) **ER Physician Group, supervisor** — Policy-Citer asks **"am I talking to a robot?"** → *"You are — I'm an AI advocate authorized by the patient, and I have her account details ready."* §501(r) cite unlocks *charity application initiated*. (c) **Collections** — no hardship, pure economics: anchor 30%, settle 40%, *pay-for-delete pending written confirmation*.
-- **1:55–3:00 · Showstopper (live, human, audible Twilio ring).** The **Facility callback** from montage (a), now escalated: J as the billing supervisor — which is why the ticker resumes at **$4,287**. Disclosure in the first line. Ticker moves on screen: duplicate X-ray conceded → **$4,287 → $3,875** (now matches the EOB) → *"Medicare pays $438 for these codes, and your own posted cash price is $2,633.25 — commercial insurers pay you less than that — is this negotiable?"* → rep counters **$2,400** → *"She can pay **$1,650 today**, settled as paid in full — can you take that to your supervisor?"* → approved. **$4,287 → $1,650. −62%.** Every step caused by intake data and tools, not script.
+- **1:55–3:00 · Showstopper (live, human, audible Twilio ring).** The **Facility callback** from montage (a), now escalated: Jay as the billing supervisor — which is why the ticker resumes at **$4,287**. Disclosure in the first line. Ticker moves on screen: duplicate X-ray conceded → **$4,287 → $3,875** (now matches the EOB) → *"Medicare pays $438 for these codes, and your own posted cash price is $2,633.25 — commercial insurers pay you less than that — is this negotiable?"* → rep counters **$2,400** → *"She can pay **$1,650 today**, settled as paid in full — can you take that to your supervisor?"* → approved. **$4,287 → $1,650. −62%.** Every step caused by intake data and tools, not script.
 - **3:00–3:30 · Closer.** Ranked report: per-line billed/fair/achieved, transcript citations under each claim, honesty-audit badge, plain-language recommendation, deadline timeline. Flash `config/verticals/`: "swap this file and it negotiates moving quotes." End card.
 
-**Ops:** Kar Shin opens, Hamza drives UI, J on the phone (Susy backup rep). Any live failure >20s → golden recording, zero on-stage debugging. Video is the submission artifact; live is upside. Call audio for the video comes from stored call recordings (ElevenLabs/Twilio → Supabase `recordings/`, capture confirmed by Hamza at H8) replayed through §11's golden-playback mode. Hotspot backup uplink; report renders fully from stored data (offline-safe).
+**Ops:** Kar Shin opens, Hamza drives UI, Jay on the phone (Susy backup rep). Any live failure >20s → golden recording, zero on-stage debugging. Video is the submission artifact; live is upside. Call audio for the video comes from stored call recordings (ElevenLabs/Twilio → Supabase `recordings/`, capture confirmed by Hamza at H8) replayed through §11's golden-playback mode. Hotspot backup uplink; report renders fully from stored data (offline-safe).
 
 ---
 
@@ -347,7 +347,7 @@ Seeded around Maya's bill (§10.3); every number below reconciles with the answe
 | Integration crunch at H8 | Contracts frozen H2–H3 (report contract H8); first E2E forced at H6; descope order pre-agreed (§13) — no on-the-spot negotiation. |
 | Demo-bill ↔ benchmark mismatch stalls a call | Demo CPT list frozen H3; `demo_answer_key.json` + eval checklist verify every code resolves end-to-end. |
 | Video left too late | H10 hard freeze; golden recordings from H8 are usable footage regardless of later UI changes. |
-| Bus factor on Hamza (scaffold + engine + orchestration) | Contracts + README at H2 enable self-serve; Kar Shin pairs on prompts; J owns red-flag rules solo; anyone blocked >45 min re-pairs immediately. |
+| Bus factor on Hamza (scaffold + engine + orchestration) | Contracts + README at H2 enable self-serve; Kar Shin pairs on prompts; Jay owns red-flag rules solo; anyone blocked >45 min re-pairs immediately. |
 | PHI-shaped data | All demo data synthetic or consented/redacted; consent/authorization artifacts (HIPAA ROI, insurer authorized-rep, AOR) are mocked status fields only — no real legal documents; Supabase service key server-side only; note in repo that production needs encryption/retention policy per the intake schema doc. |
 
 ---

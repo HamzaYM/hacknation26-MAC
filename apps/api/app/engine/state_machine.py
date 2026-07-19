@@ -114,6 +114,18 @@ class LadderStateMachine:
                 return self._respond(state, escalation=True,
                                      notes="stonewall detected — ask for someone with authority to help")
 
+        # Deterministic anti-repetition guardrail (Hamza, 07-18): the same lever
+        # reported with the same non-accepted result 3 times in a row means the
+        # point is exhausted — force the next rung instead of letting the agent
+        # argue it a fourth time.
+        recent = state.history[-3:]
+        if (len(recent) == 3 and result != "accepted"
+                and all(h["lever"] == lever and h["result"] == result for h in recent)):
+            state.index = min(state.index + 1, len(state.ladder) - 1)
+            return self._respond(state, repetition_cap=True,
+                                 notes="you have made this point three times — drop it, move to "
+                                       "the next lever, and do not repeat the previous ask")
+
         # linear advance from the reported rung (clamped at the last rung)
         if lever in state.ladder:
             state.index = state.ladder.index(lever)

@@ -15,7 +15,7 @@ The demo in one line: Maya's $4,287 ER balance → agent finds 4 seeded billing 
 | Person | Read | Then |
 |---|---|---|
 | **Susy** — UX/frontend | [PRD §11](PRD.md) + [your workplan](docs/workplans/susy.md) | Wireframe the six screens; `apps/web` runs now (see Quickstart) |
-| **J** — data/benchmarks | [PRD §10](PRD.md) + [your workplan](docs/workplans/j.md) | **Start the CMS download immediately** (longest lead); `data/pipeline/README.md` is your spec |
+| **Jay** — data/benchmarks | [PRD §10](PRD.md) + [your workplan](docs/workplans/jay.md) | **Start the CMS download immediately** (longest lead); `data/pipeline/README.md` is your spec |
 | **Hamza** — engine/orchestration | [PRD §7–9](PRD.md) + [your workplan](docs/workplans/hamza.md) | Provision Twilio/ElevenLabs/Supabase FIRST, then tool endpoints |
 | **Kar Shin** — personas/voice/video | [PRD §14+§9](PRD.md) + [your workplan](docs/workplans/kar-shin.md) | Persona prompts v0 (`prompts/personas/`) + the voice-style layer |
 
@@ -35,8 +35,8 @@ The full walkthrough lives in **[docs/architecture.md](docs/architecture.md)**: 
 | `apps/web/` | Next.js frontend — six screens (PRD §11) | **Susy** |
 | `apps/api/` | FastAPI — engine, tools, webhooks, state machine | **Hamza** |
 | `contracts/` | Frozen JSON Schemas (job_spec, benchmark_row, dossier, call_outcome) | Hamza |
-| `config/verticals/` | The config-not-code boundary (levers, flags, thresholds, voice) | Hamza keys / **J** values |
-| `data/pipeline/` + `data/seed/` | CMS/MRF pipeline → benchmarks; demo answer key | **J** |
+| `config/verticals/` | The config-not-code boundary (levers, flags, thresholds, voice) | Hamza keys / **Jay** values |
+| `data/pipeline/` + `data/seed/` | CMS/MRF pipeline → benchmarks; demo answer key | **Jay** |
 | `prompts/` | Negotiator/intake prompts, personas, imperfection + verbalization guides | **Kar Shin** (+ Hamza) |
 | `supabase/migrations/` | DB schema | Hamza |
 | `docs/workplans/` | Per-person marching orders | everyone (theirs) |
@@ -57,7 +57,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000          # → http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/cases/demo              # Maya's fixture JobSpec
 
-# Data (J)
+# Data (Jay)
 cd data/pipeline && python3 transform.py --check   # validates seed vs demo answer key
 
 # DB (once): run supabase/migrations/0001_init.sql in the Supabase SQL editor

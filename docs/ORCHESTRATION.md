@@ -11,7 +11,7 @@
 4. Teammates may push PRD updates as versions (via PRs).
 5. Demo-optimized: when a choice trades robustness vs. demo reliability, demo wins (Hamza, 2026-07-18).
 5b. **Merges/conflict-resolution ONLY in worktrees** — never in the main checkout: it serves hagglfor.me live via next dev, and an in-progress merge broke the public site (07-18, transient).
-5c. Negotiator brain LLM = **gemini-2.5-flash** by Hamza's cost call (ElevenLabs credits; gpt-5.4 tested and reverted). Provisioning preserves llm + voice on sync.
+5c. Negotiator brain LLM = **gpt-5.4** (Hamza, 07-18 evening: quality over latency — reps deserve a thinking counterpart; supersedes the earlier gemini-2.5-flash cost call). Pinned via `voice.negotiator_llm` in config; provisioning pushes it (and pacing) on every sync, voice still preserved unless pinned.
 6. **Design source of truth = Susy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
 ## Current state (update me!)
@@ -25,7 +25,7 @@
 - ✅ **Test use-cases + voice tuning (PR #20):** Persona probes (L1), negotiator conduct rules, only-if-asked disclosure mode, eval harness with call-efficiency soft check.
 - ✅ **Intake + login (PR #25):** Supabase password auth, document parse flow, voice interview widget.
 - ✅ Provisioning: ElevenLabs 6 agents live · Supabase live (migration 15/15, buckets, realtime, benchmarks+personas seeded w/ agent IDs) · Demo auth user (maya@hagglfor.me)
-- ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on J's Trust Hub KYC (must reach "Twilio Approved"); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
+- ⏳ Twilio: paid account + $20 balance ✅; number purchase blocked on Jay's Trust Hub KYC (must reach "Twilio Approved"); then scripts/provision_twilio.py buys 2 MA numbers + imports/assigns in ElevenLabs
 - ⏳ Remaining: ElevenLabs webhook-tool registration + cloudflared tunnel + first PSTN call (post-KYC). Browser-session calls work now.
 - ✅ Product name: **Haggl** (design-system.md is styling law)
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after deployment; never critical path
@@ -33,7 +33,7 @@
 
 ## In-flight (pinned 07-18 ~17:45 for compaction recovery)
 - **Deck (PRIORITY)**: Opus agent building deck/haggl-pitch.pptx on branch feat/pitch-deck — 8-slide/4:45 plan from the research brief; captures own site screenshots; voice-guide enforced; PRs when done.
-- **Multi-user + real-call plumbing**: agent on feat/multi-user-and-realcall — Dan/Nina users+cases, /calls/place-real + conversation_id persistence (A1), UUID default call_id fix (A2), archive_call.py run on both real conversations (J-call conv_9301kxvs…, a2a conv_8001kxvt…), shot-list C3 wording fix.
+- **Multi-user + real-call plumbing**: agent on feat/multi-user-and-realcall — Dan/Nina users+cases, /calls/place-real + conversation_id persistence (A1), UUID default call_id fix (A2), archive_call.py run on both real conversations (Jay-call conv_9301kxvs…, a2a conv_8001kxvt…), shot-list C3 wording fix.
 - **Visuals**: agent on feat/dashboard-warroom-visuals — /bills deadlines strip, multi-call War Room overview, price-flash, milestone icons. For Susy's review.
 - Orchestrator merges each PR on landing, then Playwright-verifies. Judge scorecard v2 (arch 7.5 / creativity 8 / workflow 6) + fix ranking: in the workflow journal wf_5189005d.
 - Susy's voice IDs (Alex PK6t0r2iXSJEz1l0Gy4k · Morgan IUr28Q1jJWtnKBQJWsGP · Riley urYrjlrwA2jxqHzz2wHT) 400 on assign — likely must be added to the workspace voice library first (dashboard), then assign Alex→negotiator, ask Hamza for Morgan/Riley mapping.
@@ -53,7 +53,7 @@
 | 07-18 | **Submission format: 60-second UI/UX demo video + 60-second tech demo video** (replaces the 3:30 single video — Kar Shin's script + deck need restructuring; compliance auditor producing both shot lists) | Hamza |
 | 07-18 | Page copy must pass Hamza's voice guide (docs/voice/ — "Page copy" register in voice-profile-addendum.md; standing rules: no em-dashes, no "not just X, it's Y" framing). Copy pass runs after the current build round merges | Hamza |
 | 07-18 | Susy keeps pushing UI work — orchestrator consolidates (watch origin/susy + PRs, merge + reconcile) | Hamza |
-| 07-18 | Telephony: J's Twilio account is the path (Hamza's KYC unfixable); J's Trust Hub profile must reach "Twilio Approved" before scripts/provision_twilio.py can buy numbers. Browser-session calls are the working baseline meanwhile | Hamza |
+| 07-18 | Telephony: Jay's Twilio account is the path (Hamza's KYC unfixable); Jay's Trust Hub profile must reach "Twilio Approved" before scripts/provision_twilio.py can buy numbers. Browser-session calls are the working baseline meanwhile | Hamza |
 
 ## Key facts Claude must not re-derive
 - Contracts frozen per PRD §12 (H2/H3/H8 schedule); `data/seed/demo_answer_key.json` is the single source of demo truth (`transform.py --check` gates it).
@@ -68,4 +68,4 @@
 - Harness task list mirrors this — keep both current.
 
 ## Doc index
-`PRD.md` (the plan) · `docs/workplans/*` (per person) · `data/pipeline/README.md` (J's data spec) · `docs/claude-headless-notes.md` (subscription cost routing) · `contracts/` (frozen schemas) · `config/verticals/medical_bills.yaml` (config-not-code) · memory dir (Claude-private prefs)
+`PRD.md` (the plan) · `docs/workplans/*` (per person) · `data/pipeline/README.md` (Jay's data spec) · `docs/claude-headless-notes.md` (subscription cost routing) · `contracts/` (frozen schemas) · `config/verticals/medical_bills.yaml` (config-not-code) · memory dir (Claude-private prefs)

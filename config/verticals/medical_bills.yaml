@@ -77,7 +77,10 @@ voice:
   # (PK6t0r2iXSJEz1l0Gy4k) lives in her personal account and is not assignable here.
   default_voice_id: jTWqplUkOPQwOegNjhal
   stability: 0.55
-  speed: 1.0                                 # keep within 0.9–1.1
+  speed: 0.9                                 # Hamza (07-18): slower so numbers stay legible; keep within 0.9–1.1
+  # Brain LLM for the negotiator, pinned by provisioning (Hamza, 07-18 evening:
+  # quality over latency for live calls; was gemini-2.5-flash on cost).
+  negotiator_llm: gpt-5.4
   target_wpm: 150
   endpointing_ms: 400                        # bias toward waiting; barge-in on
   delivery_notes: prompts/verbalization_guide.md
@@ -93,7 +96,10 @@ disclosure:
   competence_first_open: >-
     Hi, this is Alex. I'm calling about {{patient_name}}'s account, number
     {{account_number}}. Got a minute?
-  opening_line_unused: >-
+  # Early-disclosure opener: ONLY valid when mode == early. Audit finding (a2a-1):
+  # a stale sync once shipped this as the live opener while mode was only_if_asked —
+  # the early_ prefix + gate comment exist so provisioning drift can't re-select it.
+  early_mode_opening_line: >-
     Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient
     {{patient_name}}, who has authorized me to discuss account {{account_number}}.
     This call may be recorded on both ends.
@@ -103,4 +109,4 @@ disclosure:
   never_deny_ai: true          # absolute: honesty-when-asked is non-negotiable
 honesty:
   citable_sources_only: [dossier, get_benchmark]   # the agent may not speak a number from anywhere else
-  forbidden: [invented_bids, invented_inventory, misrepresenting_the_job]
+  forbidden: [invented_bids, invented_inventory, invented_dates, misrepresenting_the_job]

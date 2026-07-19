@@ -1,4 +1,4 @@
-# Data Pipeline (Owner: J)
+# Data Pipeline (Owner: Jay)
 
 Real data in, deterministic benchmarks out. Everything here is **code, not LLM** (PRD §7):
 the agent's every citable number is produced by this pipeline.
@@ -64,7 +64,7 @@ Per demo CPT: `medicare_rate` (professional + facility where applicable), `mrf_c
 **`benchmarks_v0.json` cash/negotiated values are REAL MGH figures** (extracted from
 Mass General's published price file via `mrf_extract.py` — outpatient, commercial-only
 medians; see `docs/boston-mgh-proposal.md`). Medicare rates are still hand-seeded
-placeholders, `TODO(J-verify)` against the real MA PFS — if totals change, update the
+placeholders, `TODO(Jay-verify)` against the real MA PFS — if totals change, update the
 answer key + PRD §10.3 + demo script together, never one alone.
 
 ## Also owned here

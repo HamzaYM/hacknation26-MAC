@@ -21,7 +21,7 @@ posted cash price is …" a genuinely real, checkable figure instead of a synthe
 |---|---|---|---|
 | MRF cash total (5 demo CPTs) | $1,890.00 | **$2,633.25** | discounted cash price, real |
 | Commercial negotiated median total | ~$2,600 | **$999.30** | commercial-payer weighted median; insurers pay *below* cash — a stronger fairness line |
-| Medicare total | $438.00 | (still needs real MA PFS) | flagged `TODO(J-verify)` either way |
+| Medicare total | $438.00 | (still needs real MA PFS) | flagged `TODO(Jay-verify)` either way |
 
 Per-CPT (setting=outpatient, commercial-only medians): 99283 cash 1409.25 / neg 328.79 ·
 71046 354.00 / 180.78 · 80053 133.50 / 94.87 · 85025 93.75 / 66.63 · 96374 642.75 / 328.23.

@@ -8,7 +8,7 @@ from app.main import app
 from app.services import voice_prefs
 
 ALEX = "jTWqplUkOPQwOegNjhal"
-MORGAN = "Jui2x0OuMt9XBfF1tWIo"
+ADAM = "pNInz6obpgDQGcFmaJgB"
 RILEY = "saQ3GQHMonWJoYcm6AJJ"
 
 
@@ -17,10 +17,23 @@ def client():
     return TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def hermetic_voice_store(monkeypatch):
+    """Stub the voice-pref DB helpers with an in-memory dict. Without this,
+    app.main's load_dotenv() finds the repo-root .env from a worktree (dotenv
+    searches parent dirs), and these tests read AND WRITE the live Supabase —
+    which is how a test run once persisted a voice pref onto the demo case."""
+    store: dict[str, str] = {}
+    monkeypatch.setattr(voice_prefs.db, "get_case_voice", store.get)
+    monkeypatch.setattr(voice_prefs.db, "set_case_voice",
+                        lambda case_id, voice_id, label=None: False)
+    monkeypatch.setattr(voice_prefs.db, "ensure_demo_case", lambda: None)
+
+
 def test_the_three_voices_are_allowlisted():
-    assert set(voice_prefs.VOICES) == {ALEX, MORGAN, RILEY}
+    assert set(voice_prefs.VOICES) == {ALEX, ADAM, RILEY}
     assert voice_prefs.DEFAULT_VOICE_ID == ALEX
-    assert voice_prefs.is_allowed(MORGAN)
+    assert voice_prefs.is_allowed(ADAM)
     assert not voice_prefs.is_allowed("some-random-id")
 
 
@@ -58,10 +71,10 @@ def test_get_voice_endpoint_defaults_to_alex(client):
 
 
 def test_put_voice_endpoint_validates_and_echoes(client):
-    ok = client.put("/cases/demo/voice", json={"voice_id": MORGAN})
+    ok = client.put("/cases/demo/voice", json={"voice_id": ADAM})
     assert ok.status_code == 200
-    assert ok.json()["voice_id"] == MORGAN
-    assert ok.json()["voice_label"] == "Morgan"
+    assert ok.json()["voice_id"] == ADAM
+    assert ok.json()["voice_label"] == "Adam"
     # persisted is False without a DB, and that's fine (client mirrors to localStorage).
     assert ok.json()["persisted"] is False
 

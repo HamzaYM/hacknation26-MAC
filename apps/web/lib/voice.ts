@@ -1,6 +1,8 @@
 import { API_BASE } from "./api";
 
-// The three voices cloned into our ElevenLabs workspace. voice_id is the same
+// The three negotiator voices in our ElevenLabs workspace: Alex and Riley are
+// cloned from Susy's voice designs; Adam is a stock workspace voice (swapped in
+// for Morgan, Hamza 2026-07-18: wanted a more assertive male option). voice_id is the same
 // string the backend allowlists (app/services/voice_prefs.py) — keep in sync.
 export interface Voice {
   key: string;
@@ -34,21 +36,21 @@ export const VOICES: Voice[] = [
     isDefault: true,
   },
   {
-    key: "morgan",
-    voiceId: "Jui2x0OuMt9XBfF1tWIo",
-    name: "Morgan",
-    tagline: "Calm and analytical",
+    key: "adam",
+    voiceId: "pNInz6obpgDQGcFmaJgB",
+    name: "Adam",
+    tagline: "Assertive and unbudging",
     angle: "Supervisors and benchmark moments, where a number has to land with authority.",
     pros: [
-      "Says a dollar figure or a CPT code slow and clean, with the falling intonation our verbalization guide uses, so it lands as authority.",
-      "Unfazed by pushback, which is what a policy-citing supervisor or a benchmark-anchor moment needs.",
-      "Competence first, the register our research points to for offsetting the AI-disclosure penalty.",
+      "Carries a dollar figure with weight, so an anchor or a benchmark cite lands as a position, not a suggestion.",
+      "Assertive without heat, which is the escalation register our research backs: pressure reads fine, anger backfires.",
+      "A deeper voice reads as seniority to many reps, which helps when asking for someone with authority to resolve it.",
     ],
     cons: [
-      "Analytical can tip into robotic, and flat delivery costs you the rapport that gets a front-line rep on your side.",
-      "Less warmth to spend early, so a chatty rep may take longer to thaw.",
+      "Dominance up front can put a friendly rep on the defensive and slow the early rapport plays.",
+      "Less natural room for the fillers and softeners our humanization layer leans on, so small talk can read scripted.",
     ],
-    preview: "/voices/morgan.mp3",
+    preview: "/voices/adam.mp3",
   },
   {
     key: "riley",

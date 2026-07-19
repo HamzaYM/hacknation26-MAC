@@ -14,12 +14,14 @@ from __future__ import annotations
 from .. import db
 from ..fixtures import DEMO_CASE_ID
 
-# The three cloned voices in our ElevenLabs workspace. This is an allowlist:
+# The negotiator voices in our ElevenLabs workspace: Alex and Riley are cloned
+# from Susy's voice designs, Adam is a stock workspace voice (swapped in for
+# Morgan, Hamza 2026-07-18: more assertive male option). This is an allowlist:
 # only these voice_ids are ever accepted from a client or injected into a call,
 # so a bad value can never reach the outbound-call payload.
 VOICES: dict[str, str] = {
     "jTWqplUkOPQwOegNjhal": "Alex",    # warm and polite — default
-    "Jui2x0OuMt9XBfF1tWIo": "Morgan",  # calm and analytical
+    "pNInz6obpgDQGcFmaJgB": "Adam",    # dominant, firm — assertive escalations
     "saQ3GQHMonWJoYcm6AJJ": "Riley",   # firm and direct
 }
 
