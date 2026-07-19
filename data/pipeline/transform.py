@@ -7,7 +7,22 @@ seed reconciles with demo_answer_key.json so the demo numbers can never drift.
 USAGE:
     python transform.py --check          # validate current seed vs answer key
     python transform.py --transform      # run full pipeline: raw -> benchmarks.json
+    python transform.py --transform --freeze-demo   # same, but keep frozen demo mrf values
     python transform.py --report         # print data-quality summary from MRF pulls
+
+--freeze-demo mechanism (generalized-pipeline WS1):
+    Historically `transform()` computed real MRF stats from data/raw/mrf/*.csv
+    when present, logged them, and then SILENTLY OVERWROTE them with the
+    hand-engineered benchmarks_v0.json values "for Mercy General consistency"
+    — i.e. even fresh real data never reached the output row. That override now
+    only happens when `--freeze-demo` is explicitly passed. By DEFAULT,
+    `--transform` uses freshly computed MRF stats whenever raw data is present
+    for a code, falling back to the frozen seed value only when no raw MRF data
+    exists for that code (unchanged either way).
+    `--check` is unaffected by this flag: it validates benchmarks_v0.json (the
+    committed, hand-locked demo seed) directly, never benchmarks.json, so the
+    demo answer-key gate stays green regardless of --freeze-demo or of whether
+    data/raw/mrf/*.csv happens to be present on the machine running it.
 """
 import argparse
 import csv
@@ -225,8 +240,13 @@ def report() -> None:
 
 # --------------------------------------------------------------------------- Full transform
 
-def transform() -> None:
-    """Full pipeline: read raw CMS + MRF -> clean -> compute -> write benchmarks.json."""
+def transform(freeze_demo: bool = False) -> None:
+    """Full pipeline: read raw CMS + MRF -> clean -> compute -> write benchmarks.json.
+
+    freeze_demo=True reproduces the historical behavior (real computed MRF
+    stats logged but discarded in favor of the frozen benchmarks_v0.json
+    values); freeze_demo=False (default) lets real computed stats flow into
+    the output row whenever raw MRF data is present for that code."""
     with open(CONFIG) as f:
         cfg = yaml.safe_load(f)["benchmark"]
     with open(SEED / "demo_answer_key.json") as f:
@@ -257,12 +277,20 @@ def transform() -> None:
 
         if cpt in mrf_data:
             stats = compute_mrf_stats(mrf_data[cpt], medicare_rate)
-            if stats["mrf_cash"] is not None:
-                log(f"  {cpt}: real MRF cash ${stats['mrf_cash']} (n={stats['n_cash_obs']})")
-                # Keep engineered Mercy values for demo consistency, but log real data
-                log(f"         (using demo value ${mrf_cash} for Mercy General consistency)")
-            if stats["mrf_negotiated_median"] is not None:
-                log(f"  {cpt}: real MRF negotiated median ${stats['mrf_negotiated_median']} (n={stats['n_neg_obs']})")
+            if freeze_demo:
+                if stats["mrf_cash"] is not None:
+                    log(f"  {cpt}: real MRF cash ${stats['mrf_cash']} (n={stats['n_cash_obs']}) computed, "
+                        f"but --freeze-demo active -> keeping frozen demo value ${mrf_cash}")
+                if stats["mrf_negotiated_median"] is not None:
+                    log(f"  {cpt}: real MRF negotiated median ${stats['mrf_negotiated_median']} "
+                        f"(n={stats['n_neg_obs']}) computed, but --freeze-demo active -> keeping frozen value ${mrf_neg_median}")
+            else:
+                if stats["mrf_cash"] is not None:
+                    mrf_cash = stats["mrf_cash"]
+                    log(f"  {cpt}: using real computed MRF cash ${mrf_cash} (n={stats['n_cash_obs']})")
+                if stats["mrf_negotiated_median"] is not None:
+                    mrf_neg_median = stats["mrf_negotiated_median"]
+                    log(f"  {cpt}: using real computed MRF negotiated median ${mrf_neg_median} (n={stats['n_neg_obs']})")
 
         row = compute_benchmark_row(
             cpt=cpt,
@@ -300,6 +328,9 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="validate seed vs answer key")
     parser.add_argument("--report", action="store_true", help="print data-quality summary")
     parser.add_argument("--transform", action="store_true", help="run full pipeline")
+    parser.add_argument("--freeze-demo", action="store_true",
+                        help="with --transform: keep frozen benchmarks_v0.json mrf values instead of "
+                             "real computed stats (historical behavior; see header docstring)")
     args = parser.parse_args()
 
     if args.check:
@@ -309,7 +340,7 @@ def main() -> None:
         report()
         return
     if args.transform:
-        transform()
+        transform(freeze_demo=args.freeze_demo)
         return
     # Default: show usage
     print("Run with --check, --report, or --transform. Use --help for details.")

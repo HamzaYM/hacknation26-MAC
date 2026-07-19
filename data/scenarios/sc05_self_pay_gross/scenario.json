@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "self_pay_gross",
+  "coverage": {
+    "member_id": null,
+    "network_status": null,
+    "payer_name": null,
+    "plan_name": null,
+    "status": "self_pay"
+  },
+  "hospital": {
+    "ccn": "220071",
+    "city": "Boston",
+    "ein": "04-2697983",
+    "name": "Massachusetts General Hospital",
+    "state": "MA"
+  },
+  "narrative": "Darnell had no insurance and was charged Mass General's full chargemaster list price for a CT and imaging visit — multiples of both Medicare and the hospital's own posted cash price.",
+  "patient": {
+    "account_number": "MGH-2026-0214",
+    "dob": "1985-06-03",
+    "name": "Darnell Price"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Massachusetts General Hospital"
+    }
+  ],
+  "scenario_id": "sc05_self_pay_gross",
+  "service_date": "2026-02-14",
+  "title": "Darnell Price — uninsured, billed full chargemaster gross"
+}

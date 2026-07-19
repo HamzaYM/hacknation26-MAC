@@ -11,6 +11,13 @@ build/
 .DS_Store
 apps/web/next-env.d.ts
 
+# Playwright E2E harness (WS6a) output — never committed.
+apps/web/e2e/report/
+apps/web/e2e/test-results/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/
+
 # Large data files — raw MRFs, chargemasters, and pipeline intermediates
 data/raw/
 *.db

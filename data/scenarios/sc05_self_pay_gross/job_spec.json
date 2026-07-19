@@ -1,0 +1,62 @@
+{
+  "authorizations": {},
+  "bill": {
+    "account_number": "MGH-2026-0214",
+    "due_date": "2026-03-25",
+    "facility_name": "Massachusetts General Hospital",
+    "is_itemized": true,
+    "line_items": [
+      {
+        "billed_amount": 1828.0,
+        "billing_entity": "facility",
+        "cpt": "70450",
+        "date_of_service": "2026-02-14",
+        "description": "CT head/brain without contrast",
+        "units": 1
+      },
+      {
+        "billed_amount": 835.0,
+        "billing_entity": "facility",
+        "cpt": "72110",
+        "date_of_service": "2026-02-14",
+        "description": "X-ray, lumbar spine, 4+ views",
+        "units": 1
+      },
+      {
+        "billed_amount": 826.0,
+        "billing_entity": "facility",
+        "cpt": "96360",
+        "date_of_service": "2026-02-14",
+        "description": "IV hydration, initial hour",
+        "units": 1
+      },
+      {
+        "billed_amount": 16.0,
+        "billing_entity": "facility",
+        "cpt": "36415",
+        "date_of_service": "2026-02-14",
+        "description": "Routine venipuncture",
+        "units": 1
+      }
+    ],
+    "nonprofit_status": true,
+    "patient_balance": 3505.0,
+    "statement_date": "2026-02-23"
+  },
+  "case_id": "sc05_self_pay_gross",
+  "derived_flags": [],
+  "entities": [
+    {
+      "balance": 3505.0,
+      "kind": "facility",
+      "name": "Massachusetts General Hospital"
+    }
+  ],
+  "eob": {},
+  "financial_profile": {},
+  "insurance": {},
+  "patient": {
+    "dob": "1985-06-03",
+    "legal_name": "Darnell Price"
+  }
+}

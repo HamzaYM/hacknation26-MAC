@@ -1,0 +1,38 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "oon_balance_bill",
+  "coverage": {
+    "emergency_services": true,
+    "member_id": "CIA-70045",
+    "network_status": "in_network",
+    "payer_name": "CIGNA ALTERNATE [1018]",
+    "plan_name": "HB AMC CIGNA NEW BUSINESS DISCOUNT",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220110",
+    "city": "Boston",
+    "ein": "04-2312909",
+    "name": "Brigham and Women's Hospital",
+    "state": "MA"
+  },
+  "narrative": "Tomas went to an in-network Brigham ER, but the anesthesia group was out-of-network and balance-billed him far above his in-network responsibility — a No Surprises Act violation, cited not negotiated.",
+  "patient": {
+    "account_number": "BWH-2026-0618",
+    "dob": "1983-12-11",
+    "name": "Tomas Vega"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Brigham and Women's Hospital"
+    },
+    {
+      "entity_type": "professional",
+      "name": "Bay State Anesthesia Associates"
+    }
+  ],
+  "scenario_id": "sc07_oon_balance_bill",
+  "service_date": "2026-06-18",
+  "title": "Tomas Vega — surprise out-of-network anesthesia bill (No Surprises Act)"
+}

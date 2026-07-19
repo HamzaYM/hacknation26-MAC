@@ -88,6 +88,7 @@ export default function UploadCard({
                   role="button"
                   tabIndex={0}
                   onClick={previewDemoFile}
+                  data-testid="use-demo-file"
                   style={{ fontSize: 12, color: "var(--accent-hover)", textDecoration: "underline", cursor: "pointer" }}
                 >
                   or use the demo file ({demoFile.name})
@@ -109,7 +110,7 @@ export default function UploadCard({
             </div>
             <iframe src={preview.url} title={preview.name} className="upload-preview-frame" />
             <div className="upload-preview-actions">
-              <button className="btn btn-primary" onClick={confirmAttach}>
+              <button className="btn btn-primary" onClick={confirmAttach} data-testid="attach-document">
                 Attach this document
               </button>
               <button className="btn btn-secondary" onClick={() => setPreview(null)}>

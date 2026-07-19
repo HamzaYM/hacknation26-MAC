@@ -1,0 +1,341 @@
+{
+  "ask": {
+    "anchor": 1371.97,
+    "excess_above_band": 2604.39,
+    "floor": 914.65,
+    "per_line_multiples": [
+      {
+        "code": "99285",
+        "medicare_multiple": 6.07,
+        "rand_flag": true
+      },
+      {
+        "code": "71045",
+        "medicare_multiple": 4.21,
+        "rand_flag": true
+      },
+      {
+        "code": "96360",
+        "medicare_multiple": 3.8,
+        "rand_flag": true
+      }
+    ],
+    "target": 1829.3,
+    "total_medicare_multiple": 5.35
+  },
+  "benchmark_report": {
+    "case_id": "sc03_upcoded_er",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96360/facility] cms-opps-2026q3"
+    },
+    "hospital": "Massachusetts General Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[99285/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 608.43
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 1545.41
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "AETNA [1001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Massachusetts General Hospital/99285] payer=AETNA [1001] plan=HB AMC AETNA HMO",
+            "source_url": null,
+            "value": 2576.32
+          },
+          {
+            "band": {
+              "max": 2576.32,
+              "median": 2183.22,
+              "min": 1928.92,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 1957.7,
+              "p75": 2443.44
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Massachusetts General Hospital/99285] commercial rows",
+            "source_url": null,
+            "value": 2183.22
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Massachusetts General Hospital/99285] cash",
+            "source_url": null,
+            "value": 2768.25
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Massachusetts General Hospital/99285] gross",
+            "source_url": null,
+            "value": 3691.0
+          }
+        ],
+        "billed": 3691.0,
+        "billing_entity": "facility",
+        "code": "99285",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Emergency department visit, high severity (level 5)",
+        "excess_above_band": 2169.93,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 1521.07,
+          "high_multiple": 2.5,
+          "low": 912.64,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 6.07,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[71045/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 88.91
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 225.83
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "AETNA [1001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Massachusetts General Hospital/71045] payer=AETNA [1001] plan=HB AMC AETNA HMO",
+            "source_url": null,
+            "value": 261.05
+          },
+          {
+            "band": {
+              "max": 261.05,
+              "median": 221.22,
+              "min": 195.45,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 198.37,
+              "p75": 247.59
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Massachusetts General Hospital/71045] commercial rows",
+            "source_url": null,
+            "value": 221.22
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Massachusetts General Hospital/71045] cash",
+            "source_url": null,
+            "value": 280.5
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Massachusetts General Hospital/71045] gross",
+            "source_url": null,
+            "value": 374.0
+          }
+        ],
+        "billed": 374.0,
+        "billing_entity": "facility",
+        "code": "71045",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Radiologic exam, chest, single view",
+        "excess_above_band": 151.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 222.27,
+          "high_multiple": 2.5,
+          "low": 133.37,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 4.21,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[96360/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 217.31
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 551.97
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "AETNA [1001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] payer=AETNA [1001] plan=HB AMC AETNA HMO",
+            "source_url": null,
+            "value": 576.55
+          },
+          {
+            "band": {
+              "max": 593.07,
+              "median": 508.4,
+              "min": 250.18,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 392.74,
+              "p75": 580.68
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] commercial rows",
+            "source_url": null,
+            "value": 508.4
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] cash",
+            "source_url": null,
+            "value": 619.5
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] gross",
+            "source_url": null,
+            "value": 826.0
+          }
+        ],
+        "billed": 826.0,
+        "billing_entity": "facility",
+        "code": "96360",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "IV hydration, initial hour",
+        "excess_above_band": 282.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 543.27,
+          "high_multiple": 2.5,
+          "low": 325.97,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.8,
+        "rand_flag": true,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "AETNA [1001]",
+    "plan_name": "HB AMC AETNA HMO",
+    "totals": {
+      "ask_anchor": 1371.97,
+      "ask_target": 1829.3,
+      "billed": 4891.0,
+      "excess_above_band": 2604.39,
+      "fair_band_high": 2286.61,
+      "fair_band_low": 1371.98,
+      "floor": 914.65,
+      "medicare": 914.65,
+      "medicare_multiple": 5.35
+    }
+  },
+  "call_talking_points": [
+    "upcode on 99285: $3,362.21 (derived flag)",
+    "Billed total $4,891.00 is 5.35x the Medicare rate of $914.65 (benchmark anchor).",
+    "Lines 99285, 71045, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "99285",
+      "detail": "99285 billed; records support 99283",
+      "dollar_impact": 3362.21,
+      "type": "upcode"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc03_upcoded_er"
+}

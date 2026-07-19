@@ -1,0 +1,80 @@
+{
+  "case_id": "00000000-0000-0000-0000-000000000001",
+  "hospital": "Mercy General Hospital",
+  "payer_name": "Blue Cross Blue Shield of Massachusetts",
+  "plan_name": "PPO",
+  "lines": [
+    {
+      "code": "99285",
+      "code_type": "CPT",
+      "description": "Emergency department visit, high severity (level 5)",
+      "billing_entity": "facility",
+      "units": 1,
+      "billed": 2340.0,
+      "anchors": [
+        {
+          "method": "medicare",
+          "value": 328.79,
+          "source": "CMS PFS 2026 (fixture)",
+          "confidence": "high",
+          "label": "Medicare rate"
+        },
+        {
+          "method": "rand_norm_estimate",
+          "value": 835.13,
+          "source": "RAND Hospital Price Transparency Study 5.0",
+          "confidence": "estimated",
+          "label": "estimated (RAND norm)",
+          "formula": "2.54 x medicare"
+        }
+      ],
+      "medicare_multiple": 7.12,
+      "fair_band": { "low": 328.79, "high": 835.13, "basis": "medicare-1x-to-rand-2.54x", "low_multiple": 1.0, "high_multiple": 2.54 },
+      "rand_flag": true,
+      "excess_above_band": 1504.87,
+      "coverage": "full"
+    },
+    {
+      "code": "71046",
+      "code_type": "CPT",
+      "description": "Chest X-ray, 2 views",
+      "billing_entity": "facility",
+      "units": 1,
+      "billed": 412.0,
+      "anchors": [
+        {
+          "method": "medicare",
+          "value": 41.2,
+          "source": "CMS OPPS 2026 (fixture)",
+          "confidence": "high",
+          "label": "Medicare rate"
+        },
+        {
+          "method": "cash_price",
+          "value": 120.0,
+          "source": "Mercy General Hospital posted chargemaster",
+          "source_url": "https://example.invalid/chargemaster/mercy-general",
+          "confidence": "medium",
+          "label": "Posted cash price"
+        }
+      ],
+      "medicare_multiple": 10.0,
+      "fair_band": { "low": 41.2, "high": 104.65, "basis": "medicare-1x-to-rand-2.54x", "low_multiple": 1.0, "high_multiple": 2.54 },
+      "rand_flag": true,
+      "excess_above_band": 307.35,
+      "coverage": "full"
+    }
+  ],
+  "totals": {
+    "billed": 2752.0,
+    "medicare": 369.99,
+    "medicare_multiple": 7.44,
+    "fair_band_low": 369.99,
+    "fair_band_high": 939.78,
+    "excess_above_band": 1812.22,
+    "ask_anchor": 939.78,
+    "ask_target": 654.89,
+    "floor": 369.99
+  },
+  "data_version": { "chargemaster": "e2e-fixture", "medicare": "e2e-fixture", "config": "e2e-fixture" }
+}

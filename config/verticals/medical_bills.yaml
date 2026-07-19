@@ -8,7 +8,9 @@ vertical: medical_bills
 # ── Red-flag detection parameters (deterministic engine, apps/api) ────────
 red_flags:
   duplicate:
-    match_on: [cpt, date_of_service]        # same code + same day
+    match_on: [cpt, date_of_service, billing_entity]  # same code + same day + same biller;
+                                            # distinct technical (facility) vs professional
+                                            # components of one study are NOT a duplicate (M6)
     min_amount: 25
   upcode:
     em_pairs:                                # billed vs. records-supported E/M candidates
@@ -21,10 +23,44 @@ red_flags:
     tolerance_usd: 1.00                      # bill balance vs EOB patient responsibility
   markup:
     flag_above_band_multiple: 1.0            # any line above band_high
-  nsa:                                       # No Surprises Act — protected out-of-network emergency/ancillary balance bill
+  nsa:                                       # No Surprises Act — protected out-of-network emergency/ancillary balance bill (#67 marker path)
     ancillary_kinds: [anesthesia, er_physician_group, radiology, pathology]  # providers a patient can't choose in an emergency
-    out_of_network_markers: ["out-of-network", "out of network"]             # how a line's spec marks the provider OON
+    out_of_network_markers: ["out-of-network", "out of network", "non-participating", "nonparticipating", "non-par", "out of plan", "out-of-plan"]  # how a line's spec marks the provider OON (real EOB/bill text uses "non-participating provider" for the same legal fact) (M10)
     min_impact: 100                          # protected surprise-balance delta (billed − in-network share) must be material to fire
+  # ── generalized-pipeline detectors (WS2) — thresholds only, logic is code ──
+  phantom:
+    # A bill line with no EOB counterpart, when the EOB exists AND has at least
+    # one line on the same service date (so we know the payer *did* see that
+    # date — a truly missing line is a phantom charge, not just an un-adjudicated one).
+    min_amount: 25                           # ignore trivial phantom lines
+    require_eob_date_coverage: true          # only fire when the EOB covers the date
+  nsa_balance_billing:
+    # No Surprises Act: in-network (or emergency) claim where the provider bills
+    # the patient ABOVE the EOB patient-responsibility figure = balance billing.
+    tolerance_usd: 1.00                      # slack over EOB patient-responsibility
+    emergency_always_protected: true         # emergency services protected regardless of network
+  denial:
+    # An EOB line the plan paid $0 on, carrying a denial/remark code.
+    min_amount: 1.00                         # ignore $0-impact denials
+  units_error:
+    # Bill units greater than EOB-allowed units, or greater than the code's
+    # clinically plausible max per day (map below; absent code => no ceiling check).
+    max_daily_units:
+      "96374": 1          # IV push, single/initial drug — one initial push per encounter
+      "99285": 1          # one E/M level per encounter
+      "99284": 1
+      "99283": 1
+      "71046": 1          # chest X-ray 2-view — one per encounter typically
+      "80053": 1          # one metabolic panel per day
+      "85025": 1          # one CBC per day
+  absent_from_chargemaster:
+    # 45 CFR 180.20/180.50 supporting lever. Fire ONLY for facility lines with a
+    # standard code that is missing from an OTHERWISE-COMPLETE hospital MRF.
+    # NEVER fires for professional/physician-group lines (legitimately absent).
+    mrf_completeness_min_rows: 3             # >= this many of the bill's codes must be
+                                             # present in the MRF before absence is meaningful
+    severity: low                            # supporting data point, never a fraud claim
+    standard_code_types: [CPT, HCPCS, DRG, MS-DRG]
 
 # ── Fair-price band (deterministic math) ─────────────────────────────────
 benchmark:
@@ -32,6 +68,11 @@ benchmark:
   band_high_multiple: 2.5                    # x Medicare — fair-band top (RAND commercial norm ~2.54x)
   self_pay_target_multiple_low: 1.5          # anchor zone for self-pay asks (150–200% of Medicare)
   self_pay_target_multiple_high: 2.0
+  # RAND 2022 study: commercial plans pay ~254% of Medicare on average.
+  rand_norm_multiple: 2.54                   # rand_norm_estimate = Medicare x this; ALWAYS
+                                             # labeled "estimated (RAND norm)" — not a real quote.
+  rand_ceiling_multiple: 2.54                # a line billed above this x Medicare is flagged
+                                             # (rand_flag) as an above-commercial-norm overcharge.
 
 # ── Routing thresholds (decision table from Research.md) ─────────────────
 thresholds:

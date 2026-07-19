@@ -51,19 +51,22 @@ def launch_calls(req: LaunchRequest, background_tasks: BackgroundTasks) -> dict:
     db.ensure_case(case_id, spec_dict, OWNER_EMAIL_BY_CASE_ID.get(case_id))
 
     launched: list[dict] = []
-    sim_specs: list[tuple[str, str]] = []
+    sim_specs: list[tuple[str, str, str, str]] = []
     for entity in spec.entities:
         if req.entities and entity.name not in req.entities:
             continue
-        persona = ENTITY_PERSONAS.get(entity.kind)
-        if persona is None:
-            continue
+        # ENTITY_PERSONAS only covers the hand-authored Maya scripts; any other
+        # case (including entity kinds Maya doesn't have) still gets a
+        # simulated call — simulator.build_sequence dispatches to the
+        # case-generic driver for any case_id != DEMO_CASE_ID regardless of
+        # which persona name is threaded through here.
+        persona = ENTITY_PERSONAS.get(entity.kind, "generic")
         call_id = str(uuid.uuid4())
         dossier = build_dossier(spec, flags, demo_benchmarks(), load_vertical(), entity=entity)
         dossier_id = db.insert_dossier(case_id, dossier)
         db.insert_call(call_id, case_id, counterparty="agent", dossier_id=dossier_id)
         launched.append({"call_id": call_id, "entity": entity.name, "status": "queued"})
-        sim_specs.append((call_id, persona))
+        sim_specs.append((call_id, persona, case_id, entity.name))
 
     if req.simulate and sim_specs:
         background_tasks.add_task(play_calls, sim_specs)

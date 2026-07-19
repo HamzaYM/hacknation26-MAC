@@ -1,0 +1,9 @@
+# The scenario suite is byte-stable: `python data/scenarios/generate.py --check`
+# regenerates every artifact and compares bytes. The generator always writes
+# LF-terminated JSON, so these files MUST stay LF on checkout regardless of
+# core.autocrlf (Windows), or --check (and test_scenario_suite) would see CRLF
+# drift. PDFs are binary — never touch their bytes.
+*.json text eol=lf
+*.py    text eol=lf
+*.gitattributes text eol=lf
+*.pdf   binary

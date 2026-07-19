@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "denial_driven",
+  "coverage": {
+    "member_id": "CCA-90514",
+    "network_status": "in_network",
+    "payer_name": "COMMONWEALTH CARE ALLIANCE [1007]",
+    "plan_name": "HB MGH COMMONWEALTH CARE ALLIANCE",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220071",
+    "city": "Boston",
+    "ein": "04-2697983",
+    "name": "Massachusetts General Hospital",
+    "state": "MA"
+  },
+  "narrative": "Owen's plan denied his CT scan (denial code 197, prior authorization missing) and paid $0, leaving the full charge to him. The denial is appealable — the provider never obtained the auth.",
+  "patient": {
+    "account_number": "MGH-2026-0327",
+    "dob": "1968-08-16",
+    "name": "Owen Fletcher"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Massachusetts General Hospital"
+    }
+  ],
+  "scenario_id": "sc09_denial_driven",
+  "service_date": "2026-03-27",
+  "title": "Owen Fletcher — CT denied for missing prior authorization"
+}

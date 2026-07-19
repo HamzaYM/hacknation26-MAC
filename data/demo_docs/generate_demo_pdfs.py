@@ -212,6 +212,159 @@ def generate_eob() -> None:
     print(f"Generated: {out} ({len(EOB_LINES)} lines, patient responsibility {money(EOB_RESP)})")
 
 
+# ══════════════════════════════════════════════════════════════════════════
+# Reusable, DETERMINISTIC renderers for the WS4 scenario suite
+# (data/scenarios/generate.py). These take a fully-specified context dict and
+# return PDF bytes with a FIXED creation date, so `generate.py --check`
+# regenerates byte-identical artifacts. The legacy generate_bill/generate_eob
+# above are left byte-stable (untouched) on purpose.
+# ══════════════════════════════════════════════════════════════════════════
+import datetime as _dt  # noqa: E402
+
+# A single fixed timestamp for every scenario PDF — the only way fpdf2 output is
+# byte-reproducible (it otherwise embeds `now` in /CreationDate + /ModDate).
+FIXED_PDF_DATE = _dt.datetime(2026, 7, 18, 0, 0, 0, tzinfo=_dt.timezone.utc)
+
+
+def _new_pdf() -> FPDF:
+    pdf = FPDF()
+    pdf.set_creation_date(FIXED_PDF_DATE)
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    return pdf
+
+
+def render_scenario_bill_pdf(ctx: dict) -> bytes:
+    """Itemized hospital statement for one scenario. `ctx` keys: hospital_name,
+    address, tax_id, ccn, patient, dob, account, dos, statement_date, due_date,
+    payer, diagnosis, lines[{cpt,description,date_of_service,units,billed_amount}],
+    total_billed, insurance_paid, balance."""
+    pdf = _new_pdf()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, ctx["hospital_name"].upper(), ln=True, align="C")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(0, 5, f"{ctx['address']}  ·  Tax ID {ctx['tax_id']}  ·  CCN {ctx['ccn']}",
+             ln=True, align="C")
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 8, "ITEMIZED STATEMENT", ln=True, align="C")
+    pdf.ln(3)
+
+    for label, val in [
+        ("Patient:", f"{ctx['patient']} (DOB {ctx['dob']})"),
+        ("Account #:", ctx["account"]),
+        ("Date of Service:", ctx["dos"]),
+        ("Statement Date:", f"{ctx['statement_date']}    Due: {ctx['due_date']}"),
+        ("Diagnosis:", ctx["diagnosis"]),
+        ("Primary Insurer:", ctx["payer"]),
+    ]:
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(32, 5, label)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 5, val, ln=True)
+    pdf.ln(3)
+
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_fill_color(230, 230, 230)
+    pdf.cell(10, 6, "#", border=1, fill=True)
+    pdf.cell(20, 6, "CPT", border=1, fill=True)
+    pdf.cell(84, 6, "Description", border=1, fill=True)
+    pdf.cell(20, 6, "Date", border=1, fill=True)
+    pdf.cell(10, 6, "Qty", border=1, fill=True, align="C")
+    pdf.cell(24, 6, "Amount", border=1, fill=True, align="R")
+    pdf.ln()
+
+    pdf.set_font("Helvetica", "", 7)
+    for n, li in enumerate(ctx["lines"], 1):
+        pdf.cell(10, 4.5, str(n), border=1)
+        pdf.cell(20, 4.5, li["cpt"], border=1)
+        pdf.cell(84, 4.5, (li.get("description") or "")[:52], border=1)
+        pdf.cell(20, 4.5, li.get("date_of_service") or ctx["dos"], border=1)
+        pdf.cell(10, 4.5, str(li.get("units", 1)), border=1, align="C")
+        pdf.cell(24, 4.5, money(li["billed_amount"]), border=1, align="R")
+        pdf.ln()
+
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(124, 6, "")
+    pdf.cell(20, 6, "Total Charges:", align="R")
+    pdf.cell(24, 6, money(ctx["total_billed"]), align="R", ln=True)
+    if ctx.get("insurance_paid"):
+        pdf.cell(124, 6, "")
+        pdf.set_font("Helvetica", "", 10)
+        pdf.cell(20, 6, "Insurance Paid:", align="R")
+        pdf.cell(24, 6, f"-{money(ctx['insurance_paid'])}", align="R", ln=True)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(124, 7, "")
+    pdf.cell(20, 7, "BALANCE DUE:", align="R")
+    pdf.cell(24, 7, money(ctx["balance"]), align="R", ln=True)
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.cell(0, 4, "Payment due within 30 days. Financial assistance may be available.", ln=True)
+    return bytes(pdf.output())
+
+
+def render_scenario_eob_pdf(ctx: dict) -> bytes:
+    """Explanation of Benefits for one scenario. `ctx` keys: payer,
+    payer_address, member, member_id, group, claim, date_processed, provider,
+    dos, lines[{cpt,description,billed_amount,plan_paid,patient_responsibility}],
+    eob_billed, eob_plan_paid, eob_resp, remark."""
+    pdf = _new_pdf()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "EXPLANATION OF BENEFITS", ln=True, align="C")
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, ctx["payer"], ln=True, align="C")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(0, 5, ctx.get("payer_address", ""), ln=True, align="C")
+    pdf.cell(0, 5, "THIS IS NOT A BILL", ln=True, align="C")
+    pdf.ln(4)
+
+    for label, val in [
+        ("Member:", ctx["member"]),
+        ("Member ID:", ctx.get("member_id", "")),
+        ("Group:", ctx.get("group", "")),
+        ("Claim #:", ctx.get("claim", "")),
+        ("Date Processed:", ctx.get("date_processed", "")),
+        ("Provider:", ctx["provider"]),
+        ("Date of Service:", ctx["dos"]),
+    ]:
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.cell(30, 5, label)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 5, val, ln=True)
+    pdf.ln(3)
+
+    lines = ctx.get("lines") or []
+    if lines:
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_fill_color(230, 230, 230)
+        pdf.cell(20, 5, "CPT", border=1, fill=True)
+        pdf.cell(74, 5, "Description", border=1, fill=True)
+        pdf.cell(24, 5, "Billed", border=1, fill=True, align="R")
+        pdf.cell(24, 5, "Plan Paid", border=1, fill=True, align="R")
+        pdf.cell(24, 5, "You Owe", border=1, fill=True, align="R")
+        pdf.ln()
+        pdf.set_font("Helvetica", "", 7)
+        for li in lines:
+            pdf.cell(20, 4.5, li["cpt"], border=1)
+            pdf.cell(74, 4.5, (li.get("description") or "")[:46], border=1)
+            pdf.cell(24, 4.5, money(li["billed_amount"]), border=1, align="R")
+            pdf.cell(24, 4.5, money(li.get("plan_paid") or 0.0), border=1, align="R")
+            pdf.cell(24, 4.5, money(li.get("patient_responsibility") or 0.0), border=1, align="R")
+            pdf.ln()
+        pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(60, 7, "YOUR TOTAL RESPONSIBILITY:")
+    pdf.cell(30, 7, money(ctx["eob_resp"]), align="R", ln=True)
+
+    if ctx.get("remark"):
+        pdf.ln(3)
+        pdf.set_font("Helvetica", "", 8)
+        pdf.multi_cell(0, 4, f"Remark: {ctx['remark']}")
+    return bytes(pdf.output())
+
+
 if __name__ == "__main__":
     assert round(2500.00 + 250.00 + 1125.00, 2) == EOB_RESP, "summary components != 3875"
     generate_bill()
