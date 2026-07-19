@@ -187,6 +187,45 @@ def report_lever_result(body: LeverResult) -> dict:
     return resp
 
 
+@router.post("/get_authorization")
+def get_authorization(body: dict) -> dict:
+    """The patient's recorded authorization, presented when a rep challenges it.
+
+    TOOL-GATED HONESTY: the agent may claim a recording exists ONLY when the tool
+    returns on_file: true. When true it returns the VERBATIM statement (the exact
+    words the patient recorded), the date recorded, and the account reference.
+
+    There is no ElevenLabs mechanism to PLAY a stored clip into a live PSTN call
+    (confirmed across the system-tools/server-tools/client-tools/custom-LLM docs and
+    the outbound-call API schema), so the agent reads the statement out loud, is
+    explicit it is reading a recorded/signed authorization on file rather than
+    playing the audio, and offers to send the recording + a written release."""
+    call_id = _resolve_call_id((body or {}).get("call_id"))
+    case_id = DEMO_CASE_ID
+    row = db.get_call(call_id) if call_id else None
+    if row is not None:
+        case_id = str(row["case_id"])
+    rec = db.get_case_authorization(case_id)
+    if not rec or not rec.get("authorization_path"):
+        return {
+            "on_file": False,
+            "say": ("No recorded authorization is on file for this account. Do NOT claim one "
+                    "exists — offer to complete the office's own authorization process instead."),
+        }
+    spec = spec_for_case(case_id) or DEMO_JOB_SPEC
+    return {
+        "on_file": True,
+        "recorded_at": rec.get("authorization_recorded_at"),
+        "statement_text": rec.get("authorization_statement"),
+        "patient_name": (spec.get("patient") or {}).get("legal_name"),
+        "reference": (spec.get("bill") or {}).get("account_number"),
+        "playback_note": ("Read statement_text VERBATIM. You cannot play the audio on this line — "
+                          "say that plainly, tell them you are reading her recorded authorization on "
+                          "file, and offer to send the recording and a written release to their email "
+                          "or fax right now."),
+    }
+
+
 @router.post("/log_quote")
 def log_quote(body: LogEvent) -> dict:
     payload = dict(body.payload)

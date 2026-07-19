@@ -5,7 +5,7 @@ Persistence is best-effort (app/db.py no-ops without a DB); the fixture cases
 parse_documents into the OpenAI vision extraction prompt
 (data/pipeline/extraction_prompt.md).
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from .. import db, storage
@@ -120,6 +120,74 @@ def set_case_financial_profile(case_id: str, body: FinancialProfileInput) -> dic
         "floor": floor,
         "persisted": persisted,
     }
+
+
+# Signed authorization URLs outlive a single sitting: the patient records it,
+# and it may be sent to a billing office hours later. sign_url's 3600s default is
+# too short for "I'll email you this," so use 48h for the playback/handoff link.
+_AUTH_URL_TTL = 60 * 60 * 48
+
+
+def _authorization_view(real_id: str) -> dict:
+    """Frozen contract for the on-file state (confirm + report + the mid-call
+    tool share this shape). on_file false when nothing was recorded."""
+    rec = db.get_case_authorization(real_id)
+    if not rec or not rec.get("authorization_path"):
+        return {"on_file": False, "recorded_at": None, "statement_text": None, "recording_url": None}
+    return {
+        "on_file": True,
+        "recorded_at": rec.get("authorization_recorded_at"),
+        "statement_text": rec.get("authorization_statement"),
+        "recording_url": storage.sign_url(rec["authorization_path"], expires_in=_AUTH_URL_TTL),
+    }
+
+
+@router.post("/{case_id}/authorization")
+async def upload_authorization(
+    case_id: str,
+    file: UploadFile = File(...),
+    statement: str = Form(...),
+) -> dict:
+    """Land the patient's recorded authorization on the case (migration 0008).
+
+    Maya records herself on /confirm approving the AI advocate; the clip goes to
+    the authorizations bucket and the verbatim statement (the script she read) is
+    persisted. The agent presents this the moment a rep challenges authorization
+    mid-call (get_authorization tool). The recording IS paper-trail evidence.
+    """
+    spec = _resolve_spec(case_id)            # 404s unknown cases before we write
+    real_id = spec["case_id"]
+    statement = statement.strip()
+    if not statement:
+        raise HTTPException(400, "statement (the words the patient read) is required")
+
+    audio = await file.read()
+    if not audio:
+        raise HTTPException(400, "empty recording")
+
+    db.ensure_case(real_id, spec, OWNER_EMAIL_BY_CASE_ID.get(real_id))
+    content_type = file.content_type or "audio/webm"
+    path = storage.store_authorization(real_id, audio, content_type)
+    # Persist even when storage is unavailable (no-DB/no-bucket demo): the
+    # statement + a synthetic path still drive the on-file state and the tool.
+    stored_path = path or f"authorizations/{real_id}.webm"
+    persisted = db.set_case_authorization(real_id, stored_path, statement)
+
+    view = _authorization_view(real_id)
+    view["case_id"] = case_id
+    view["persisted"] = persisted
+    view["uploaded"] = path is not None
+    return view
+
+
+@router.get("/{case_id}/authorization")
+def get_authorization_state(case_id: str) -> dict:
+    """The recorded-authorization state for the /confirm and case-file screens:
+    {on_file, recorded_at, statement_text, recording_url}."""
+    spec = _resolve_spec(case_id)
+    view = _authorization_view(spec["case_id"])
+    view["case_id"] = case_id
+    return view
 
 
 @router.get("/{case_id}/action_plan")

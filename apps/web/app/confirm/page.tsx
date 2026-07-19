@@ -5,10 +5,38 @@ import { useRouter } from "next/navigation";
 import { confirmCase, getActionPlan, getDemoCase, getFlags, launchCalls } from "../../lib/api";
 import type { ActionPlanResponse } from "../../lib/api";
 import { getVoicePref, voiceById } from "../../lib/voice";
+import RecordAuthorization from "../../components/RecordAuthorization";
 import { entitySavings, facilitySavings, money } from "../../lib/savings";
 import { FEE_LINE, feeOn, yourShare } from "../../lib/fees";
 import { FLAG_LABELS } from "../../lib/types";
 import type { DerivedFlag, JobSpec } from "../../lib/types";
+
+// The exact words the patient reads into their recorded authorization. Built
+// from the case (name, DOB, account, facility) per the research's ideal script:
+// name + DOB (identity), account + provider (scope), the third party (Haggl) and
+// an explicit scope of authority, effective date, and revocation language. No
+// em-dashes in spoken copy. This is the SAME text persisted with the recording
+// and read back verbatim by the agent, so it must match what they say out loud.
+function authorizationStatement(spec: JobSpec): string {
+  const name = (spec.patient?.legal_name as string) ?? "the patient";
+  const dobRaw = spec.patient?.dob as string | undefined;
+  let dob = "";
+  if (dobRaw) {
+    const d = new Date(`${dobRaw}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      dob = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    }
+  }
+  const account = spec.bill?.account_number ?? "";
+  const facility = spec.bill?.facility_name ?? "the provider";
+  return [
+    `My name is ${name}${dob ? `, date of birth ${dob}` : ""}.`,
+    `This is regarding my account ${account} at ${facility}.`,
+    "I authorize Haggl to discuss, negotiate, dispute, and adjust the charges and payment arrangements on this account on my behalf.",
+    "This authorization is effective today and remains valid until I revoke it.",
+    "You may reach me directly to confirm.",
+  ].join(" ");
+}
 
 // PRD §11 screen 3 — the challenge-mandated gate: nothing dials until the
 // user confirms this plan. Flags come from GET /cases/{id}/flags (computed
@@ -227,6 +255,12 @@ export default function Confirm() {
           Change voice
         </a>
       </div>
+
+      <RecordAuthorization
+        caseId={spec.case_id}
+        statement={authorizationStatement(spec)}
+        patientName={(spec.patient?.legal_name as string) ?? "You"}
+      />
       {copy?.per_call_descriptions && copy.per_call_descriptions.length > 0 && (
         <div className="card">
           <h3 style={{ marginBottom: 12 }}>The calls we&apos;ll make</h3>

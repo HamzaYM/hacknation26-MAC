@@ -173,6 +173,44 @@ export async function parseDocument(
   return res.json();
 }
 
+// ---- Recorded patient authorization (migration 0008) ----
+// Maya records herself authorizing the AI advocate; the agent presents it (reads
+// it verbatim) when a rep challenges authorization mid-call. on_file gates the
+// whole feature: the mid-call tool may only claim a recording when on_file is true.
+export interface AuthorizationState {
+  case_id?: string;
+  on_file: boolean;
+  recorded_at: string | null;
+  statement_text: string | null;
+  recording_url: string | null;
+  persisted?: boolean;
+  uploaded?: boolean;
+}
+
+export async function getAuthorization(caseId: string): Promise<AuthorizationState> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/authorization`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /cases/${caseId}/authorization failed: ${res.status}`);
+  return res.json();
+}
+
+// Uploads the recorded clip + the exact words the patient read (the statement).
+// blob is a MediaRecorder Blob (webm) or a file from the accessible file-input
+// fallback; filename/type carry through so the API bucket keeps the right ext.
+export async function uploadAuthorization(
+  caseId: string,
+  blob: Blob,
+  statement: string
+): Promise<AuthorizationState> {
+  const form = new FormData();
+  const type = blob.type || "audio/webm";
+  const name = type.includes("mpeg") || type.includes("mp3") ? "authorization.mp3" : "authorization.webm";
+  form.append("file", blob, name);
+  form.append("statement", statement);
+  const res = await fetch(`${API_BASE}/cases/${caseId}/authorization`, { method: "POST", body: form });
+  if (!res.ok) throw new Error(`POST /cases/${caseId}/authorization failed: ${res.status}`);
+  return res.json();
+}
+
 // null = no report yet (404 — no completed calls); throws on other failures.
 export async function getReport(caseId: string): Promise<CaseReport | null> {
   const res = await fetch(`${API_BASE}/cases/${caseId}/report`, { cache: "no-store" });

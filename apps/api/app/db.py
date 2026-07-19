@@ -12,7 +12,7 @@ import os
 import threading
 import urllib.parse
 import uuid as uuidlib
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -36,6 +36,9 @@ _warned = False
 # survives within the running API process, so /intake → /confirm reflects it
 # without a DB. Supabase is the durable store; this is the same-process cache.
 _financial_overrides: dict[str, dict] = {}
+# Same-process cache for the recorded patient authorization (migration 0008),
+# so upload → /confirm → the mid-call tool reflect it even without a DB.
+_authorization_overrides: dict[str, dict] = {}
 
 
 def _connect():
@@ -196,6 +199,52 @@ def get_case_financial_profile(case_id: str) -> dict | None:
         return rows[0]["financial_profile_captured"]
     with _lock:
         return _financial_overrides.get(case_id)
+
+
+# ── recorded patient authorization (migration 0008) ───────────────────────
+def set_case_authorization(case_id: str, path: str, statement: str) -> bool:
+    """Persist the recorded authorization (storage path + verbatim statement) and
+    stamp authorization_recorded_at = now(). Also caches in-process so the flow
+    works without a DB. Returns True only when it actually persisted to Supabase."""
+    recorded_at = datetime.now(timezone.utc)
+    with _lock:
+        _authorization_overrides[case_id] = {
+            "authorization_path": path,
+            "authorization_statement": statement,
+            "authorization_recorded_at": recorded_at.isoformat(),
+        }
+    if not _is_uuid(case_id):
+        return False
+    result = _run(
+        """
+        update cases set authorization_path = %s,
+                         authorization_statement = %s,
+                         authorization_recorded_at = now()
+        where id = %s
+        """,
+        (path, statement, case_id),
+    )
+    return result is not None
+
+
+def get_case_authorization(case_id: str) -> dict | None:
+    """The recorded authorization for a case: {authorization_path,
+    authorization_statement, authorization_recorded_at}. Reads Supabase first,
+    then the in-process cache. None when nothing has been recorded — the mid-call
+    tool then reports on_file: false (tool-gated honesty)."""
+    if _is_uuid(case_id):
+        rows = _run(
+            "select authorization_path, authorization_statement, authorization_recorded_at "
+            "from cases where id = %s", (case_id,), fetch=True)
+        if rows and rows[0].get("authorization_path"):
+            row = _jsonable(rows[0])
+            return {
+                "authorization_path": row["authorization_path"],
+                "authorization_statement": row.get("authorization_statement"),
+                "authorization_recorded_at": row.get("authorization_recorded_at"),
+            }
+    with _lock:
+        return _authorization_overrides.get(case_id)
 
 
 # ── voice preference (per case) ───────────────────────────────────────────
