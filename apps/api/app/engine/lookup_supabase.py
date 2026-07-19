@@ -106,6 +106,9 @@ class SupabaseLookup:
 
     # -- charge rows (cached per hospital+code) --------------------------
     def charge_rows(self, hospital: str, code: str) -> list[ChargeRow]:
+        # Normalize the hospital key (strip surrounding whitespace), consistent with
+        # the payer/plan .strip().upper() handling below and SqliteLookup (L3).
+        hospital = (hospital or "").strip()
         key = (hospital, code)
         if key in self._charge_cache:
             return self._charge_cache[key]

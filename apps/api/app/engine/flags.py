@@ -106,7 +106,15 @@ def detect_flags(
         reconciliation = reconcile(job_spec.bill, job_spec.eob if eob_present else None)
 
     flags: list[DerivedFlag] = []
-    implicated_cpts: set[str] = set()  # lines already explained by a flag → markup skips
+    # Lines already explained by a flag → later detectors (markup, PTP, phantom,
+    # units, absent) skip them so the same dollars are never claimed twice. Keyed
+    # by LINE IDENTITY (cpt, date_of_service) — NOT bare CPT — so an unrelated
+    # occurrence of the same code on a *different* date stays independently
+    # detectable (fix H1). Helper keeps the tuple construction in one place.
+    implicated: set[tuple] = set()
+
+    def _key(code, date):
+        return (code, date)
 
     # ── duplicate: same values on the config's match_on keys ──────────────
     groups: dict[tuple, list[LineItem]] = {}
@@ -119,7 +127,7 @@ def detect_flags(
         extra = round(sum(li.billed_amount or 0.0 for li in group[1:]), 2)
         if extra < rf["duplicate"]["min_amount"]:
             continue
-        implicated_cpts.add(group[0].cpt)
+        implicated.add(_key(group[0].cpt, group[0].date_of_service))
         flags.append(DerivedFlag(
             type="duplicate",
             cpt=group[0].cpt,
@@ -133,10 +141,14 @@ def detect_flags(
 
     # ── upcode candidate: em_pairs billed code + all-low-acuity dx ────────
     em_pairs = {p["billed"]: p for p in rf["upcode"]["em_pairs"]}
-    low_acuity = set(rf["upcode"].get("low_acuity_dx", []))
+    # Normalize the low-acuity dx set + each line's dx codes (strip/upper) before
+    # membership — the same normalization infer_code_type/the SQLite layer apply —
+    # so an extraction artifact like 'J06.9 ' doesn't defeat the detector (M9).
+    low_acuity = {str(dx).strip().upper() for dx in rf["upcode"].get("low_acuity_dx", [])}
     for li in lines:
         pair = em_pairs.get(li.cpt)
-        if not pair or not li.dx_codes or not all(dx in low_acuity for dx in li.dx_codes):
+        if not pair or not li.dx_codes or not all(
+                str(dx).strip().upper() in low_acuity for dx in li.dx_codes):
             continue
         # supported level = highest suspect code that has a benchmark row
         candidates = pair["suspect_if_supported"]
@@ -149,8 +161,12 @@ def detect_flags(
                 if row.get(basis) is not None:
                     counterfactual = row[basis]
                     break
-        impact = round((li.billed_amount or 0.0) - counterfactual, 2) if counterfactual else 0.0
-        implicated_cpts.add(li.cpt)
+        # No defensible counterfactual price → we cannot substantiate a dollar
+        # overcharge, so do NOT emit a misleading $0-impact upcode "finding" (H5).
+        if counterfactual is None:
+            continue
+        impact = round((li.billed_amount or 0.0) - counterfactual, 2)
+        implicated.add(_key(li.cpt, li.date_of_service))
         flags.append(DerivedFlag(
             type="upcode",
             cpt=li.cpt,
@@ -189,7 +205,7 @@ def detect_flags(
             if any(matched_cpts <= fired for fired in fired_components_by_date.get(date, [])):
                 continue
             components_billed = round(sum(li.billed_amount or 0.0 for li in comps), 2)
-            implicated_cpts |= {li.cpt for li in comps} | {bundle["bundled_code"]}
+            implicated |= {_key(li.cpt, date) for li in comps} | {_key(bundle["bundled_code"], date)}
             fired_components_by_date.setdefault(date, []).append(matched_cpts)
             flags.append(DerivedFlag(
                 type="unbundle",
@@ -216,12 +232,18 @@ def detect_flags(
             for date, cpt_map in sorted(by_date_cpt.items(), key=lambda kv: str(kv[0])):
                 if c1 not in cpt_map or c2 not in cpt_map:
                     continue
-                if c1 in implicated_cpts or c2 in implicated_cpts:
-                    continue  # already handled by a panel bundle
+                # The PTP flag claims the column-2 code's dollars ON THIS DATE, so
+                # skip only when THOSE dollars are already claimed (e.g. a panel
+                # bundle subsumed c2 on this date). Do NOT skip merely because c1
+                # was implicated by an unrelated flag (a same-day duplicate of c1,
+                # or c1 on another date) — that would swallow an independent
+                # column-2 violation (fix H1 / cross-date + duplicate suppression).
+                if _key(c2, date) in implicated:
+                    continue
                 c2_lines = cpt_map[c2]
                 impact = round(sum(li.billed_amount or 0.0 for li in c2_lines), 2)
                 mod = pair.get("modifier_indicator", 0)
-                implicated_cpts |= {c1, c2}
+                implicated |= {_key(c1, date), _key(c2, date)}
                 flags.append(DerivedFlag(
                     type="unbundle",
                     cpt=c2,
@@ -245,14 +267,14 @@ def detect_flags(
         require_cov = pf.get("require_eob_date_coverage", True)
         for row in reconciliation["bill_only"]:
             code = row["code"]
-            if code in implicated_cpts:
+            if _key(code, row.get("date")) in implicated:
                 continue
             billed = row.get("billed") or 0.0
             if billed < min_amt:
                 continue
             if require_cov and not row.get("eob_covers_date"):
                 continue
-            implicated_cpts.add(code)
+            implicated.add(_key(code, row.get("date")))
             flags.append(DerivedFlag(
                 type="phantom",
                 cpt=code,
@@ -289,32 +311,61 @@ def detect_flags(
          if li.description and any(m in li.description.lower() for m in markers)),
         None,
     )
-    ancillary_entity = next(
-        (e for e in job_spec.entities
-         if e.kind in ancillary_kinds and (e.balance or 0) > 0),
-        None,
+    ancillary_entities = [
+        e for e in job_spec.entities
+        if e.kind in ancillary_kinds and (e.balance or 0) > 0
+    ]
+    # This case is in the marker path's domain when BOTH an OON-marked line and an
+    # ancillary provider (a provider a patient can't choose in an emergency) are
+    # present — the #67 surprise-bill shape. In that domain we require a genuine
+    # linkage before asserting NSA protection: an ancillary provider whose balance
+    # ALONE exceeds the entire adjudicated patient responsibility is billing above
+    # the in-network cost share (a real surprise balance bill). A boilerplate OON
+    # disclosure on an unrelated facility line + an ancillary whose balance is a
+    # fully-reconciled in-network co-insurance share does NOT qualify (fix M2).
+    marker_context = oon_line is not None and bool(ancillary_entities)
+    marker_protected = marker_context and eob_resp is not None and any(
+        (e.balance or 0) > eob_resp for e in ancillary_entities
     )
-    marker_protected = oon_line is not None and ancillary_entity is not None
 
     # (b) generalized reconciliation-driven signal (WS2 semantics)
     ins = job_spec.insurance or {}
     network = ins.get("network_status")
-    emergency = bool(ins.get("emergency_services") or ins.get("emergency"))
+    ins_emergency = ins.get("emergency_services", ins.get("emergency"))
+    emergency = bool(ins_emergency)
     generalized_protected = (network == "in_network") or (
         emergency and nsa_bb_cfg.get("emergency_always_protected", True)
     )
 
-    # min_impact (#67) is the material-delta gate; fall back to WS2 tolerance.
-    min_impact = nsa_cfg.get("min_impact", nsa_bb_cfg.get("tolerance_usd", 0))
-    if ((marker_protected or generalized_protected)
-            and eob_present and balance is not None and eob_resp is not None):
+    # Select the protection signal AND its own material-delta gate per path (fix
+    # M1): inside the marker domain use the #67 min_impact; on the generalized WS2
+    # path use nsa_balance_billing.tolerance_usd (they are independent statutory
+    # theories with independently configured tolerances). When the marker domain
+    # applies, the strict marker analysis governs — the broad generalized signal
+    # does not get to fire a marker-shaped case the linkage rejected.
+    if marker_context:
+        protected = marker_protected
+        min_impact = nsa_cfg.get("min_impact", 0)
+    else:
+        protected = generalized_protected
+        min_impact = nsa_bb_cfg.get("tolerance_usd", 0)
+
+    if (protected and eob_present and balance is not None and eob_resp is not None):
         impact = round(balance - eob_resp, 2)
         if impact > min_impact:
-            if marker_protected:
-                # #67 marker path: preserve exact cpt + evidence (Nina's answer key)
+            if marker_context:
+                # #67 marker path: preserve exact cpt + evidence (Nina's answer key).
+                # `emergency` is DERIVED, not asserted: use the insurance flag when
+                # present, else infer from the OON-marked line's own description
+                # ("emergency ..."). Never contradict an explicit emergency=False
+                # in the JobSpec (fix M3).
                 nsa_cpt = oon_line.cpt
+                if ins_emergency is not None:
+                    marker_emergency = bool(ins_emergency)
+                else:
+                    marker_emergency = "emergency" in (oon_line.description or "").lower()
                 nsa_evidence = {
-                    "emergency": True,
+                    "emergency": marker_emergency,
                     "facility_network_status": "in_network",
                     "provider_network_status": "out_of_network",
                     "statute": "No Surprises Act",
@@ -344,19 +395,24 @@ def detect_flags(
     if eob_present and denial_codes:
         dn = rf.get("denial", {})
         min_amt = dn.get("min_amount", 0.0)
-        # every adjudicated line with plan_paid == 0 is a denied line
-        adjudicated = reconciliation["matched"] + reconciliation["eob_only"]
-        for row in adjudicated:
+        # Only lines actually ON THE PATIENT'S BILL (reconciliation["matched"]) can
+        # be a patient-owed denial — an eob_only line the provider absorbed/never
+        # billed carries no dollars the patient owes on this statement (M5). And
+        # only fire when the line carries a POSITIVE patient responsibility: a
+        # bundled $0-liability line whose per-line responsibility is simply blank
+        # (None) must NOT manufacture a billed-amount impact or inherit the claim's
+        # other denial reason codes (M4).
+        for row in reconciliation["matched"]:
             if row.get("plan_paid") != 0.0:
                 continue
             impact = row.get("patient_responsibility")
-            if impact is None:
-                impact = row.get("billed") or 0.0
+            if impact is None or impact <= 0:
+                continue
             if impact < min_amt:
                 continue
             code = row.get("code")
             if code:
-                implicated_cpts.add(code)
+                implicated.add(_key(code, row.get("date")))
             flags.append(DerivedFlag(
                 type="denial",
                 cpt=code,
@@ -374,17 +430,22 @@ def detect_flags(
     #    code's plausible daily ceiling (config max_daily_units). ─────────────
     ue = rf.get("units_error", {})
     max_daily = ue.get("max_daily_units", {})
-    eob_units_by_code: dict[str, int] = {}
+    # EOB-allowed units keyed by (code, date_of_service) — a code billed on several
+    # dates has its OWN allowed figure per date; a code-only key would let one
+    # date's ceiling overwrite (and be checked against) another's (fix H4).
+    eob_units_by_key: dict[tuple, int] = {}
     for row in reconciliation["matched"]:
         if row.get("units_eob") is not None and row.get("code"):
-            eob_units_by_code[row["code"]] = row["units_eob"]
+            eob_units_by_key[_key(row["code"], row.get("date"))] = row["units_eob"]
     for li in lines:
-        if li.cpt in implicated_cpts or li.billed_amount is None:
+        if _key(li.cpt, li.date_of_service) in implicated or li.billed_amount is None:
             continue
         units = li.units if li.units is not None else 1
         ceilings = []
-        if li.cpt in eob_units_by_code:
-            ceilings.append(eob_units_by_code[li.cpt])
+        ekey = _key(li.cpt, li.date_of_service)
+        has_eob_ceiling = ekey in eob_units_by_key
+        if has_eob_ceiling:
+            ceilings.append(eob_units_by_key[ekey])
         if li.cpt in max_daily:
             ceilings.append(max_daily[li.cpt])
         if not ceilings:
@@ -394,7 +455,7 @@ def detect_flags(
             continue
         excess = units - allowed_units
         per_unit = (li.billed_amount or 0.0) / units if units else 0.0
-        implicated_cpts.add(li.cpt)
+        implicated.add(_key(li.cpt, li.date_of_service))
         flags.append(DerivedFlag(
             type="units_error",
             cpt=li.cpt,
@@ -402,7 +463,7 @@ def detect_flags(
                 "billed_units": units,
                 "allowed_units": allowed_units,
                 "excess_units": excess,
-                "basis": "eob_allowed" if li.cpt in eob_units_by_code else "max_daily_units",
+                "basis": "eob_allowed" if has_eob_ceiling else "max_daily_units",
                 "billed": li.billed_amount,
                 "date": li.date_of_service,
             },
@@ -414,22 +475,37 @@ def detect_flags(
     #    lever only; NEVER fires for professional/physician-group lines. ────────
     if lookup is not None:
         ac = rf.get("absent_from_chargemaster", {})
-        hospital = job_spec.bill.facility_name
+        # Normalize the hospital key at the lookup boundary (strip surrounding
+        # whitespace off the bill's facility_name), consistent with the payer/plan
+        # normalization the lookup layer already does — trivial statement-header
+        # noise (a trailing space from PDF extraction) must not silently make the
+        # MRF-completeness gate dormant (fix L3).
+        hospital = (job_spec.bill.facility_name or "").strip()
         std_types = set(ac.get("standard_code_types", ["CPT", "HCPCS", "DRG", "MS-DRG"]))
         distinct_codes = {li.cpt for li in lines if li.cpt}
         present = sum(1 for c in distinct_codes if lookup.code_in_chargemaster(hospital, c))
         mrf_complete = present >= ac.get("mrf_completeness_min_rows", 3)
         if mrf_complete:
             for li in lines:
-                if li.cpt in implicated_cpts or li.billed_amount is None:
+                if _key(li.cpt, li.date_of_service) in implicated or li.billed_amount is None:
                     continue
-                if li.billing_entity != "facility":
+                # Casefold/strip the entity gate — billing_entity is an
+                # unconstrained Optional[str]; an extracted "Facility" is still a
+                # facility line and must not fall to the professional branch (M8).
+                if (li.billing_entity or "").strip().lower() != "facility":
                     continue  # professional/unknown → legitimately absent, do not flag
                 if infer_code_type(li.cpt) not in std_types:
                     continue
+                # UB-04 revenue codes are bare 3–4 digit numerics, shape-identical
+                # to MS-DRG once a leading zero is lost in extraction (0450→450).
+                # Don't accuse an ambiguous bare numeric of being an absent standard
+                # code — CPT (5-digit)/HCPCS (letter+digits) are unaffected (fix M7).
+                code_norm = (li.cpt or "").strip()
+                if code_norm.isdigit() and len(code_norm) <= 4:
+                    continue
                 if lookup.code_in_chargemaster(hospital, li.cpt):
                     continue
-                implicated_cpts.add(li.cpt)
+                implicated.add(_key(li.cpt, li.date_of_service))
                 flags.append(DerivedFlag(
                     type="absent_from_chargemaster",
                     cpt=li.cpt,
@@ -470,7 +546,7 @@ def detect_flags(
     multiple = rf["markup"]["flag_above_band_multiple"]
     for li in lines:
         row = benchmarks.get(li.cpt)
-        if row is None or li.cpt in implicated_cpts or li.billed_amount is None:
+        if row is None or _key(li.cpt, li.date_of_service) in implicated or li.billed_amount is None:
             continue
         threshold = round(row["band_high"] * multiple, 2)
         if li.billed_amount > threshold:

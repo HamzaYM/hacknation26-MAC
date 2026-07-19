@@ -152,12 +152,11 @@ def build_dossier(
     # Citation wording comes verbatim from J's statute pack (config/levers.json),
     # interpolated with the code-computed totals + flag impacts (engine/levers.py).
     # The engine owns the numbers; the pack owns the words (PRD §7).
-    lever_ctx = levers.build_context(
-        flags, {"medicare_total": medicare_total, "mrf_cash_total": mrf_cash_total}, benchmarks
-    )
+    ctx_totals = {"medicare_total": medicare_total, "mrf_cash_total": mrf_cash_total}
+    lever_ctx = levers.build_context(flags, ctx_totals, benchmarks)
 
-    def _pack_cite(engine_id: str, fallback: str | None = None) -> str | None:
-        cited = levers.citation_for_engine_lever(engine_id, lever_ctx)
+    def _pack_cite(engine_id: str, fallback: str | None = None, ctx: dict | None = None) -> str | None:
+        cited = levers.citation_for_engine_lever(engine_id, ctx if ctx is not None else lever_ctx)
         return cited[0] if cited else fallback
 
     levers_list: list[Lever] = []
@@ -203,12 +202,18 @@ def build_dossier(
             continue
         lever_id = f"error_{flag.type}" + (f"_{flag.cpt}" if flag.cpt else "")
         row = benchmarks.get(flag.evidence.get("supported") or flag.cpt or "")
+        # Interpolate each error lever's citation from a PER-FLAG context, not the
+        # shared one: build_context overwrites its unbundle/duplicate/upcode tokens
+        # once per flag TYPE, so a run with two same-type flags (e.g. two unbundle
+        # flags) would otherwise voice only the last flag's CPT/dollars on every
+        # lever — a provenance mismatch against the lever's own dollar_ask (fix H3).
+        flag_ctx = levers.build_context([flag], ctx_totals, benchmarks)
         # eob_mismatch has no statute in the pack → fall back to the per-CPT cite
         levers_list.append(Lever(
             id=lever_id,
             armed=True,
             armed_by=f"derived_flag:{flag.type}",
-            citation=_pack_cite(lever_id, fallback=_cite(row) if row else None),
+            citation=_pack_cite(lever_id, fallback=_cite(row) if row else None, ctx=flag_ctx),
             dollar_ask=flag.dollar_impact,
         ))
 

@@ -178,12 +178,16 @@ def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: di
 
     out: list[dict] = []
 
-    def add(pack_id: str, armed_by: str, dollar_ask: float | None = None):
+    def add(pack_id: str, armed_by: str, dollar_ask: float | None = None,
+            flag_ctx: dict | None = None):
         lv = _by_id()[pack_id]
-        local = dict(ctx)
+        # Use a per-flag context for error levers so each speaks ITS OWN flag's
+        # tokens — the shared ctx holds only the last flag of each type (fix H3).
+        base = flag_ctx if flag_ctx is not None else ctx
+        local = dict(base)
         # error levers share the ``${dollar_impact}`` token name
         if pack_id in _IMPACT_TOKEN:
-            local["dollar_impact"] = ctx.get(_IMPACT_TOKEN[pack_id])
+            local["dollar_impact"] = base.get(_IMPACT_TOKEN[pack_id])
         out.append({
             "id": pack_id,
             "category": lv["category"],
@@ -211,10 +215,11 @@ def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: di
     if totals.get("medicare_total"):
         add("medicare_benchmark", "Medicare rate published for these codes")
     for f in flags:
+        f_ctx = build_context([f], totals, benchmarks)
         if f.type == "duplicate":
-            add("duplicate_charge_dispute", "duplicate line item detected", f.dollar_impact)
+            add("duplicate_charge_dispute", "duplicate line item detected", f.dollar_impact, f_ctx)
         elif f.type == "upcode":
-            add("upcode_dispute", "E/M level unsupported by the dx", f.dollar_impact)
+            add("upcode_dispute", "E/M level unsupported by the dx", f.dollar_impact, f_ctx)
         elif f.type == "unbundle":
-            add("unbundle_dispute", "NCCI components billed unbundled", f.dollar_impact)
+            add("unbundle_dispute", "NCCI components billed unbundled", f.dollar_impact, f_ctx)
     return out

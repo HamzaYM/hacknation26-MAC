@@ -21,7 +21,11 @@ _MEDICARE_SOURCE_URL = "https://www.cms.gov/medicare/payment/fee-schedules"
 
 
 def _component_for_entity(billing_entity: str | None) -> str:
-    return {"facility": "facility", "professional": "professional"}.get(billing_entity, "global")
+    # Casefold/strip — billing_entity is an unconstrained Optional[str]; an
+    # extracted "Facility" must still select the facility component, not fall to
+    # the global fallback and mis-price the line (M8, mirrors flags.py).
+    return {"facility": "facility", "professional": "professional"}.get(
+        (billing_entity or "").strip().lower(), "global")
 
 
 def _line_anchors(lookup, hospital: str, code: str, billing_entity: str | None,
@@ -128,12 +132,16 @@ def build_benchmark_report(job_spec: JobSpec, lookup, config: dict) -> dict:
     std_types = set(config["red_flags"].get("absent_from_chargemaster", {})
                     .get("standard_code_types", ["CPT", "HCPCS", "DRG", "MS-DRG"]))
 
-    hospital = job_spec.bill.facility_name
+    # Normalize the hospital key at the lookup boundary (strip statement-header
+    # whitespace), consistent with flags.py and the lookup layer's payer/plan
+    # normalization — trivial extraction noise must not blank every anchor (L3).
+    hospital = (job_spec.bill.facility_name or "").strip()
     ins = job_spec.insurance or {}
     payer_name = ins.get("payer_name")
     plan_name = ins.get("plan_type") or ins.get("plan_name")
 
     lines_out: list[dict] = []
+    line_medicare: list[float | None] = []  # parallel to lines_out; per-line Medicare $ (L1)
     medicare_version = f"lookup:{lookup.version()}"
     for li in job_spec.bill.line_items:
         code = li.cpt
@@ -148,11 +156,17 @@ def build_benchmark_report(job_spec: JobSpec, lookup, config: dict) -> dict:
         if med_anchor is not None:
             medicare_version = med_anchor["source"]  # provenance string of the Medicare rate used
 
-        medicare_multiple = round(billed / medicare_line, 2) if medicare_line else None
+        # A GENUINELY RESOLVED Medicare rate of $0.00 (CMS OPPS packaged / zero-RVU
+        # codes) is real data, not missing data — use `is not None`, not truthiness,
+        # so a $0 rate still yields a fair band, rand_flag and excess rather than
+        # collapsing into the no-Medicare state (fix L2). medicare_multiple is left
+        # None only for the genuine divide-by-zero ($0 rate) case.
+        has_medicare = medicare_line is not None
+        medicare_multiple = round(billed / medicare_line, 2) if (has_medicare and medicare_line) else None
         fair_band = None
         rand_flag = False
         excess = 0.0
-        if medicare_line:
+        if has_medicare:
             fair_band = {
                 "low": round(band_low_m * medicare_line, 2),
                 "high": round(band_high_m * medicare_line, 2),
@@ -171,15 +185,26 @@ def build_benchmark_report(job_spec: JobSpec, lookup, config: dict) -> dict:
             "medicare_multiple": medicare_multiple, "fair_band": fair_band,
             "rand_flag": rand_flag, "excess_above_band": excess, "coverage": coverage,
         })
+        # per-line Medicare dollars (rate×units) carried out-of-band for exact
+        # totals (L1) — kept off the anchor-set surface so it never leaks into the
+        # persisted report / answer keys.
+        line_medicare.append(medicare_line)
 
     billed_total = round(sum(l["billed"] for l in lines_out), 2)
+    med_lines_medicare = [m for l, m in zip(lines_out, line_medicare) if l["fair_band"] is not None]
     med_lines = [l for l in lines_out if l["fair_band"] is not None]
-    medicare_total = round(sum(
-        # reconstruct per-line medicare from fair_band low / low_multiple
-        (l["fair_band"]["low"] / l["fair_band"]["low_multiple"]) for l in med_lines), 2) if med_lines else None
+    # Sum the per-line Medicare dollars the engine already computed — do NOT invert
+    # a rounded fair_band["low"], which introduces per-line drift that can flip the
+    # reported cents of the total and every ask derived from it (fix L1).
+    medicare_total = round(sum(med_lines_medicare), 2) if med_lines_medicare else None
     fair_low = round(sum(l["fair_band"]["low"] for l in med_lines), 2)
     fair_high = round(sum(l["fair_band"]["high"] for l in med_lines), 2)
-    excess_total = round(max(0.0, billed_total - fair_high), 2)
+    # Excess = the sum of each line's OWN excess_above_band — never the billed total
+    # minus a fair_high that omits un-benchmarked lines, which would smuggle an
+    # un-benchmarked line's full billed amount in as "excess above band" and break
+    # the module's "None never becomes a guessed price" promise at the totals level
+    # (fix H2).
+    excess_total = round(sum(l["excess_above_band"] for l in lines_out), 2)
 
     totals = {
         "billed": billed_total,

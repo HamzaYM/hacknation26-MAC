@@ -8,7 +8,9 @@ vertical: medical_bills
 # ── Red-flag detection parameters (deterministic engine, apps/api) ────────
 red_flags:
   duplicate:
-    match_on: [cpt, date_of_service]        # same code + same day
+    match_on: [cpt, date_of_service, billing_entity]  # same code + same day + same biller;
+                                            # distinct technical (facility) vs professional
+                                            # components of one study are NOT a duplicate (M6)
     min_amount: 25
   upcode:
     em_pairs:                                # billed vs. records-supported E/M candidates
@@ -23,7 +25,7 @@ red_flags:
     flag_above_band_multiple: 1.0            # any line above band_high
   nsa:                                       # No Surprises Act — protected out-of-network emergency/ancillary balance bill (#67 marker path)
     ancillary_kinds: [anesthesia, er_physician_group, radiology, pathology]  # providers a patient can't choose in an emergency
-    out_of_network_markers: ["out-of-network", "out of network"]             # how a line's spec marks the provider OON
+    out_of_network_markers: ["out-of-network", "out of network", "non-participating", "nonparticipating", "non-par", "out of plan", "out-of-plan"]  # how a line's spec marks the provider OON (real EOB/bill text uses "non-participating provider" for the same legal fact) (M10)
     min_impact: 100                          # protected surprise-balance delta (billed − in-network share) must be material to fire
   # ── generalized-pipeline detectors (WS2) — thresholds only, logic is code ──
   phantom:

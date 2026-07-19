@@ -119,6 +119,10 @@ class SqliteLookup:
 
     # -- charge rows (cached per hospital+code) --------------------------
     def charge_rows(self, hospital: str, code: str) -> list[ChargeRow]:
+        # Normalize the hospital key (strip surrounding whitespace) so trivial
+        # statement-header noise doesn't miss a byte-exact match — consistent with
+        # this file's payer/plan .strip().upper() handling (L3).
+        hospital = (hospital or "").strip()
         key = (hospital, code)
         if key in self._charge_cache:
             return self._charge_cache[key]
