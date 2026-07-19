@@ -29,3 +29,26 @@ export function subscribeToCall(callId: string, onChange: (call: Call) => void) 
     .subscribe();
   return () => supabase.removeChannel(channel);
 }
+
+/**
+ * Whether ANY call for this case is currently ringing/live — what a bill
+ * detail screen needs to know before it can honestly show a "live call"
+ * card (vs. one that claims a call is happening when nothing is). Fires on
+ * both INSERT (call just launched) and UPDATE (status changed).
+ */
+export function subscribeToCallsForCase(caseId: string, onChange: (call: Call) => void) {
+  const channel = supabase
+    .channel(`calls:case:${caseId}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "calls", filter: `case_id=eq.${caseId}` },
+      (payload) => onChange(payload.new as unknown as Call)
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "calls", filter: `case_id=eq.${caseId}` },
+      (payload) => onChange(payload.new as unknown as Call)
+    )
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}

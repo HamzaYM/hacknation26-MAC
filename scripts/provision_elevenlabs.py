@@ -28,14 +28,10 @@ API = "https://api.elevenlabs.io"
 AGENTS: dict[str, dict] = {
     "negotiator": {
         "prompt_file": "prompts/negotiator_system.md",
-        # A2A deadlock fix (live-verified 07-18: empty first_message + persona greeting
-        # failing to fire = 4 min of mutual silence on a real PSTN call). The negotiator
-        # now opens with the disclosure line — compliance wants it first anyway.
-        "first_message": (
-            "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient "
-            "{{patient_name}}, who has authorized me to discuss account {{account_number}}. "
-            "This call may be recorded on both ends. Am I through to the billing department?"
-        ),
+        # First message comes from config (disclosure.mode): only_if_asked → the
+        # competence-first opener (team decision 07-18); early → the full disclosure
+        # line. Never empty (a2a deadlock, live-verified 07-18).
+        "first_message": "FROM_CONFIG",
         "voices": ["Eric", "Chris", "Brian"],       # smooth-trustworthy advocate
     },
     "intake": {
@@ -197,6 +193,14 @@ def load_voice_settings() -> dict:
     return cfg
 
 
+def negotiator_first_message() -> str:
+    import yaml
+    d = yaml.safe_load((ROOT / "config/verticals/medical_bills.yaml").read_text())["disclosure"]
+    if d.get("mode") == "only_if_asked":
+        return " ".join(d["competence_first_open"].split())
+    return " ".join(d.get("opening_line_unused", d.get("opening_line", "")).split()) + " Am I through to the billing department?"
+
+
 def pick_voice(voices_by_name: dict[str, str], prefs: list[str], fallback: str) -> str:
     for pref in prefs:
         for name, vid in voices_by_name.items():
@@ -232,6 +236,8 @@ def main() -> None:
 
     ids: dict[str, str] = {}
     for name, spec in AGENTS.items():
+        if spec["first_message"] == "FROM_CONFIG":
+            spec = dict(spec, first_message=negotiator_first_message())
         prompt = (ROOT / spec["prompt_file"]).read_text()
         if name.startswith("persona-"):
             prompt = PERSONA_PREFIX + prompt + "\n\n# DELIVERY STYLE (inlined)\n\n" + imperfection
@@ -257,6 +263,7 @@ def main() -> None:
             cc["agent"]["language"] = "en"
             if tools is not None:
                 cc["agent"]["prompt"]["tools"] = tools
+                cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
             s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, {"conversation_config": cc})
             action = "updated (voice/llm preserved)"
         else:

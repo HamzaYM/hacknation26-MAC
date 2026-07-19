@@ -27,12 +27,17 @@ const DEMO_STATUS: Record<string, "Confirmed" | "Submitted" | "Pending"> = {
 export default function Onboard() {
   const router = useRouter();
   const [income, setIncome] = useState("$30k – $50k");
-  // Gate: a brand-new case has nothing to negotiate until a bill exists.
-  // Returning users who already have a case on file can skip past this —
-  // that's the "already set up" escape hatch below, not a second upload gate.
+  // Gate: a brand-new case has nothing to negotiate until at least one
+  // document exists. We ask for both the bill and the EOB up front because
+  // reconciling them against each other is where a lot of leverage lives
+  // (see the eob_mismatch flag) — but we only require ONE to continue, since
+  // plenty of people only have one on hand right now. The other can be added
+  // later from that bill's Documents tab. Returning users who already have a
+  // case can skip past this entirely via the escape hatch below.
   const [hasBill, setHasBill] = useState(false);
+  const [hasEob, setHasEob] = useState(false);
   const [skippingUpload, setSkippingUpload] = useState(false);
-  const canContinue = hasBill || skippingUpload;
+  const canContinue = hasBill || hasEob || skippingUpload;
 
   return (
     <div className="card" style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -46,17 +51,30 @@ export default function Onboard() {
         negotiate, nothing more.
       </p>
 
-      <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)", marginBottom: 12 }}>
-        Your first bill <span style={{ color: "var(--destructive)" }}>*</span>
+      <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)", marginBottom: 4 }}>
+        Your documents <span style={{ color: "var(--destructive)" }}>*</span>
       </h3>
+      <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+        We use both together to find the strongest leverage, but one is enough to start. Missing the
+        other? Add it later from that bill&apos;s Documents tab.
+      </p>
       {!skippingUpload && (
-        <UploadCard
-          title="Upload a bill to get started"
-          hint="A PDF or photo of any medical bill. We'll find the rest as we go"
-          onSelect={() => setHasBill(true)}
-        />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <UploadCard
+            title="Medical bill"
+            hint="The itemized bill from the provider"
+            onSelect={() => setHasBill(true)}
+            demoFile={{ url: "/demo-docs/mercy_general_bill.pdf", name: "mercy_general_bill.pdf" }}
+          />
+          <UploadCard
+            title="Explanation of Benefits"
+            hint="The EOB from your insurer"
+            onSelect={() => setHasEob(true)}
+            demoFile={{ url: "/demo-docs/bcbs_eob.pdf", name: "bcbs_eob.pdf" }}
+          />
+        </div>
       )}
-      {!hasBill && !skippingUpload && (
+      {!hasBill && !hasEob && !skippingUpload && (
         <button
           type="button"
           onClick={() => setSkippingUpload(true)}
@@ -67,8 +85,8 @@ export default function Onboard() {
       )}
       {skippingUpload && (
         <p className="todo" style={{ marginTop: 8 }}>
-          Skipping upload: assuming an existing case already has a bill on file. New cases need at
-          least one before we can negotiate anything.
+          Skipping upload: assuming an existing case already has documents on file. New cases need
+          at least one before we can negotiate anything.
         </p>
       )}
 
@@ -134,7 +152,7 @@ export default function Onboard() {
       </button>
       {!canContinue && (
         <p style={{ textAlign: "center", fontSize: 12, color: "var(--text-tertiary)", marginTop: 8 }}>
-          Upload a bill above to continue
+          Upload a document above to continue
         </p>
       )}
       <p style={{ textAlign: "center", fontSize: 12, color: "var(--text-tertiary)", marginTop: 12 }}>

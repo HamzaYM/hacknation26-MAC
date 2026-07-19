@@ -1,62 +1,47 @@
 "use client";
 
 import { useState } from "react";
-
-// Static demo queue — a real backend endpoint for "what's still missing per
-// case" doesn't exist yet (financial_profile is currently filled in the fixture,
-// so this queue is illustrative of the pattern, not live-computed). TODO(Hamza).
-// Every "unlocks" line names a dollar or percent figure tied to a specific bill —
-// pulled from the same numbers shown on that bill's detail page, never invented here.
-const QUEUE = [
-  {
-    entity: "Mercy General Hospital",
-    question: "Confirm your date of service",
-    why: "Lets us match the itemized bill line-by-line against your insurance EOB.",
-    unlocks: "Confirms the $412 (9.6%) duplicate-charge win already found on your Mercy General bill.",
-  },
-  {
-    // Income itself is already known from onboarding's financial snapshot —
-    // this item converts that data into a decision, not a re-ask. Repeating
-    // the income question here (as an earlier draft did) is exactly the kind
-    // of redundant-ask that undermines the "ask once" promise on /onboard.
-    entity: "Mercy General Hospital",
-    question: "You may qualify for charity care. Want us to apply?",
-    why: "Based on the income range you gave us at signup, Mercy General (a nonprofit) likely has to offer you discounted or free care under federal rules (§501(r)).",
-    unlocks: "Could add charity-care eligibility to your Mercy General bill: potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
-  },
-  {
-    entity: "Bay State Emergency Physicians",
-    question: "Authorize us to dispute the ER physician charge",
-    why: "This is a separate bill from a separate entity; we need your go-ahead per entity before we call.",
-    unlocks: "Unlocks the call to Bay State Emergency Physicians: typical range is 15–35% off their $640 balance (~$96–$224).",
-  },
-  {
-    entity: "Meridian Recovery Services",
-    question: "Authorize us to negotiate your collections account",
-    why: "Collections settlements need explicit authorization since a lump-sum offer is binding once accepted.",
-    unlocks: "Unlocks settlement negotiation on your $980 collections balance: typically 25–50% off (~$245–$490) via lump-sum settlement.",
-  },
-];
+import { ACTION_ITEMS } from "../../lib/actionItems";
+import ActionItemCard from "../../components/ActionItemCard";
 
 export default function ActionItems() {
-  const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [view, setView] = useState<"focus" | "bulk">("focus");
 
-  const item = QUEUE[index];
-  const done = index >= QUEUE.length;
+  const pending = ACTION_ITEMS.filter((i) => !completed.has(i.id));
+  const easyCount = pending.filter((i) => i.type === "confirm").length;
 
-  function next() {
-    setSelected(null);
-    setIndex((i) => Math.min(i + 1, QUEUE.length));
+  function complete(id: string) {
+    setCompleted((prev) => new Set(prev).add(id));
+  }
+
+  function clearEasyOnes() {
+    setCompleted((prev) => {
+      const next = new Set(prev);
+      pending.filter((i) => i.type === "confirm").forEach((i) => next.add(i.id));
+      return next;
+    });
   }
 
   return (
     <div>
-      <div className="user-strip">
-        <span>Action Items</span>
+      <div className="bulk-toolbar">
+        <span className="user-strip" style={{ padding: 0 }}>
+          Action Items {pending.length > 0 && <span className="pill pill-muted" style={{ marginLeft: 8 }}>{pending.length} pending</span>}
+        </span>
+        {pending.length > 0 && (
+          <div className="view-toggle">
+            <button className={view === "focus" ? "active" : ""} onClick={() => setView("focus")}>
+              One at a time
+            </button>
+            <button className={view === "bulk" ? "active" : ""} onClick={() => setView("bulk")}>
+              Clear in bulk
+            </button>
+          </div>
+        )}
       </div>
 
-      {done ? (
+      {pending.length === 0 ? (
         <div className="action-card" style={{ textAlign: "center" }}>
           <h2>You&apos;re all caught up</h2>
           <p style={{ color: "var(--text-secondary)" }}>
@@ -66,32 +51,21 @@ export default function ActionItems() {
             Back to your bills
           </a>
         </div>
+      ) : view === "focus" ? (
+        <>
+          <ActionItemCard key={pending[0].id} item={pending[0]} onComplete={() => complete(pending[0].id)} />
+          <div className="action-progress">{ACTION_ITEMS.length - pending.length + 1} of {ACTION_ITEMS.length}</div>
+        </>
       ) : (
-        <div className="action-card">
-          <div className="eyebrow">Question · {item.entity}</div>
-          <h2>{item.question}</h2>
-
-          <div className="action-why">
-            <strong>Why we&apos;re asking</strong>
-            {item.why}
-          </div>
-
-          <div className="action-unlocks">
-            <strong>Unlocks</strong>
-            {item.unlocks}
-          </div>
-
-          <div className="action-options">
-            <button className={`action-option ${selected === "yes" ? "selected" : ""}`} onClick={() => setSelected("yes")}>
-              Yes, go ahead
+        <div>
+          {easyCount > 0 && (
+            <button className="btn btn-secondary" style={{ marginBottom: 16 }} onClick={clearEasyOnes}>
+              Clear {easyCount} simple {easyCount === 1 ? "confirmation" : "confirmations"} at once →
             </button>
-          </div>
-
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={next} disabled={!selected}>
-            Next →
-          </button>
-
-          <div className="action-progress">{index + 1} of {QUEUE.length}</div>
+          )}
+          {pending.map((item) => (
+            <ActionItemCard key={item.id} item={item} onComplete={() => complete(item.id)} compact />
+          ))}
         </div>
       )}
     </div>
