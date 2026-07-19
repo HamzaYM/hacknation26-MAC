@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { getCall } from "../../lib/api";
 import { fetchCallEvents, subscribeToActiveCalls, subscribeToCall, subscribeToCallEvents } from "../../lib/realtime";
 import Logo from "../../components/Logo";
+import ReferenceChip from "../../components/ReferenceChip";
 import { LADDER_LABELS } from "../../lib/types";
 import type { ActiveCall, Call, CallEvent } from "../../lib/types";
 
@@ -61,6 +62,24 @@ export default function WarRoomPage() {
       <WarRoom />
     </Suspense>
   );
+}
+
+// Reference/confirmation numbers the negotiator captured mid-call — from the
+// structured tool payload (payload.reference_number) or parsed out of a tool
+// result string ("…ref MRS-55217"). The patient reads these aloud, so we
+// surface them as copyable chips. Requires an uppercase prefix + a dash so rep
+// names ("Bob") never match.
+function extractReferences(events: CallEvent[]): string[] {
+  const refs = new Set<string>();
+  for (const e of events) {
+    const p = e.payload ?? {};
+    const structured = p.reference_number;
+    if (typeof structured === "string" && /\d/.test(structured)) refs.add(structured.trim());
+    const result = typeof p.result === "string" ? p.result : "";
+    const matches = result.match(/\b[A-Z]{2,}[A-Z0-9]*-[A-Z0-9-]{2,}\b/g);
+    if (matches) matches.forEach((m) => refs.add(m));
+  }
+  return [...refs];
 }
 
 /** Append without duplicates (seed fetch + Realtime can overlap), id-ordered. */
@@ -281,6 +300,7 @@ function WarRoom() {
   const stateChanges = events.filter((e) => e.type === "state_change");
   const latestRung = stateChanges.at(-1)?.payload as { rung?: string; rung_index?: number } | undefined;
   const disclosed = toolCalls.some((e) => String(e.payload.name ?? "").includes("disclose"));
+  const references = extractReferences(events);
 
   return (
     <div className="warroom-shell">
@@ -363,6 +383,17 @@ function WarRoom() {
               {/* proof panel */}
               <div className="wr-panel">
                 <HonestyAudit toolCalls={toolCalls} />
+
+                {references.length > 0 && (
+                  <>
+                    <h2>Reference numbers</h2>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+                      {references.map((r) => (
+                        <ReferenceChip key={r} label="Ref" value={r} tone="dark" />
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 <h2>Current step</h2>
                 <div style={{ fontSize: 15, marginBottom: 20 }}>

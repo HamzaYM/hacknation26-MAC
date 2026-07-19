@@ -98,6 +98,9 @@ def get_case_report(case_id: str) -> dict:
     ranked = rank_outcomes(outcomes, fair_total(spec, flags, benchmarks))
     for o in ranked:  # frozen contract: entity + evidence events + recording_url
         o["entity"] = o.get("target_entity")
+        # resolved_at: when the outcome was reached = when its call ended. Lets the
+        # case view date each paper-trail entry without a new column.
+        o["resolved_at"] = o.pop("ended_at", None)
         events = db.get_events_by_ids(o.get("evidence_event_ids") or []) or []
         o["evidence"] = [{"ts": e.get("ts"), "type": e.get("type"), "payload": e.get("payload")}
                          for e in events]
@@ -118,4 +121,8 @@ def get_case_report(case_id: str) -> dict:
         "outcomes": ranked,
         "lines": build_lines(spec, flags, benchmarks, best_final),
         "recommendation": build_recommendation(ranked),
+        # The case's own identifiers, so the patient can read them aloud on a
+        # call (surfaced as copyable reference chips in the case view header).
+        "account_number": spec.bill.account_number,
+        "claim_number": spec.eob.claim_number,
     }
