@@ -1,0 +1,21 @@
+-- The Negotiator — voice-intake financial capture
+-- Owner: Hamza. Apply via `supabase db push` (or run in the Supabase SQL editor).
+--
+-- The voice interview (+ the manual card on /intake) captures the patient's
+-- financial answers — lump_sum_available, max_monthly_payment, household_income,
+-- household_size — and they must land on the case so the served JobSpec (and the
+-- dossier floor derived from it) reflect them.
+--
+-- These are kept in a DEDICATED column, separate from cases.financial_profile:
+-- ensure_case() snapshots the fixture profile into financial_profile on confirm,
+-- so reusing it would make "captured?" indistinguishable from "fixture default".
+-- financial_profile_captured holds ONLY what the interview/card actually answered
+-- (nullable; the capture endpoint jsonb-merges answered fields in), and the
+-- server overlays those over the fixture. A NULL column means "nothing captured"
+-- → the served spec is the untouched fixture.
+--
+-- Apply-safe / idempotent: `add column if not exists` is a no-op on re-run, and
+-- until this migration lands the API's read/write of the column simply skips
+-- (best-effort db._run), so nothing breaks in the meantime.
+
+alter table cases add column if not exists financial_profile_captured jsonb;

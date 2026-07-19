@@ -14,13 +14,15 @@ import hmac
 import json
 import logging
 import os
+import uuid
 
 from fastapi import APIRouter, Request
 
 from .. import db, storage
 from ..config import load_vertical
 from ..engine.honesty import audit_call
-from ..fixtures import demo_benchmarks, demo_dossier
+from ..fixtures import DEMO_CASE_ID, demo_benchmarks, demo_dossier
+from ..intake_capture import parse_financial_answers
 
 router = APIRouter()
 log = logging.getLogger("negotiator.webhooks")
@@ -41,6 +43,43 @@ def _signature_ok(raw: bytes, header: str | None) -> bool:
     return hmac.compare_digest(sig, expected)
 
 
+def _is_intake_conversation(data: dict) -> bool:
+    """True when a post-call payload belongs to the intake agent rather than a
+    negotiator call — matched by agent_id (ELEVENLABS_AGENT_ID_INTAKE) or, as a
+    fallback, an agent name containing 'intake'."""
+    intake_id = os.environ.get("ELEVENLABS_AGENT_ID_INTAKE", "").strip()
+    aid = data.get("agent_id") or (data.get("metadata") or {}).get("agent_id")
+    if intake_id and aid == intake_id:
+        return True
+    name = ((data.get("agent") or {}).get("name")
+            or (data.get("metadata") or {}).get("agent_name") or "")
+    return "intake" in str(name).lower()
+
+
+def _intake_case_id(data: dict) -> str:
+    """The case an intake conversation belongs to — a uuid carried in metadata /
+    dynamic variables, else the demo case."""
+    meta = data.get("metadata") or {}
+    dyn = (data.get("conversation_initiation_client_data") or {}).get("dynamic_variables") or {}
+    candidate = meta.get("case_id") or dyn.get("case_id")
+    try:
+        return str(uuid.UUID(str(candidate)))
+    except (ValueError, TypeError, AttributeError):
+        return DEMO_CASE_ID
+
+
+def _capture_intake_financials(data: dict) -> None:
+    """Parse the intake transcript for financial answers and persist them onto
+    the case (same store the manual card / endpoint write to)."""
+    fields = parse_financial_answers(data.get("transcript") or [])
+    if not fields:
+        log.info("intake conversation: no financial answers confidently parsed")
+        return
+    case_id = _intake_case_id(data)
+    db.upsert_case_financial_profile(case_id, fields)
+    log.info("intake capture for %s: %s", case_id, fields)
+
+
 @router.post("/elevenlabs")
 async def elevenlabs_post_call(request: Request) -> dict:
     raw = await request.body()
@@ -55,6 +94,15 @@ async def elevenlabs_post_call(request: Request) -> dict:
 
     wtype = envelope.get("type", "")
     data = envelope.get("data") or {}
+
+    # Intake-agent conversations carry the patient's financial answers, not a
+    # negotiation — they never map to a dialed `calls` row. Extract + persist
+    # them onto the case so the served spec + dossier floor reflect them, then
+    # we're done (nothing else in this handler applies to an intake call).
+    if wtype == "post_call_transcription" and _is_intake_conversation(data):
+        _capture_intake_financials(data)
+        return {"received": True, "type": wtype, "intake": True}
+
     conversation_id = data.get("conversation_id")
     call = db.get_call_by_conversation(conversation_id) if conversation_id else None
     if call is None:

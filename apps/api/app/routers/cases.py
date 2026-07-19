@@ -6,11 +6,13 @@ parse_documents into the OpenAI vision extraction prompt
 (data/pipeline/extraction_prompt.md).
 """
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 from .. import db, storage
 from ..action_plan_copy import generate_action_plan_copy
 from ..config import load_vertical
 from ..engine.action_plan import build_action_plan_input
+from ..engine.dossier import build_dossier
 from ..engine.report import build_lines, build_recommendation, fair_total, rank_outcomes
 from ..fixtures import DEMO_JOB_SPEC, demo_benchmarks
 from ..fixtures_users import OWNER_EMAIL_BY_CASE_ID, flags_for_spec, spec_for_case, spec_for_email
@@ -28,8 +30,10 @@ def _resolve_spec(case_id: str) -> dict:
 
 @router.get("/demo", response_model=JobSpec)
 def get_demo_case() -> dict:
-    """Maya's fixture case — lets web + agents integrate before parsing exists."""
-    return DEMO_JOB_SPEC
+    """Maya's fixture case — lets web + agents integrate before parsing exists.
+    Served through spec_for_case so any captured financial answers (voice intake
+    / manual card) overlay onto it — the /confirm screen reads this."""
+    return spec_for_case("demo")
 
 
 @router.get("/mine", response_model=JobSpec)
@@ -45,7 +49,7 @@ def get_my_case(email: str | None = None) -> dict:
         spec = spec_for_email(email)
         if spec is not None:
             return spec
-    return DEMO_JOB_SPEC
+    return spec_for_case("demo")
 
 
 @router.get("/{case_id}", response_model=JobSpec)
@@ -58,6 +62,64 @@ def get_case_flags(case_id: str) -> dict:
     """Red flags computed live by the deterministic engine (PRD §7)."""
     spec = _resolve_spec(case_id)
     return {"case_id": case_id, "flags": [f.model_dump() for f in flags_for_spec(spec)]}
+
+
+class FinancialProfileInput(BaseModel):
+    """The financial answers the documents can't provide — from the voice
+    interview or the manual card on /intake. All optional; only the answered
+    fields are persisted (they overlay onto the fixture profile)."""
+    lump_sum_available: float | None = Field(default=None, ge=0)
+    monthly_max: float | None = Field(default=None, ge=0)
+    household_income: float | None = Field(default=None, ge=0)
+    household_size: int | None = Field(default=None, ge=1)
+
+
+# monthly_max is the endpoint's contract name; the JobSpec/dossier read
+# max_monthly_payment, so persist under that key to overlay correctly.
+_FINANCIAL_KEY_MAP = {
+    "lump_sum_available": "lump_sum_available",
+    "monthly_max": "max_monthly_payment",
+    "household_income": "household_income",
+    "household_size": "household_size",
+}
+
+
+@router.post("/{case_id}/financial-profile")
+def set_case_financial_profile(case_id: str, body: FinancialProfileInput) -> dict:
+    """Land the interview's / manual card's financial answers on the case.
+
+    Persists the answered fields to cases.financial_profile (migration 0006) and
+    overlays them onto the served JobSpec (spec_for_case), so /confirm shows the
+    captured number and the dossier floor derived from it (floor =
+    lump_sum_available) changes accordingly. `floor` in the response is that live
+    dossier floor — proof the number reached the engine."""
+    spec = _resolve_spec(case_id)            # 404s unknown cases before we write
+    real_id = spec["case_id"]
+
+    fields = {_FINANCIAL_KEY_MAP[k]: v
+              for k, v in body.model_dump(exclude_none=True).items()}
+    if not fields:
+        raise HTTPException(400, "no financial fields provided")
+
+    persisted = db.upsert_case_financial_profile(real_id, fields)
+
+    overlaid = spec_for_case(real_id)        # re-reads with the just-saved overlay
+    profile = overlaid["financial_profile"]
+    floor = None
+    try:  # best-effort: the floor is nice-to-have, must never fail the save
+        spec_model = JobSpec.model_validate(overlaid)
+        dossier = build_dossier(spec_model, flags_for_spec(overlaid), demo_benchmarks(),
+                                load_vertical(), entity=spec_model.entities[0])
+        floor = dossier.floor
+    except Exception:  # noqa: BLE001
+        floor = profile.get("lump_sum_available")
+
+    return {
+        "case_id": case_id,
+        "financial_profile": profile,
+        "floor": floor,
+        "persisted": persisted,
+    }
 
 
 @router.get("/{case_id}/action_plan")

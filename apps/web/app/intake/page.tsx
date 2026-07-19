@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import UploadCard from "../../components/UploadCard";
-import { parseDocument } from "../../lib/api";
-import type { ParseDocumentResponse, Reconciliation } from "../../lib/api";
+import { getDemoCase, parseDocument, saveFinancialProfile } from "../../lib/api";
+import type { FinancialProfileInput, ParseDocumentResponse, Reconciliation } from "../../lib/api";
 import { money } from "../../lib/savings";
 import { FLAG_LABELS } from "../../lib/types";
 
@@ -47,6 +47,14 @@ export default function Intake() {
     bill: { status: "idle" },
     eob: { status: "idle" },
   });
+  // The case the interview's answers attach to. Resolved from the demo case so
+  // the manual card / webhook capture and the /confirm screen share one spec.
+  const [caseId, setCaseId] = useState<string | null>(null);
+  useEffect(() => {
+    getDemoCase()
+      .then((s) => setCaseId(s.case_id))
+      .catch(() => setCaseId(null));
+  }, []);
 
   function setSlot(kind: DocKind, state: SlotState) {
     setSlots((prev) => ({ ...prev, [kind]: state }));
@@ -110,7 +118,7 @@ export default function Intake() {
         >
           Voice interview
         </h3>
-        <VoiceInterviewCard />
+        <VoiceInterviewCard caseId={caseId} />
       </section>
 
       {billDone && (
@@ -366,7 +374,51 @@ function ParseResult({
   );
 }
 
-function VoiceInterviewCard() {
+// Best-effort read of "what the widget heard" off a convai end/disconnect event.
+// The embed widget's event payload isn't a guaranteed contract, so this only
+// pre-fills when a dollar amount is actually accessible; otherwise the card
+// opens with empty inputs and the server-side webhook remains the reliable path.
+function extractHeard(e: Event): FinancialProfileInput | null {
+  const detail = (e as CustomEvent).detail;
+  const text =
+    typeof detail === "string" ? detail : detail && typeof detail === "object" ? JSON.stringify(detail) : "";
+  const m = text.match(/put down[^$0-9]*\$?\s?([0-9][0-9,]*)/i) ?? text.match(/\$\s?([0-9][0-9,]*)/);
+  if (!m) return null;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  return Number.isFinite(n) ? { lump_sum_available: n } : null;
+}
+
+function VoiceInterviewCard({ caseId }: { caseId: string | null }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Offline → the manual card is the whole interview, so open it immediately.
+  const [cardOpen, setCardOpen] = useState(!INTAKE_AGENT_ID);
+  const [heard, setHeard] = useState<FinancialProfileInput>({});
+
+  useEffect(() => {
+    if (!INTAKE_AGENT_ID) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const onEnd = (e: Event) => {
+      const heardNow = extractHeard(e);
+      if (heardNow) setHeard((h) => ({ ...h, ...heardNow }));
+      setCardOpen(true);
+    };
+    // The widget's end-event name isn't guaranteed — listen to the plausible
+    // set so the confirmation card reliably appears when the call finishes.
+    const endEvents = [
+      "elevenlabs-convai:call-ended",
+      "elevenlabs-convai:disconnect",
+      "conversation-ended",
+      "call-ended",
+      "disconnect",
+      "ended",
+    ];
+    endEvents.forEach((name) => el.addEventListener(name, onEnd));
+    return () => endEvents.forEach((name) => el.removeEventListener(name, onEnd));
+  }, []);
+
+  const confirming = !!INTAKE_AGENT_ID && heard.lump_sum_available != null;
+
   return (
     <div className="card" style={{ marginBottom: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16 }}>
@@ -378,18 +430,207 @@ function VoiceInterviewCard() {
         what you could put down today, and the most you could manage monthly. It never re-asks
         anything already on the bill.
       </p>
+
       {INTAKE_AGENT_ID ? (
-        <>
+        <div ref={containerRef}>
           <elevenlabs-convai agent-id={INTAKE_AGENT_ID} />
           <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" strategy="afterInteractive" />
-        </>
+          {!cardOpen && (
+            <button
+              type="button"
+              onClick={() => setCardOpen(true)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--accent)",
+                fontSize: 13,
+                marginTop: 12,
+                cursor: "pointer",
+                textDecoration: "underline",
+                padding: 0,
+              }}
+            >
+              Prefer to type it — or confirm what we heard? Enter your numbers →
+            </button>
+          )}
+        </div>
       ) : (
-        <p className="todo">
-          Voice interview is offline. Set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> in{" "}
-          <code>apps/web/.env.local</code> (copy the value of <code>ELEVENLABS_AGENT_ID_INTAKE</code>)
-          and restart the dev server.
+        <p className="todo" style={{ marginBottom: 16 }}>
+          The voice interview is taking a break. Enter the numbers below and we&apos;ll take it from there.
         </p>
       )}
+
+      {cardOpen && <ManualFinancialCard caseId={caseId} prefill={heard} confirming={confirming} />}
+    </div>
+  );
+}
+
+function toNumber(s: string): number | undefined {
+  const n = parseFloat(s.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function ManualFinancialCard({
+  caseId,
+  prefill,
+  confirming,
+}: {
+  caseId: string | null;
+  prefill: FinancialProfileInput;
+  confirming: boolean;
+}) {
+  const [lump, setLump] = useState(prefill.lump_sum_available != null ? String(prefill.lump_sum_available) : "");
+  const [monthly, setMonthly] = useState("");
+  const [income, setIncome] = useState("");
+  const [size, setSize] = useState("");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "empty" | "error">("idle");
+  const [floor, setFloor] = useState<number | null>(null);
+
+  async function save() {
+    if (!caseId) return;
+    const fields: FinancialProfileInput = {};
+    if (toNumber(lump) !== undefined) fields.lump_sum_available = toNumber(lump);
+    if (toNumber(monthly) !== undefined) fields.monthly_max = toNumber(monthly);
+    if (toNumber(income) !== undefined) fields.household_income = toNumber(income);
+    if (toNumber(size) !== undefined) fields.household_size = toNumber(size);
+    if (Object.keys(fields).length === 0) {
+      setStatus("empty");
+      return;
+    }
+    setStatus("saving");
+    try {
+      const res = await saveFinancialProfile(caseId, fields);
+      setFloor(res.floor);
+      setStatus("saved");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  const label: React.CSSProperties = {
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    color: "var(--text-tertiary)",
+    marginBottom: 4,
+    display: "block",
+  };
+  const input: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid var(--border)",
+    background: "var(--surface, transparent)",
+    color: "var(--text-primary)",
+    fontSize: 15,
+  };
+
+  const heading = confirming
+    ? `We heard: you could put down ${money(prefill.lump_sum_available)} today — correct?`
+    : "What could you put toward this?";
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 8,
+        background: "var(--surface-muted, rgba(0,0,0,0.02))",
+      }}
+    >
+      <h4 style={{ fontSize: 15, margin: "0 0 4px" }}>{heading}</h4>
+      <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: "0 0 16px" }}>
+        These four numbers set your negotiating position — we never offer more than you can put down.
+        Fill in what you can; adjust anything that&apos;s off.
+      </p>
+
+      <div style={{ marginBottom: 12 }}>
+        <label htmlFor="fin-lump" style={label}>
+          Most you could put down today
+        </label>
+        <input
+          id="fin-lump"
+          aria-label="Most you could put down today"
+          inputMode="decimal"
+          placeholder="$1,700"
+          value={lump}
+          onChange={(e) => setLump(e.target.value)}
+          style={input}
+        />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+        <div>
+          <label htmlFor="fin-monthly" style={label}>
+            Most you could pay monthly
+          </label>
+          <input
+            id="fin-monthly"
+            aria-label="Most you could pay monthly"
+            inputMode="decimal"
+            placeholder="$150"
+            value={monthly}
+            onChange={(e) => setMonthly(e.target.value)}
+            style={input}
+          />
+        </div>
+        <div>
+          <label htmlFor="fin-income" style={label}>
+            Household income (yearly)
+          </label>
+          <input
+            id="fin-income"
+            aria-label="Household income yearly"
+            inputMode="decimal"
+            placeholder="$39,000"
+            value={income}
+            onChange={(e) => setIncome(e.target.value)}
+            style={input}
+          />
+        </div>
+        <div>
+          <label htmlFor="fin-size" style={label}>
+            People in household
+          </label>
+          <input
+            id="fin-size"
+            aria-label="People in household"
+            inputMode="numeric"
+            placeholder="2"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            style={input}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={save}
+          disabled={status === "saving" || !caseId}
+          style={status === "saving" || !caseId ? { opacity: 0.7 } : undefined}
+        >
+          {status === "saving" ? "Saving…" : status === "saved" ? "Saved ✓" : "Save these numbers"}
+        </button>
+        {status === "saved" && (
+          <span style={{ fontSize: 14, color: "var(--accent)" }}>
+            {floor != null
+              ? `Locked in — we'll never offer more than ${money(floor)} on your behalf.`
+              : "Locked in — thanks."}
+          </span>
+        )}
+        {status === "empty" && (
+          <span style={{ fontSize: 14, color: "var(--flag)" }}>Enter at least one number first.</span>
+        )}
+        {status === "error" && (
+          <span style={{ fontSize: 14, color: "var(--flag)" }}>
+            Couldn&apos;t save — the API at :8000 didn&apos;t answer. Nothing was lost; try again.
+          </span>
+        )}
+      </div>
     </div>
   );
 }
