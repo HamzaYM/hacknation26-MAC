@@ -10,6 +10,7 @@ import uuid as uuidlib
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field, ValidationError
 
+from . import scenarios
 from .. import case_store, db, storage
 from ..action_plan_copy import generate_action_plan_copy
 from ..config import load_vertical
@@ -31,6 +32,8 @@ def _resolve_spec(case_id: str) -> dict:
     spec = spec_for_case(case_id)
     if spec is None:
         spec = case_store.get_job_spec(case_id)
+    if spec is None:
+        spec = scenarios.rehydrate_case(case_id)  # D1: rebuild from disk after a restart
     if spec is None:
         raise HTTPException(404, "case not found")
     return spec
