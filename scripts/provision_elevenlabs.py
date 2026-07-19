@@ -140,7 +140,8 @@ NEGOTIATOR_TOOLS = [
                     "quote": {"type": "string", "description": "The counterparty's own words, verbatim, if notable"},
                     "questions_asked": {
                         "type": "array",
-                        "items": {"type": "string"},
+                        # ElevenLabs rejects any schema node without a description — including array items
+                        "items": {"type": "string", "description": "One coverage tag from the vocabulary"},
                         "description": (
                             "Coverage tags you covered this exchange. Vocabulary — "
                             "open_and_hold_account: account_hold_requested, itemized_bill_status, rep_name_captured; "
