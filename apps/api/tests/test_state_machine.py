@@ -109,3 +109,20 @@ def test_stonewall_escalation_capped_at_two(machine, call):
     resp = machine.advance(call, "reach_authority", "stonewalled")
     assert resp["next_move"] == PROVIDER_LADDER[-1]  # escalate_or_exit
     assert "escalation limit" in resp["notes"]
+
+
+def test_repetition_guardrail_forces_next_rung_after_three_identical_reports(machine, call):
+    machine.advance(call, "line_item_disputes", "rejected")
+    machine.advance(call, "line_item_disputes", "rejected")
+    resp = machine.advance(call, "line_item_disputes", "rejected")
+    assert resp.get("repetition_cap") is True
+    assert "three times" in resp["notes"]
+    # and the ladder moved on rather than re-arguing the same rung
+    assert resp["next_move"] != "line_item_disputes"
+
+
+def test_repetition_guardrail_ignores_accepted_results(machine, call):
+    machine.advance(call, "open_and_hold_account", "accepted")
+    machine.advance(call, "open_and_hold_account", "accepted")
+    resp = machine.advance(call, "open_and_hold_account", "accepted")
+    assert resp.get("repetition_cap") is None

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "benchmark_row.schema.json",
   "title": "BenchmarkRow",
-  "description": "One CPT's fair-price data. Produced by J's pipeline (data/pipeline → data/seed → benchmarks table); consumed by the flag engine, dossier builder, get_benchmark tool, and report. FROZEN at H2.",
+  "description": "One CPT's fair-price data. Produced by Jay's pipeline (data/pipeline → data/seed → benchmarks table); consumed by the flag engine, dossier builder, get_benchmark tool, and report. FROZEN at H2.",
   "type": "object",
   "required": ["cpt", "medicare_rate", "band_low", "band_high"],
   "properties": {

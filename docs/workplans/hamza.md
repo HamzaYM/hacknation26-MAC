@@ -5,9 +5,9 @@
 ## Deliverables
 - [ ] **H0–H1: provision FIRST** — Twilio off-trial + buy all numbers (negotiator outbound + 4 persona inbound), create ElevenLabs agents (negotiator, intake, 4 personas), enter persona rows (agent IDs + numbers + human cells) in `personas` table
 - [ ] H1–H2: scaffold lands (this repo) + Supabase project + run `supabase/migrations/0001_init.sql` + freeze H2 contracts (`contracts/`, yaml keys, levers.json shape) + README posted
-- [ ] Red-flag engine in `apps/api` (deterministic, consumes J's config/tables): duplicate, upcode (dx rule), unbundle (NCCI), EOB mismatch, markup
+- [ ] Red-flag engine in `apps/api` (deterministic, consumes Jay's config/tables): duplicate, upcode (dx rule), unbundle (NCCI), EOB mismatch, markup
 - [ ] Dossier builder (code: route + armed levers + anchor/target/floor from config) + prompt compiler (`prompts/negotiator_system.md` + dossier + VERBATIM JobSpec)
-- [ ] Server tools (`apps/api/app/routers/tools.py`): real state machine behind `report_lever_result` (ladder from yaml, stonewall triggers, floors enforced in code), `get_benchmark` from J's table, event logging → `call_events` (typed milestones — the War Room's primary feed)
+- [ ] Server tools (`apps/api/app/routers/tools.py`): real state machine behind `report_lever_result` (ladder from yaml, stonewall triggers, floors enforced in code), `get_benchmark` from Jay's table, event logging → `call_events` (typed milestones — the War Room's primary feed)
 - [ ] ElevenLabs wiring: outbound call trigger (native Twilio), post-call webhook → recording to Storage + OpenAI outcome extraction (CallOutcome schema) + honesty audit (figures vs. DB, case-facts vs. JobSpec)
 - [ ] **First agent-vs-persona test call by H4** (turn-taking pathology check: persona greets first, negotiator wait-biased)
 - [ ] Golden-recording replay endpoint (events on original timestamps + audio URL) for Susy

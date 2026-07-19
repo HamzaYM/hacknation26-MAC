@@ -86,7 +86,7 @@ Run: L1 = the two eval fixtures (`eval_pass_call.json`, `eval_fail_call.json`) +
 
 ---
 
-## C · Human role-play rehearsal runbook (J as "Pat" — 2 rehearsals before H10)
+## C · Human role-play rehearsal runbook (Jay as "Pat" — 2 rehearsals before H10)
 
 Score sheet per run (from `prompts/personas/human_role_play_guide.md` + config
 `human_facility_supervisor.hidden_params`):

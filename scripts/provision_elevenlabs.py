@@ -201,7 +201,9 @@ def negotiator_first_message() -> str:
     d = yaml.safe_load((ROOT / "config/verticals/medical_bills.yaml").read_text())["disclosure"]
     if d.get("mode") == "only_if_asked":
         return " ".join(d["competence_first_open"].split())
-    return " ".join(d.get("opening_line_unused", d.get("opening_line", "")).split()) + " Am I through to the billing department?"
+    # early/late modes only — the AI-disclosing opener must never ship while
+    # mode is only_if_asked (audit finding: a stale sync once did exactly that).
+    return " ".join(d.get("early_mode_opening_line", d.get("opening_line", "")).split()) + " Am I through to the billing department?"
 
 
 def allow_voice_override(platform_settings: dict | None) -> dict:
@@ -299,6 +301,15 @@ def main() -> None:
                 action = f"updated (voice pinned → {default_voice})"
             else:
                 action = "updated (voice/llm preserved)"
+            # Config owns pacing (Hamza 07-18: slower for legibility) — pushed on
+            # every sync, unlike voice_id which dashboard tweaks may keep.
+            tts = cc.setdefault("tts", {})
+            tts["stability"] = vcfg.get("stability", 0.55)
+            tts["speed"] = vcfg.get("speed", 1.0)
+            # Brain pin: config decides the negotiator's LLM (gpt-5.4, Hamza 07-18).
+            if name == "negotiator" and vcfg.get("negotiator_llm"):
+                cc["agent"]["prompt"]["llm"] = vcfg["negotiator_llm"]
+                action += f" · brain → {vcfg['negotiator_llm']}"
             patch_body: dict = {"conversation_config": cc}
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
                 patch_body["platform_settings"] = allow_voice_override(live.get("platform_settings"))

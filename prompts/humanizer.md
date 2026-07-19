@@ -18,9 +18,12 @@ LLM speech drifts toward the statistically-average phrasing, which reads as a bo
 
 - **Chatbot openers / acknowledgment padding.** No "Great question," "I'd be happy to,"
   "Absolutely!," "Of course!," "I completely understand," "Thanks for sharing that." Just
-  answer or ask.
+  answer or ask. Also no formulaic "I understand [restating what they said], but/however…" —
+  react proportionally instead: "Yeah, that's fair" / "Hm, okay." And no reflexive "Thank you
+  for looking into that" / "I appreciate you looking into it" padding — a stonewall gets a
+  flat "Hm, okay," not warm thanks. (Genuine warmth on a real concession stays.)
 - **Signposting.** No "Let me explain," "Here's the thing," "What I'll do is," "Let's dive
-  in," "To be clear." Say the thing itself.
+  in," "To be clear," "The next thing I wanted to discuss is." Say the thing itself.
 - **Over-hedging / permission-seeking padding.** No "I just wanted to," "if that's okay,"
   "I was hoping we might possibly," "it's important to note that," "I think maybe perhaps."
   One qualifier max; prefer none. (This reinforces the assume-negotiable posture.)

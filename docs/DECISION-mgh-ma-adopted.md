@@ -1,6 +1,6 @@
 # DECISION (Hamza, 2026-07-18): Real MGH numbers adopted · demo relocated to Boston MA
 
-**For J — start immediately; don't wait for the re-tune PR.** (A coordinated PR updating
+**For Jay — start immediately; don't wait for the re-tune PR.** (A coordinated PR updating
 PRD §3/§10.1/§10.3/§14, both benchmark seeds, the answer key, 4 test asserts, persona
 configs, and regenerated demo PDFs is in flight and lands shortly. This memo is the
 decision + numbers so you can move now.)
@@ -28,7 +28,7 @@ Upcode impact becomes **$2,011.21** (2340 − 328.79). Arc endpoints UNCHANGED:
 4287 → 3875 → 2400 → **1650 (−62%)**; anchor 657 / target 876 / floor 1700; human-rep floor 1500.
 New talking point: commercial insurers pay *below* the cash price here ($999.30 vs $2,633.25).
 
-## J's next moves (in priority order)
+## Jay's next moves (in priority order)
 1. **Real MA Medicare rates** — the one still-synthetic column. Pull MA-locality PFS/OPPS/CLFS
    for the 5 codes (your `pfs_lookup.csv` path is fine); if the $438 total shifts, that's a
    second coordinated re-tune — bring the numbers to Hamza/Claude first, don't push directly.

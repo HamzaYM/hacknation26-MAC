@@ -8,7 +8,7 @@ slides: **code-vs-LLM matrix, honesty/disclosure design, config-swap vision.**
 
 ### 1 · Title
 **Haggle — an AI advocate that calls, compares, and haggles your medical bills down.**
-Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs). Team: Susy · J · Hamza · Kar Shin.
+Hack-Nation 6th Global AI Hackathon · Challenge 01 (ElevenLabs). Team: Susy · Jay · Hamza · Kar Shin.
 One-line: *reads your bill + EOB, finds the errors and the law on your side, and negotiates the price down on a live call.*
 
 ### 2 · The problem (provable pain)
