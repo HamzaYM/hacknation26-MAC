@@ -56,12 +56,16 @@ export default function ScenarioPicker({
   const cardBg = dark ? "rgba(255,255,255,0.03)" : "var(--bg-surface)";
 
   if (scenarios === null) {
-    return <p style={{ fontSize: 13, color: mutedColor }}>Loading scenarios…</p>;
+    return (
+      <p data-testid="scenario-picker-loading" style={{ fontSize: 13, color: mutedColor }}>
+        Loading scenarios…
+      </p>
+    );
   }
 
   if (scenarios.length === 0) {
     return (
-      <p style={{ fontSize: 13, color: mutedColor }}>
+      <p data-testid="scenario-picker-empty" style={{ fontSize: 13, color: mutedColor }}>
         No scenarios published yet. The 9-scenario suite (Maya + 8 archetypes) lands from the scenario
         generator; this gallery will populate as soon as it does.
       </p>
@@ -69,7 +73,7 @@ export default function ScenarioPicker({
   }
 
   return (
-    <div>
+    <div data-testid="scenario-picker">
       <div
         style={{
           display: "grid",
@@ -81,6 +85,8 @@ export default function ScenarioPicker({
           <button
             key={s.scenario_id}
             type="button"
+            data-testid="scenario-card"
+            data-scenario-id={s.scenario_id}
             onClick={() => pick(s.scenario_id)}
             disabled={loadingId !== null}
             style={{

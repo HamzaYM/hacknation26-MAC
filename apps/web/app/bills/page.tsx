@@ -89,7 +89,12 @@ export default function BillList() {
 
       <div style={{ marginBottom: 24 }}>
         {!creating ? (
-          <button className="btn btn-secondary" style={{ width: "100%" }} onClick={() => setCreating(true)}>
+          <button
+            className="btn btn-secondary"
+            style={{ width: "100%" }}
+            onClick={() => setCreating(true)}
+            data-testid="create-bill-button"
+          >
             + Create new bill
           </button>
         ) : (
@@ -180,7 +185,7 @@ function CreateBillPanel({ onCancel, onCreated }: { onCancel: () => void; onCrea
   const anyDone = slots.bill.status === "done" || slots.eob.status === "done";
 
   return (
-    <div className="card">
+    <div className="card" data-testid="create-bill-panel">
       <h3 style={{ fontSize: 15, marginBottom: 4 }}>New bill</h3>
       <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
         Upload the medical bill and EOB. One is enough to start, add the other later.
@@ -207,7 +212,7 @@ function CreateBillPanel({ onCancel, onCreated }: { onCancel: () => void; onCrea
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {anyDone && caseId && (
-          <button className="btn btn-primary" onClick={() => onCreated(caseId)}>
+          <button className="btn btn-primary" onClick={() => onCreated(caseId)} data-testid="view-parsed-bill">
             View parsed bill →
           </button>
         )}
