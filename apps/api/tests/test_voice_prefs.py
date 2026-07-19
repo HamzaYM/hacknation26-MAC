@@ -32,14 +32,14 @@ def hermetic_voice_store(monkeypatch):
 
 def test_the_three_voices_are_allowlisted():
     assert set(voice_prefs.VOICES) == {ALEX, ADAM, RILEY}
-    assert voice_prefs.DEFAULT_VOICE_ID == ALEX
+    assert voice_prefs.DEFAULT_VOICE_ID == ADAM
     assert voice_prefs.is_allowed(ADAM)
     assert not voice_prefs.is_allowed("some-random-id")
 
 
 def test_resolve_falls_back_to_default_without_a_choice():
-    # No DB in tests, so nothing is persisted → default (Alex).
-    assert voice_prefs.resolve_voice("demo") == ALEX
+    # No DB in tests, so nothing is persisted → default (Adam).
+    assert voice_prefs.resolve_voice("demo") == ADAM
 
 
 def test_set_voice_rejects_unknown_id():
@@ -57,24 +57,24 @@ def test_server_payload_carries_the_override():
 
 def test_initiation_client_data_uses_resolved_voice():
     data = voice_prefs.initiation_client_data("demo")
-    assert data["conversation_config_override"]["tts"]["voice_id"] == ALEX  # default w/o DB
+    assert data["conversation_config_override"]["tts"]["voice_id"] == ADAM  # default w/o DB
 
 
-def test_get_voice_endpoint_defaults_to_alex(client):
+def test_get_voice_endpoint_defaults_to_adam(client):
     resp = client.get("/cases/demo/voice")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["voice_id"] == ALEX
-    assert body["voice_label"] == "Alex"
+    assert body["voice_id"] == ADAM
+    assert body["voice_label"] == "Adam"
     assert body["is_default"] is True
     assert body["persisted"] is False  # no DB in tests
 
 
 def test_put_voice_endpoint_validates_and_echoes(client):
-    ok = client.put("/cases/demo/voice", json={"voice_id": ADAM})
+    ok = client.put("/cases/demo/voice", json={"voice_id": RILEY})
     assert ok.status_code == 200
-    assert ok.json()["voice_id"] == ADAM
-    assert ok.json()["voice_label"] == "Adam"
+    assert ok.json()["voice_id"] == RILEY
+    assert ok.json()["voice_label"] == "Riley"
     # persisted is False without a DB, and that's fine (client mirrors to localStorage).
     assert ok.json()["persisted"] is False
 
