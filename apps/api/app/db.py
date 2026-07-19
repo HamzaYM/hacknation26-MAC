@@ -143,6 +143,17 @@ def ensure_demo_case():
     return ensure_case(DEMO_CASE_ID, DEMO_JOB_SPEC)
 
 
+def record_scenario_load(case_id: str, scenario_id: str):
+    """Best-effort: tag a case with the scenario it was loaded from (generalized
+    pipeline, WS3). Degrades to a warning-logged no-op via _run's existing
+    psycopg2.Error handling if cases.scenario_id doesn't exist in this DB yet
+    (schema migration is additive, out of this module's ownership) — never
+    blocks a scenario load."""
+    if not _is_uuid(case_id):
+        return None
+    return _run("update cases set scenario_id = %s where id = %s", (scenario_id, case_id))
+
+
 def get_case_by_owner_email(email: str) -> dict | None:
     rows = _run("select * from cases where owner_email = %s order by created_at limit 1",
                 (email,), fetch=True)
