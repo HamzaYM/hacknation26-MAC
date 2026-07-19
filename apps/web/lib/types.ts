@@ -106,7 +106,10 @@ export interface StrategyDossier {
 // (disclosure_given/lever_attempted/rung_advanced/...) that never matched
 // the real schema. Payload shapes below are this file's own convention
 // (call_events.payload is jsonb / freeform), not yet frozen with Hamza.
-export type CallEventType = "transcript" | "tool_call" | "state_change" | "quote" | "escalation";
+export type CallEventType =
+  | "transcript" | "tool_call" | "state_change" | "quote" | "escalation"
+  // question-guardrail + parking events (db.CALL_EVENT_TYPES, migrations 0004–0007)
+  | "coverage_gap" | "read_back" | "topic_parked" | "callback_due" | "question_covered";
 
 export interface CallEvent {
   id: number;
@@ -184,6 +187,34 @@ export const LADDER_LABELS: Record<string, string> = {
   lump_sum_anchor: "Anchor a lump-sum settlement",
   settle: "Settle with written paid-in-full terms",
   exit_with_written_confirmation: "Exit with written confirmation",
+};
+
+// Required questions per ladder rung — mirrors config/verticals/medical_bills.yaml
+// `required_questions`. The engine's coverage gate won't let the call leave a rung
+// until these are covered; the War Room coverage panel renders the current rung's
+// list and flips each row to covered on a `question_covered` event (coral on a
+// `coverage_gap`). Static mirror, same convention as LADDER_LABELS / PROVIDER_LADDER.
+export const REQUIRED_QUESTIONS: Record<string, string[]> = {
+  open_and_hold_account: ["account_hold_requested", "itemized_bill_status", "rep_name_captured"],
+  financial_assistance_screen: ["fap_exists", "pauses_collections_while_pending"],
+  diagnostic_questions: [
+    "interest_accruing", "will_sue", "credit_bureau_reported",
+    "debt_owned_or_bought", "predetermined_settlement_floor",
+  ],
+};
+
+// Humanized labels for the coverage-question tags (fallback: underscores → spaces).
+export const QUESTION_LABELS: Record<string, string> = {
+  account_hold_requested: "Hold the account from collections",
+  itemized_bill_status: "Itemized bill / UB-04 requested",
+  rep_name_captured: "Rep's name captured",
+  fap_exists: "Financial-assistance policy exists?",
+  pauses_collections_while_pending: "Collections paused while pending?",
+  interest_accruing: "Is interest still accruing?",
+  will_sue: "Will they sue?",
+  credit_bureau_reported: "Reported to the credit bureaus?",
+  debt_owned_or_bought: "Do they own or buy the debt?",
+  predetermined_settlement_floor: "Is there a settlement floor?",
 };
 
 // ---- API response envelopes (apps/api routers — frozen integration contract) ----

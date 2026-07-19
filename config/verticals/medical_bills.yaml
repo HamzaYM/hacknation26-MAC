@@ -114,7 +114,7 @@ ladder:
 # call is never hard-deadlocked. Tag vocabulary is mirrored into the
 # report_lever_result tool description in scripts/provision_elevenlabs.py.
 required_questions:
-  open_and_hold_account: [account_hold_requested, itemized_bill_status, rep_name_captured]
+  open_and_hold_account: [account_hold_requested, records_alignment_confirmed, rep_name_captured]
   financial_assistance_screen: [fap_exists, pauses_collections_while_pending]
   diagnostic_questions: [interest_accruing, will_sue, credit_bureau_reported, debt_owned_or_bought, predetermined_settlement_floor]
 
@@ -156,6 +156,28 @@ collections_threat_phrases:
   - "collection agency"
   - "report this"
 
+# Authorization challenge — the rep questions the caller's authority/identity to
+# discuss the account ("do you have authorization?", "HIPAA", "release on file",
+# "verify identity", "I can't discuss this with you"). The state machine folds a
+# note into report_lever_result arming the authorization move: present the
+# patient's RECORDED authorization (read it verbatim, be explicit it is a recorded
+# authorization on file, not audio played over the line) and offer to send the
+# recording + a written release. Tool-gated: the agent calls get_authorization and
+# may only claim a recording the tool confirms (on_file true). NO menace, no
+# overclaiming — a recording is not a signed 164.508 form; never say it is.
+authorization_challenge_phrases:
+  - "authorization"
+  - "authorized to"
+  - "hipaa"
+  - "release on file"
+  - "release of information"
+  - "verify identity"
+  - "verify your identity"
+  - "can't discuss"
+  - "cannot discuss"
+  - "who are you to"
+  - "on the account"
+
 # Parked open items are re-attempted this many hours after the call (caller-side
 # APScheduler; auto-dials only when ELEVENLABS_OUTBOUND_ENABLED is set).
 callback_delay_hours: 5
@@ -184,9 +206,9 @@ voice:
   model: eleven_flash_v2_5                   # ~75ms; do NOT use v3 for live calls
   # Default ElevenLabs voice for the negotiator + any agent without a name match.
   # Kar Shin's pick (2026-07-18). Personas keep their own distinct voices.
-  # NOTE: Adam (stock workspace voice) — Hamza's pick 07-18 late, was the Alex clone. Susy's original
+  # NOTE: Jason W. — Hamza's own voice design (07-18 night), replaces Adam. Susy's original
   # (PK6t0r2iXSJEz1l0Gy4k) lives in her personal account and is not assignable here.
-  default_voice_id: pNInz6obpgDQGcFmaJgB
+  default_voice_id: 8duqbsrxNeN6j4yugadv
   stability: 0.55
   speed: 0.85                                # Hamza (07-18 late): slower still after hearing 0.9 on a live call; ElevenLabs range 0.7–1.2
   # Brain LLM for the negotiator, pinned by provisioning (Hamza, 07-18 evening:

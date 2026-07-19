@@ -35,21 +35,21 @@ export const VOICES: Voice[] = [
     preview: "/voices/alex.mp3",
   },
   {
-    key: "adam",
-    voiceId: "pNInz6obpgDQGcFmaJgB",
-    name: "Adam",
-    tagline: "Assertive and unbudging",
-    angle: "Supervisors and benchmark moments, where a number has to land with authority.",
+    key: "jason",
+    voiceId: "8duqbsrxNeN6j4yugadv",
+    name: "Jason",
+    tagline: "Calm and unhurried",
+    angle: "The all-rounder, designed for this job: calm authority that never crowds the rep.",
     pros: [
-      "Carries a dollar figure with weight, so an anchor or a benchmark cite lands as a position, not a suggestion.",
-      "Assertive without heat, which is the escalation register our research backs: pressure reads fine, anger backfires.",
-      "A deeper voice reads as seniority to many reps, which helps when asking for someone with authority to resolve it.",
+      "Designed to our research brief: unhurried pace, natural pitch variation, and everyday texture that reads human on a phone line.",
+      "Quiet confidence carries a number without pushing, which suits both a friendly opener and a firm date-ask.",
+      "Neutral American accent with no regional read, so nothing distracts from the case.",
     ],
     cons: [
-      "Dominance up front can put a friendly rep on the defensive and slow the early rapport plays.",
-      "Less natural room for the fillers and softeners our humanization layer leans on, so small talk can read scripted.",
+      "Less overt warmth than Alex on a chatty front-line call.",
+      "Less bite than Riley when a collector needs pure economics.",
     ],
-    preview: "/voices/adam.mp3",
+    preview: "/voices/jason.mp3",
     isDefault: true,
   },
   {
@@ -71,7 +71,7 @@ export const VOICES: Voice[] = [
   },
 ];
 
-export const DEFAULT_VOICE_ID = "pNInz6obpgDQGcFmaJgB"; // Adam (Hamza's pick, 07-18 late)
+export const DEFAULT_VOICE_ID = "8duqbsrxNeN6j4yugadv"; // Jason W. (Hamza's designed voice)
 
 export function voiceById(voiceId: string | null | undefined): Voice | undefined {
   return VOICES.find((v) => v.voiceId === voiceId);

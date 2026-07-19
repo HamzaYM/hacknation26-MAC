@@ -5,9 +5,38 @@ import { useRouter } from "next/navigation";
 import { confirmCase, getActionPlan, getDemoCase, getFlags, launchCalls } from "../../lib/api";
 import type { ActionPlanResponse } from "../../lib/api";
 import { getVoicePref, voiceById } from "../../lib/voice";
-import { facilitySavings, money } from "../../lib/savings";
+import RecordAuthorization from "../../components/RecordAuthorization";
+import { entitySavings, facilitySavings, money } from "../../lib/savings";
+import { FEE_LINE, feeOn, yourShare } from "../../lib/fees";
 import { FLAG_LABELS } from "../../lib/types";
 import type { DerivedFlag, JobSpec } from "../../lib/types";
+
+// The exact words the patient reads into their recorded authorization. Built
+// from the case (name, DOB, account, facility) per the research's ideal script:
+// name + DOB (identity), account + provider (scope), the third party (Haggl) and
+// an explicit scope of authority, effective date, and revocation language. No
+// em-dashes in spoken copy. This is the SAME text persisted with the recording
+// and read back verbatim by the agent, so it must match what they say out loud.
+function authorizationStatement(spec: JobSpec): string {
+  const name = (spec.patient?.legal_name as string) ?? "the patient";
+  const dobRaw = spec.patient?.dob as string | undefined;
+  let dob = "";
+  if (dobRaw) {
+    const d = new Date(`${dobRaw}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      dob = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    }
+  }
+  const account = spec.bill?.account_number ?? "";
+  const facility = spec.bill?.facility_name ?? "the provider";
+  return [
+    `My name is ${name}${dob ? `, date of birth ${dob}` : ""}.`,
+    `This is regarding my account ${account} at ${facility}.`,
+    "I authorize Haggl to discuss, negotiate, dispute, and adjust the charges and payment arrangements on this account on my behalf.",
+    "This authorization is effective today and remains valid until I revoke it.",
+    "You may reach me directly to confirm.",
+  ].join(" ");
+}
 
 // PRD §11 screen 3 — the challenge-mandated gate: nothing dials until the
 // user confirms this plan. Flags come from GET /cases/{id}/flags (computed
@@ -76,6 +105,28 @@ export default function Confirm() {
   const pctHigh = savings.percentSavedSoFar + savings.percentProjectedHigh;
   const totalFlagged = flags.reduce((sum, f) => sum + f.dollar_impact, 0);
 
+  // The displayed savings range (Mercy facility): prefer the engine's estimate,
+  // fall back to the locally computed one. Used for the net-of-fee framing and
+  // the Mercy row of the per-provider ranges.
+  const hasPlanRange =
+    plan?.input.savings_estimate.low != null && plan?.input.savings_estimate.high != null;
+  const rangeLow = hasPlanRange ? plan!.input.savings_estimate.low! : estimateLow;
+  const rangeHigh = hasPlanRange ? plan!.input.savings_estimate.high! : estimateHigh;
+  const rangeMid = Math.round((rangeLow + rangeHigh) / 2);
+  const midFee = feeOn(rangeMid);
+  const midKeep = yourShare(rangeMid);
+
+  // Per-provider rough ranges. Mercy is the case-specific facility estimate;
+  // the others are typical outcomes by entity kind (entitySavings labels them
+  // as such), so the headline range never silently stands in for every party.
+  const providerEstimates = spec.entities.map((entity) => {
+    if (entity.kind === "facility") {
+      return { name: entity.name, low: rangeLow, high: rangeHigh, typical: false };
+    }
+    const es = entitySavings(entity);
+    return { name: entity.name, low: es.projectedLow, high: es.projectedHigh, typical: true };
+  });
+
   // What the voice interview / intake card captured — the negotiator's settlement
   // ceiling (dossier floor = lump_sum_available). Surfacing it here is the visible
   // proof the interview changed the plan.
@@ -143,6 +194,20 @@ export default function Confirm() {
           {copy?.savings_line ??
             `Estimated savings if the calls go our way: ${pctLow}–${pctHigh}% off your ${money(savings.originalBalance)} balance.`}
         </div>
+        <div
+          style={{
+            marginTop: 12,
+            paddingTop: 12,
+            borderTop: "1px solid var(--border)",
+            fontSize: 13.5,
+            color: "var(--text-secondary)",
+            lineHeight: 1.55,
+          }}
+        >
+          {FEE_LINE} If we land the middle of that range, our fee would be about{" "}
+          <span className="mono-figure" style={{ color: "var(--text-primary)" }}>{money(midFee)}</span> and you&apos;d
+          keep <span className="mono-figure" style={{ color: "var(--accent)" }}>{money(midKeep)}</span>.
+        </div>
         {putDownToday != null && (
           <div
             style={{
@@ -160,18 +225,42 @@ export default function Confirm() {
         )}
       </div>
 
+      <div className="card">
+        <h3 style={{ marginBottom: 4 }}>Rough range per provider</h3>
+        <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12, lineHeight: 1.55 }}>
+          The big number above is {spec.bill.facility_name} only. Here&apos;s a rough range for each
+          provider we&apos;ll call. The ones tagged typical are what bills like these usually land at, not
+          case-specific findings yet.
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {providerEstimates.map((p) => (
+            <span key={p.name} className="pill pill-muted">
+              {p.name}
+              <span className="mono-figure">· {money(p.low)}–{money(p.high)}</span>
+              {p.typical && <span style={{ color: "var(--text-tertiary)" }}>typical</span>}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
         <div>
           <h3 style={{ marginBottom: 4 }}>The voice we&apos;ll call in</h3>
           <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-            {voiceById(voiceId ?? undefined)?.name ?? "Adam"}
-            <span style={{ color: "var(--text-tertiary)" }}> · {voiceById(voiceId ?? undefined)?.tagline ?? "assertive and unbudging"}</span>
+            {voiceById(voiceId ?? undefined)?.name ?? "Jason"}
+            <span style={{ color: "var(--text-tertiary)" }}> · {voiceById(voiceId ?? undefined)?.tagline ?? "calm and unhurried"}</span>
           </div>
         </div>
         <a href="/voice" className="btn btn-secondary" style={{ padding: "8px 18px", fontSize: 14 }}>
           Change voice
         </a>
       </div>
+
+      <RecordAuthorization
+        caseId={spec.case_id}
+        statement={authorizationStatement(spec)}
+        patientName={(spec.patient?.legal_name as string) ?? "You"}
+      />
       {copy?.per_call_descriptions && copy.per_call_descriptions.length > 0 && (
         <div className="card">
           <h3 style={{ marginBottom: 12 }}>The calls we&apos;ll make</h3>
@@ -197,6 +286,18 @@ export default function Confirm() {
       )}
 
       <div style={{ marginTop: 24, textAlign: "center" }}>
+        <p
+          style={{
+            maxWidth: 480,
+            margin: "0 auto 16px",
+            fontSize: 13,
+            color: "var(--text-secondary)",
+            lineHeight: 1.55,
+          }}
+        >
+          Our AI identifies itself when asked, never denies what it is, and every call is recorded. You
+          get the transcript and audio.
+        </p>
         <button className="btn btn-primary" onClick={onConfirm} disabled={confirming} style={confirming ? { opacity: 0.7 } : undefined}>
           {confirming ? "Confirming…" : "Looks right, make the calls"}
         </button>

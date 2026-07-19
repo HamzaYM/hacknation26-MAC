@@ -21,11 +21,11 @@ from ..fixtures import DEMO_CASE_ID
 # so a bad value can never reach the outbound-call payload.
 VOICES: dict[str, str] = {
     "jTWqplUkOPQwOegNjhal": "Alex",    # warm and polite
-    "pNInz6obpgDQGcFmaJgB": "Adam",    # dominant, firm — default (Hamza's pick)
+    "8duqbsrxNeN6j4yugadv": "Jason",   # Hamza's designed voice — default
     "saQ3GQHMonWJoYcm6AJJ": "Riley",   # firm and direct
 }
 
-DEFAULT_VOICE_ID = "pNInz6obpgDQGcFmaJgB"  # Adam
+DEFAULT_VOICE_ID = "8duqbsrxNeN6j4yugadv"  # Jason W.
 
 
 def is_allowed(voice_id: str | None) -> bool:

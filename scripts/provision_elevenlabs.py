@@ -117,6 +117,33 @@ NEGOTIATOR_TOOLS = [
     },
     {
         "type": "webhook",
+        "name": "get_authorization",
+        "description": (
+            "Fetch the patient's RECORDED authorization for this account. Call this the "
+            "moment a rep challenges your authority or identity to discuss the account "
+            "(\"do you have authorization?\", \"HIPAA\", \"is there a release on file?\", "
+            "\"I can't discuss this with you\", \"I need to verify identity\"). Returns "
+            "on_file plus, when true, the exact words the patient recorded (statement_text), "
+            "the date recorded, and the account reference. HONESTY BOUNDARY: you may claim a "
+            "recorded authorization exists ONLY if on_file is true — never invent one. You "
+            "cannot play the audio on the line; read statement_text VERBATIM, say plainly you "
+            "are reading her recorded authorization on file (not playing audio), and offer to "
+            "send the recording plus a written release to their email or fax. Never call a "
+            "recording a signed release."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/get_authorization",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "No parameters needed",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "webhook",
         "name": "report_lever_result",
         "description": (
             "Report what just happened with the current negotiation step and receive the "
@@ -144,7 +171,7 @@ NEGOTIATOR_TOOLS = [
                         "items": {"type": "string", "description": "One coverage tag from the vocabulary"},
                         "description": (
                             "Coverage tags you covered this exchange. Vocabulary — "
-                            "open_and_hold_account: account_hold_requested, itemized_bill_status, rep_name_captured; "
+                            "open_and_hold_account: account_hold_requested, records_alignment_confirmed, rep_name_captured; "
                             "financial_assistance_screen: fap_exists, pauses_collections_while_pending; "
                             "diagnostic_questions (collections): interest_accruing, will_sue, credit_bureau_reported, "
                             "debt_owned_or_bought, predetermined_settlement_floor."
@@ -195,7 +222,8 @@ NEGOTIATOR_TOOLS = [
         "description": (
             "Log a structured event to the case record. Use type 'read_back' EVERY time you "
             "read a number, date, name spelling, or reference/confirmation code back to the rep "
-            "as you hear it — put what you read back in payload (e.g. {\"value\": \"M G dash A D J 22 47\"}). "
+            "as you hear it. Put the details INSIDE a payload object — e.g. "
+            "{\"type\": \"read_back\", \"payload\": {\"value\": \"MG-ADJ-2247\", \"heard_as\": \"M G dash A D J 22 47\"}}. "
             "A reference number with no logged read_back comes back flagged "
             "reference_number_unverified. Fire-and-forget; keep talking, don't wait on it."
         ),
@@ -228,7 +256,20 @@ END_CALL_TOOL = {
     "params": {"system_tool_type": "end_call"},  # required discriminator (docs: SystemToolConfig)
 }
 
-NEGOTIATOR_TURN = {"silence_end_call_timeout": 10}
+# Silence backstop: LONG only (Hamza, 07-18 late). 10s killed a live call mid-lookup
+# (Susy's call: agent said "gimme one sec", ran get_benchmark, platform hung up —
+# termination_reason "Ending conversation after 10 seconds of silence"). The platform
+# timer counts silence from the counterparty's last speech and can't know about holds
+# or lookups, so it must only catch a truly abandoned line; the model's end_call tool
+# owns the normal goodbye hangup.
+NEGOTIATOR_TURN = {
+    "silence_end_call_timeout": 180,
+    # Default turn_timeout is 7s: the agent re-engages 7 seconds into any pause,
+    # which read as RUSHING when a rep said "one second" (live call: "still with
+    # me?" 9s after "yeah, one second"). 15s gives thinking room; the prompt
+    # handles explicit wait requests on top.
+    "turn_timeout": 15,
+}
 
 
 def env() -> dict[str, str]:
@@ -356,13 +397,20 @@ def main() -> None:
             cc["agent"]["first_message"] = spec["first_message"]
             cc["agent"]["language"] = "en"
             if tools is not None:
-                cc["agent"]["prompt"]["tools"] = tools
+                cc["agent"]["prompt"]["tools"] = list(tools)
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
             if name == "negotiator":
-                # Self-hangup: enable ElevenLabs' end_call SYSTEM tool via built_in_tools.
-                # The old prompt.tools {"type":"system"} shape is HARD-REJECTED by the API —
-                # built_in_tools.end_call = {} is the accepted form. The LLM passes a reason
-                # (+ optional farewell). Plus a silence backstop so we never sit on a per-minute line.
+                # Self-hangup: a previous sync wrote built_in_tools.end_call and the API
+                # accepted it, but GET showed end_call: null and a live call proved the
+                # agent could not hang up. Current docs put system tools in prompt.tools
+                # as {"type":"system","name":"end_call","description":...}. Ship BOTH
+                # shapes; verify_end_call() below reports what actually stuck.
+                if tools is not None:
+                    cc["agent"]["prompt"]["tools"] = list(tools) + [{
+                        "type": "system",
+                        "name": "end_call",
+                        "description": END_CALL_TOOL["description"],
+                    }]
                 cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
                 cc.setdefault("turn", {}).update(NEGOTIATOR_TURN)
             # pin_voice agents override the live voice with the config default;
@@ -385,6 +433,21 @@ def main() -> None:
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
                 patch_body["platform_settings"] = allow_voice_override(live.get("platform_settings"))
             s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
+            if s != 200 and name == "negotiator" and tools is not None:
+                # Fallback: some API versions reject type:system inside prompt.tools.
+                # Retry with webhook tools only (built_in_tools still carries end_call).
+                print(f"  (system tool in prompt.tools rejected: {str(resp)[:120]} — retrying without it)")
+                cc["agent"]["prompt"]["tools"] = list(tools)
+                s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
+            if s == 200 and name == "negotiator":
+                sv, fresh = call("GET", f"/v1/convai/agents/{agent_id}", key)
+                if sv == 200:
+                    fp = fresh["conversation_config"]["agent"]["prompt"]
+                    in_tools = any(t.get("name") == "end_call" for t in (fp.get("tools") or []))
+                    bit = fp.get("built_in_tools") or {}
+                    in_bit = bool(bit.get("end_call"))
+                    print(f"  end_call live: prompt.tools={in_tools} built_in_tools={in_bit}"
+                          + ("" if (in_tools or in_bit) else "  ← STILL NOT ENABLED, the agent cannot hang up"))
         else:
             conversation_config = {
                 "agent": {

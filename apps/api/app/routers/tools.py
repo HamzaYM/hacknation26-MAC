@@ -9,7 +9,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .. import case_store, db, scheduler
 from ..config import load_vertical
@@ -40,6 +40,16 @@ GATED_OUTCOMES = {"reduction", "payment_plan", "settlement"}
 
 def _append_note(base: str | None, note: str) -> str:
     return f"{base}; {note}" if base else note
+
+
+def _looks_like_bare_name(value: object) -> bool:
+    """A reference_number that's really a rep's first name leaked into the wrong
+    field ("Bob"): a single short word, all letters, no digits. Real confirmation
+    numbers always carry a digit (and usually a prefix/dash)."""
+    if not isinstance(value, str):
+        return False
+    v = value.strip()
+    return bool(v) and v.isalpha() and len(v) <= 15
 
 
 def _ensure_call_row(call_id: str | None) -> dict | None:
@@ -108,8 +118,12 @@ class LeverResult(BaseModel):
 
 
 class LogEvent(BaseModel):
+    # extra="allow" captures fields the model put at the TOP LEVEL of the body
+    # instead of nested under payload (live finding: read_back arriving as
+    # {"type":"read_back","value":"MG-2247"}); log_event folds them into payload.
+    model_config = ConfigDict(extra="allow")
     call_id: str = LIVE_CALL_ID
-    type: str  # transcript | tool_call | state_change | quote | escalation
+    type: str  # transcript | tool_call | state_change | quote | escalation | read_back
     payload: dict = {}
 
 
@@ -224,17 +238,62 @@ def report_lever_result(body: LeverResult) -> dict:
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
     db.insert_event(call_id, "state_change",
                     {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
+    # Per-question coverage: one event per tag covered for the first time this
+    # exchange — the War Room panel flips each required-question row to green (A1).
+    for tag in resp.get("newly_covered", []):
+        db.insert_event(call_id, "question_covered", {"tag": tag, "rung": body.lever})
     if resp.get("escalation") or resp.get("escalation_required"):
         db.insert_event(call_id, "escalation", {"reason": resp.get("notes", "")})
     # Coverage gap: the agent walked off a required-questions rung still missing
-    # tags on the second pass — surface it to the War Room (A1).
+    # tags on the second pass — surface it to the War Room (A1). The rung is the
+    # one being LEFT (body.lever, whose required tags went uncovered), not the
+    # rung just advanced to — so the panel can flag those exact rows coral.
     if resp.get("coverage_incomplete"):
         db.insert_event(call_id, "coverage_gap",
-                        {"rung": resp["current_rung"], "missing": resp["coverage_incomplete"]})
+                        {"rung": body.lever, "missing": resp["coverage_incomplete"]})
     # Topic parked: an impasse set aside as an open item (escalation last resort).
     if resp.get("parked"):
         db.insert_event(call_id, "topic_parked", resp["parked"])
     return resp
+
+
+@router.post("/get_authorization")
+def get_authorization(body: dict) -> dict:
+    """The patient's recorded authorization, presented when a rep challenges it.
+
+    TOOL-GATED HONESTY: the agent may claim a recording exists ONLY when the tool
+    returns on_file: true. When true it returns the VERBATIM statement (the exact
+    words the patient recorded), the date recorded, and the account reference.
+
+    There is no ElevenLabs mechanism to PLAY a stored clip into a live PSTN call
+    (confirmed across the system-tools/server-tools/client-tools/custom-LLM docs and
+    the outbound-call API schema), so the agent reads the statement out loud, is
+    explicit it is reading a recorded/signed authorization on file rather than
+    playing the audio, and offers to send the recording + a written release."""
+    call_id = _resolve_call_id((body or {}).get("call_id"))
+    case_id = DEMO_CASE_ID
+    row = db.get_call(call_id) if call_id else None
+    if row is not None:
+        case_id = str(row["case_id"])
+    rec = db.get_case_authorization(case_id)
+    if not rec or not rec.get("authorization_path"):
+        return {
+            "on_file": False,
+            "say": ("No recorded authorization is on file for this account. Do NOT claim one "
+                    "exists — offer to complete the office's own authorization process instead."),
+        }
+    spec = spec_for_case(case_id) or DEMO_JOB_SPEC
+    return {
+        "on_file": True,
+        "recorded_at": rec.get("authorization_recorded_at"),
+        "statement_text": rec.get("authorization_statement"),
+        "patient_name": (spec.get("patient") or {}).get("legal_name"),
+        "reference": (spec.get("bill") or {}).get("account_number"),
+        "playback_note": ("Read statement_text VERBATIM. You cannot play the audio on this line — "
+                          "say that plainly, tell them you are reading her recorded authorization on "
+                          "file, and offer to send the recording and a written release to their email "
+                          "or fax right now."),
+    }
 
 
 @router.post("/log_quote")
@@ -253,9 +312,14 @@ def log_quote(body: LogEvent) -> dict:
 
 @router.post("/log_event")
 def log_event(body: LogEvent) -> dict:
+    # Tolerant payload: the model often puts fields at the TOP LEVEL of the body
+    # (e.g. {"type":"read_back","value":"MG-2247"}) instead of nested under
+    # payload, which used to store {}. Fold any unknown top-level keys in; an
+    # explicit payload wins on collisions.
+    payload = {**(body.__pydantic_extra__ or {}), **(body.payload or {})}
     call_id = _resolve_call_id(body.call_id)
     _ensure_call_row(call_id)
-    db.insert_event(call_id, body.type, body.payload)
+    db.insert_event(call_id, body.type, payload)
     return {"logged": True}
 
 
@@ -335,6 +399,20 @@ def end_call_summary(body: dict) -> dict:
 
     confirm_incomplete = bool(body.get("confirm_incomplete"))
 
+    # Reference-field guard: a bare first name in reference_number ("Bob") is a
+    # rep name that leaked into the wrong field, never a real confirmation
+    # number. Reroute it to rep_name when that's empty, otherwise drop it. Runs
+    # before the A4 gate and the outcome insert so the name can't be banked as a
+    # reference or satisfy the gated-win check.
+    ref_moved_to_rep = ref_dropped = False
+    if _looks_like_bare_name(body.get("reference_number")):
+        if not body.get("rep_name"):
+            body["rep_name"] = body["reference_number"].strip()
+            ref_moved_to_rep = True
+        else:
+            ref_dropped = True
+        body["reference_number"] = None
+
     # A4: gated wins need the paper trail before we bank them.
     missing = [f for f in ("reference_number", "rep_name", "agreed_action")
                if outcome_type in GATED_OUTCOMES and not body.get(f)]
@@ -387,7 +465,11 @@ def end_call_summary(body: dict) -> dict:
         resp["outcome_downgraded"] = "callback"
     # A6: a reference number nobody read back is unverified — flag, don't block.
     if body.get("reference_number") and not db.has_event(call_id, "read_back"):
-        resp["warnings"] = ["reference_number_unverified"]
+        resp.setdefault("warnings", []).append("reference_number_unverified")
+    if ref_moved_to_rep:
+        resp.setdefault("warnings", []).append("reference_number_looked_like_name_moved_to_rep_name")
+    if ref_dropped:
+        resp.setdefault("warnings", []).append("reference_number_looked_like_name_dropped")
 
     # Parked topics persist as scheduled callbacks; the winning lever resolves
     # (unless the win was downgraded to a callback for a pending written confirmation).

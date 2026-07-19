@@ -79,9 +79,12 @@ export default function Intake() {
         <span style={{ fontSize: 13, color: "var(--text-tertiary)" }}>takes ~5 min</span>
       </div>
       <h1 style={{ fontSize: 30, marginBottom: 8 }}>Add your documents</h1>
-      <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
+      <p style={{ color: "var(--text-secondary)", marginBottom: 8 }}>
         We read the bill and EOB line by line, check them against your case records, and flag
         anything worth arguing. Then a short voice interview covers what documents can&apos;t tell us.
+      </p>
+      <p style={{ fontSize: 13, color: "var(--text-tertiary)", marginBottom: 24 }}>
+        🔒 Encrypted in transit and at rest. Used only to negotiate this bill.
       </p>
 
       {(["bill", "eob"] as DocKind[]).map((kind) => (
