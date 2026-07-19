@@ -117,6 +117,28 @@ collections_threat_phrases:
   - "collection agency"
   - "report this"
 
+# Authorization challenge — the rep questions the caller's authority/identity to
+# discuss the account ("do you have authorization?", "HIPAA", "release on file",
+# "verify identity", "I can't discuss this with you"). The state machine folds a
+# note into report_lever_result arming the authorization move: present the
+# patient's RECORDED authorization (read it verbatim, be explicit it is a recorded
+# authorization on file, not audio played over the line) and offer to send the
+# recording + a written release. Tool-gated: the agent calls get_authorization and
+# may only claim a recording the tool confirms (on_file true). NO menace, no
+# overclaiming — a recording is not a signed 164.508 form; never say it is.
+authorization_challenge_phrases:
+  - "authorization"
+  - "authorized to"
+  - "hipaa"
+  - "release on file"
+  - "release of information"
+  - "verify identity"
+  - "verify your identity"
+  - "can't discuss"
+  - "cannot discuss"
+  - "who are you to"
+  - "on the account"
+
 # Parked open items are re-attempted this many hours after the call (caller-side
 # APScheduler; auto-dials only when ELEVENLABS_OUTBOUND_ENABLED is set).
 callback_delay_hours: 5

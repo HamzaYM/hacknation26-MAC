@@ -117,6 +117,33 @@ NEGOTIATOR_TOOLS = [
     },
     {
         "type": "webhook",
+        "name": "get_authorization",
+        "description": (
+            "Fetch the patient's RECORDED authorization for this account. Call this the "
+            "moment a rep challenges your authority or identity to discuss the account "
+            "(\"do you have authorization?\", \"HIPAA\", \"is there a release on file?\", "
+            "\"I can't discuss this with you\", \"I need to verify identity\"). Returns "
+            "on_file plus, when true, the exact words the patient recorded (statement_text), "
+            "the date recorded, and the account reference. HONESTY BOUNDARY: you may claim a "
+            "recorded authorization exists ONLY if on_file is true — never invent one. You "
+            "cannot play the audio on the line; read statement_text VERBATIM, say plainly you "
+            "are reading her recorded authorization on file (not playing audio), and offer to "
+            "send the recording plus a written release to their email or fax. Never call a "
+            "recording a signed release."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/get_authorization",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "No parameters needed",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "webhook",
         "name": "report_lever_result",
         "description": (
             "Report what just happened with the current negotiation step and receive the "
