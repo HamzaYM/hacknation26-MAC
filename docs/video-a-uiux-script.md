@@ -37,22 +37,27 @@ Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block 
 **Screenshot refs:** `deck/assets/warroom.png` + live `/voice` capture. CUT-IF-OVER: the voice-picker beat is the first thing to drop if the edit runs long.
 **VO:** *"Maya approves — nothing dials until she does. Then Haggl picks up the phone."*
 
-### SHOT 5 · 0:24–0:55 · THE LIVE CALL (31s, continuous) — proves S4, S5, S6
+### SHOT 5 · 0:24–0:56 · THE LIVE CALL (32s, continuous) — proves S4, S5, S6
 **SCREEN:** War Room call view, full frame. The through-line is the **price ticker** — it must be readable the whole time: **$4,287 → $3,875 → $2,400 → $1,650**, lever chips arming before each move, `escalation_required` event firing at $1,650. Picture-in-picture (small): Jay on a real phone, or the phone screen with the inbound call — sells "live human on the line."
 **AUDIO:** the call IS the audio. No VO. Record the full call with Jay as Pat (concession rules in `human_role_play_guide.md`); cut to these beats, ticker carrying continuity:
 
+**Realism rule: no instant concessions.** Pat never gives ground on the first breath — every move gets a *consideration beat* first (a system check, a deflection, a grumble). That friction is what makes the movement read as earned, not scripted (the judges' explicit red flag).
+
 | ~t | Beat (agent = Adam's voice) | Ticker |
 |---|---|---|
-| 0:24 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat: *"…what is it you're asking for?"* | $4,287 |
-| 0:29 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* Pat checks… *"…yeah, I see that. I can remove one."* | **→ $3,875** |
-| 0:37 | The benchmark, slow and clean: *"Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, grumbling: *"…I could do 2,400."* | **→ $2,400** |
-| 0:46 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* — hold — Pat: *"…approved at 1,650."* | **→ $1,650** |
-| 0:52 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
+| 0:24 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat, wary: *"…what is it you're asking for?"* | $4,287 |
+| 0:29 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* | $4,287 |
+| 0:33 | **Consideration beat.** Pat: *"Hold on… let me pull that up."* — keys clacking, a pause — *"…we bill what's documented, sir."* Adam, easy: *"Sure — but it's the same code, same day. Two X-rays, one visit."* Pat, beat: *"…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one."* | **→ $3,875** |
+| 0:41 | The benchmark, slow and clean: *"Appreciate that. Now — Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, bristling: *"Our rates are our rates."* — pause — *"…look, I've got some room. Best I can do is 2,400."* | **→ $2,400** |
+| 0:49 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* Pat, exhaling: *"…give me a second."* — hold music, 2s — *"Okay. Approved at 1,650."* | **→ $1,650** |
+| 0:55 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
+
+*(Timing note: the call block now runs 0:24–0:56; Shot 6 compresses to 0:56–1:00 — the report needs 4s, it's a receipt, not a tour.)*
 
 **On-screen text (small, bottom):** at 0:29 "finding #1: duplicate charge" · at 0:37 "the hospital's own posted price" · at 0:52 "every call ends structured: ref MG-ADJ-2247".
 **FALLBACK:** if the live take breaks twice, use the best golden recording replayed through the identical War Room view (the UI is the same code path) — label honestly in the submission text, not on screen.
 
-### SHOT 6 · 0:55–1:00 · The receipt (5s) — proves S7 + closes S1
+### SHOT 6 · 0:56–1:00 · The receipt (4s) — proves S7 + closes S1
 **SCREEN:** `/report` (or bill → Call History/outcome view): ranked outcomes with ref#s + rep names, **billed vs fair vs achieved** per line, Evidence expanded to a cited transcript line, then the savings headline.
 **Screenshot ref:** `deck/assets/report.png`.
 **VO:** *"Ranked, cited, in plain English. $4,287 became $1,650 — sixty-two percent off. Haggl."*
