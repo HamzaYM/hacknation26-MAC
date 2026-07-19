@@ -12,6 +12,7 @@ const BARE_PREFIXES = ["/warroom"];
 const NAV_ITEMS = [
   { href: "/bills", label: "Bills" },
   { href: "/action-items", label: "Action Items" },
+  { href: "/voice", label: "Voice" },
   { href: "/profile", label: "Profile" },
   { href: "/warroom", label: "War Room" },
 ];

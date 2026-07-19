@@ -23,8 +23,32 @@ def enabled() -> bool:
     return os.environ.get("ELEVENLABS_OUTBOUND_ENABLED", "").lower() in ("1", "true")
 
 
+def build_outbound_body(agent_id: str, agent_phone_number_id: str, to_number: str,
+                        voice_id: str | None = None,
+                        conversation_initiation_client_data: dict | None = None) -> dict:
+    """The outbound-call request body. conversation_initiation_client_data
+    carries per-call dynamic_variables (patient name, account, anchor/target —
+    scripts/place_test_call.py shape). When voice_id is set, the chosen voice
+    rides along in that same block as a per-call override
+    (conversation_config_override.tts.voice_id) — the agent itself is never
+    PATCHed, so concurrent calls each get their own voice without racing.
+    """
+    body: dict = {
+        "agent_id": agent_id,
+        "agent_phone_number_id": agent_phone_number_id,
+        "to_number": to_number,
+    }
+    init_data = dict(conversation_initiation_client_data or {})
+    if voice_id:
+        init_data.setdefault("conversation_config_override", {}).setdefault("tts", {})["voice_id"] = voice_id
+    if init_data:
+        body["conversation_initiation_client_data"] = init_data
+    return body
+
+
 def outbound_call(agent_id: str, agent_phone_number_id: str, to_number: str,
-                  conversation_initiation_client_data: dict | None = None) -> dict:
+                  conversation_initiation_client_data: dict | None = None,
+                  voice_id: str | None = None) -> dict:
     """Start a native-Twilio outbound call from an ElevenLabs agent.
 
     conversation_initiation_client_data carries per-call dynamic_variables
@@ -38,17 +62,12 @@ def outbound_call(agent_id: str, agent_phone_number_id: str, to_number: str,
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
     if not api_key:
         return {"enabled": False, "note": "ELEVENLABS_API_KEY missing"}
-    body = {
-        "agent_id": agent_id,
-        "agent_phone_number_id": agent_phone_number_id,
-        "to_number": to_number,
-    }
-    if conversation_initiation_client_data:
-        body["conversation_initiation_client_data"] = conversation_initiation_client_data
     resp = httpx.post(
         OUTBOUND_URL,
         headers={"xi-api-key": api_key},
-        json=body,
+        json=build_outbound_body(agent_id, agent_phone_number_id, to_number,
+                                 voice_id=voice_id,
+                                 conversation_initiation_client_data=conversation_initiation_client_data),
         timeout=30,
     )
     resp.raise_for_status()
