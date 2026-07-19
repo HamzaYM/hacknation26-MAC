@@ -692,6 +692,11 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .warroom-shell .brand, .warroom-shell .logo { color: #f5f1ec; }
 .warroom-meta { padding: var(--space-lg) var(--space-2xl) 0; font-size: 14px; color: rgba(245,241,236,0.6); }
 .warroom-layout { display: grid; grid-template-columns: 1fr 280px; gap: var(--space-xl); padding: var(--space-lg) var(--space-2xl); max-width: 1560px; margin: 0 auto; align-items: start; }
+/* Call-ended → report handoff: the flow out of the War Room once a call wraps. */
+.wr-report-cta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); margin: var(--space-lg) var(--space-2xl) 0; padding: var(--space-md) var(--space-lg); background: rgba(239,107,69,0.12); border: 1px solid rgba(239,107,69,0.4); border-radius: var(--radius-card); }
+.wr-report-cta-text { font-size: 14px; color: rgba(245,241,236,0.85); line-height: 1.5; }
+.wr-report-cta-text strong { color: #f5f1ec; }
+@media (max-width: 640px) { .wr-report-cta { flex-direction: column; align-items: stretch; text-align: center; } }
 .warroom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
 .wr-roster { position: sticky; top: var(--space-lg); }
 .wr-roster-toggle {
