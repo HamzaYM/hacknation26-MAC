@@ -121,7 +121,7 @@ tuning the persona prompts before they're provisioned.
 | ID | Test | Pass |
 |---|---|---|
 | VD-1 | **Cold-viewer test**: someone who didn't build watches the cut with the S1–S7 list from `docs/video-script.md` | All seven checked without prompting |
-| VD-2 | Narration read-aloud with a stopwatch | ≤3:30 including call audio segments |
+| VD-2 | Narration read-aloud with a stopwatch | ≤60s per video including call audio segments |
 | VD-3 | Scripted number check (grep video-script + deck vs `demo_answer_key.json`) | Every spoken number matches the answer key |
 | VD-4 | Deck coverage | Code-vs-LLM matrix, disclosure/honesty, config-swap slides present |
 

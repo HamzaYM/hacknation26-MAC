@@ -30,23 +30,41 @@ export function subscribeToCall(callId: string, onChange: (call: Call) => void) 
   return () => supabase.removeChannel(channel);
 }
 
+// A non-terminal call that has produced ZERO events and has been dialing for
+// more than ~10 minutes is a stale orphan (a launch that never streamed, the
+// old ca11 fallback row), not a live negotiation — drop it from the overview
+// so it doesn't linger as a dead "connecting…" card. A call with even one
+// event, or one not yet dialed (no started_at — just launched, about to dial),
+// is always kept, so the fresh confirm→launch flow shows its cards instantly.
+const STALE_ZERO_EVENT_MS = 10 * 60 * 1000;
+type CallWithEventCount = ActiveCall & { call_events?: { count: number }[] };
+function isStaleZeroEventOrphan(call: CallWithEventCount): boolean {
+  if (call.status === "ended" || call.status === "failed") return false;
+  if ((call.call_events?.[0]?.count ?? 0) > 0) return false;
+  if (!call.started_at) return false;
+  return Date.now() - new Date(call.started_at).getTime() > STALE_ZERO_EVENT_MS;
+}
+
 /**
  * War Room multi-call overview: the full roster of calls for a case, with
  * each call's dossier target entity joined in. Calls onCalls with a fresh
  * id-ordered list on subscribe and again after every INSERT/UPDATE on the
  * case's calls (a refetch rather than a local merge — Realtime payloads
  * carry only the bare row, so refetching keeps the dossier join populated).
+ * Stale zero-event orphans are filtered out here (see isStaleZeroEventOrphan).
  */
 export function subscribeToActiveCalls(caseId: string, onCalls: (calls: ActiveCall[]) => void) {
   let disposed = false;
   const fetchAll = () => {
     supabase
       .from("calls")
-      .select("*, dossier:strategy_dossiers(target_entity, route)")
+      .select("*, dossier:strategy_dossiers(target_entity, route), call_events(count)")
       .eq("case_id", caseId)
       .order("id")
       .then(({ data }) => {
-        if (!disposed && data) onCalls(data as unknown as ActiveCall[]);
+        if (disposed || !data) return;
+        const calls = (data as unknown as CallWithEventCount[]).filter((c) => !isStaleZeroEventOrphan(c));
+        onCalls(calls);
       });
   };
   fetchAll();

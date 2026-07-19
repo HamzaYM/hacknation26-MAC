@@ -309,7 +309,7 @@ Individual marching orders: `docs/workplans/{suzy,j,hamza,kar-shin}.md`.
 
 ---
 
-## §14 · Demo Script — 3:30 (Kar Shin directs)
+## §14 · Demo Script — 2×60s (Kar Shin directs)
 
 Seeded around Maya's bill (§10.3); every number below reconciles with the answer key.
 

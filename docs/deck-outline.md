@@ -45,15 +45,16 @@ is **computed in code** and injected; the LLM is the mouth, not the brain-stem.
   caller. Trade-off stated plainly: this is lighter than a proactive-disclosure reading of
   TCPA/SB 1001, so production would add an early compliant disclosure; for the demo we optimize
   the negotiation and never lie. (Config-switchable: `disclosure.mode` = only_if_asked | late | early.)
-- **Honesty audit** on every call: figures diffed vs. the DB, case-facts vs. the JobSpec →
-  "passed" badge in the report. Never invents inventory, a fake bid, or hardship.
+- **Honesty audit** on every call: spoken figures diffed vs. the DB and disclosure checked —
+  deterministically. (Case-facts aren't audited; they're prompt-constrained to the JobSpec, never
+  invented.) → "passed" badge in the report. Never invents inventory, a fake bid, or hardship.
 - *Visual: the disclosure line + a redacted honesty-audit badge.*
 
 ### 7 · The demo — a real price move
 The showstopper arc, as a ticker: **$4,287 → $3,875 → $2,400 → $1,650. −62%.**
 Each step tied to a lever the agent gathered (duplicate cite → benchmark cite → settlement).
 3 distinct counterparty styles (Stonewaller hangs up → documented decline; Policy-Citer →
-charity app; Collections → settlement). *Embed the 3:30 video / QR.*
+charity app; Collections → settlement). *Embed the 2×60s videos / QR.*
 
 ### 8 · Config-swap vision + team (MANDATED)
 - Vertical params are **config, not code**: swap `medical_bills.yaml` → `moving.yaml`, same

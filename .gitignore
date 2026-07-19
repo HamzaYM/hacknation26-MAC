@@ -18,3 +18,13 @@ data/raw/
 *.csv.gz
 *.zip
 chargemasters*
+
+# Local tooling + loose evidence at repo root (root-scoped with a leading slash
+# so committed asset dirs stay tracked: deck-web-verify/, case-view-verify/,
+# apps/web/public/** are all nested and unaffected).
+/.claude
+/.playwright-mcp
+/*.jpeg
+/*.png
+/intake-parse-verified.png
+/The Negotiator - Visual Brief (standalone).html
