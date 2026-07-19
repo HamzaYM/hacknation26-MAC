@@ -1,0 +1,29 @@
+{
+  "claim_number": "CCA-2026-33418",
+  "denial_codes": [
+    "197"
+  ],
+  "line_items": [
+    {
+      "allowed_amount": 1828.0,
+      "billed_amount": 1828.0,
+      "cpt": "70450",
+      "date_of_service": "2026-03-27",
+      "description": "CT head/brain without contrast",
+      "patient_responsibility": 1828.0,
+      "plan_paid": 0.0,
+      "units": 1
+    },
+    {
+      "allowed_amount": 508.4,
+      "billed_amount": 826.0,
+      "cpt": "96360",
+      "date_of_service": "2026-03-27",
+      "description": "IV hydration, initial hour",
+      "patient_responsibility": 0.0,
+      "plan_paid": 508.4,
+      "units": 1
+    }
+  ],
+  "patient_responsibility_total": 1828.0
+}

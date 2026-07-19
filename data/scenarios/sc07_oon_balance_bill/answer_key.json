@@ -1,0 +1,172 @@
+{
+  "ask": {
+    "anchor": 912.64,
+    "excess_above_band": 4969.93,
+    "floor": 608.43,
+    "per_line_multiples": [
+      {
+        "code": "99285",
+        "medicare_multiple": 6.07,
+        "rand_flag": true
+      }
+    ],
+    "target": 1216.86,
+    "total_medicare_multiple": 10.67
+  },
+  "benchmark_report": {
+    "case_id": "sc07_oon_balance_bill",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[99285/facility] cms-opps-2026q3"
+    },
+    "hospital": "Brigham and Women's Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[99285/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 608.43
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 1545.41
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "CIGNA ALTERNATE [1018] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/99285] payer=CIGNA ALTERNATE [1018] plan=HB AMC CIGNA NEW BUSINESS DISCOUNT",
+            "source_url": null,
+            "value": 1967.3
+          },
+          {
+            "band": {
+              "max": 2583.7,
+              "median": 2271.81,
+              "min": 779.71,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 1670.4,
+              "p75": 2578.16
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/99285] commercial rows",
+            "source_url": null,
+            "value": 2271.81
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/99285] cash",
+            "source_url": null,
+            "value": 2768.25
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/99285] gross",
+            "source_url": null,
+            "value": 3691.0
+          }
+        ],
+        "billed": 3691.0,
+        "billing_entity": "facility",
+        "code": "99285",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Emergency department visit, high severity (level 5)",
+        "excess_above_band": 2169.93,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 1521.07,
+          "high_multiple": 2.5,
+          "low": 912.64,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 6.07,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 2800.0,
+        "billing_entity": "professional",
+        "code": "01922",
+        "code_type": "CPT",
+        "coverage": "professional_excluded",
+        "description": "Anesthesia services (out-of-network provider)",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "CIGNA ALTERNATE [1018]",
+    "plan_name": "HB AMC CIGNA NEW BUSINESS DISCOUNT",
+    "totals": {
+      "ask_anchor": 912.64,
+      "ask_target": 1216.86,
+      "billed": 6491.0,
+      "excess_above_band": 4969.93,
+      "fair_band_high": 1521.07,
+      "fair_band_low": 912.64,
+      "floor": 608.43,
+      "medicare": 608.43,
+      "medicare_multiple": 10.67
+    }
+  },
+  "call_talking_points": [
+    "nsa balance billing on 01922: $2,800.00 (derived flag)",
+    "eob mismatch on the claim: $2,800.00 (derived flag)",
+    "Billed total $6,491.00 is 10.67x the Medicare rate of $608.43 (benchmark anchor).",
+    "Lines 99285 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "01922",
+      "detail": "protected out-of-network emergency/ancillary balance (No Surprises Act)",
+      "dollar_impact": 2800.0,
+      "type": "nsa_balance_billing"
+    },
+    {
+      "code": null,
+      "detail": "provider balance exceeds the EOB patient responsibility",
+      "dollar_impact": 2800.0,
+      "type": "eob_mismatch"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc07_oon_balance_bill"
+}

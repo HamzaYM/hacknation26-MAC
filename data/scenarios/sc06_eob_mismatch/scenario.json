@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "eob_mismatch",
+  "coverage": {
+    "member_id": "TUF-31007",
+    "network_status": "in_network",
+    "payer_name": "TUFTS HEALTH PLAN [170001]",
+    "plan_name": "HB CH TUFTS",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220087",
+    "city": "Newton",
+    "ein": "04-2103611",
+    "name": "Newton-Wellesley Hospital",
+    "state": "MA"
+  },
+  "narrative": "Grace's EOB shows the plan allowed and paid the negotiated amount with $0 left to her, but the hospital's statement bills her the full gross charge — the contractual write-down was never applied.",
+  "patient": {
+    "account_number": "NWH-2026-0502",
+    "dob": "1994-09-19",
+    "name": "Grace Kimura"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Newton-Wellesley Hospital"
+    }
+  ],
+  "scenario_id": "sc06_eob_mismatch",
+  "service_date": "2026-05-02",
+  "title": "Grace Kimura — billed the gross charge her plan already adjusted"
+}

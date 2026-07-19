@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "duplicate_charge",
+  "coverage": {
+    "member_id": "CIG-2210",
+    "network_status": "in_network",
+    "payer_name": "CIGNA [1006]",
+    "plan_name": "HB CH CIGNA HMO / PPO",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220087",
+    "city": "Newton",
+    "ein": "04-2103611",
+    "name": "Newton-Wellesley Hospital",
+    "state": "MA"
+  },
+  "narrative": "An ER chest X-ray (CPT 71046) appears twice on the same date on Priya's Newton-Wellesley itemized bill — a classic duplicate line.",
+  "patient": {
+    "account_number": "NWH-2026-0311",
+    "dob": "1988-07-22",
+    "name": "Priya Nair"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Newton-Wellesley Hospital"
+    }
+  ],
+  "scenario_id": "sc02_duplicate",
+  "service_date": "2026-03-11",
+  "title": "Priya Nair — chest X-ray billed twice"
+}

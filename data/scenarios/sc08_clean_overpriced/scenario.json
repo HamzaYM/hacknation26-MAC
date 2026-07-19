@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "clean_overpriced",
+  "coverage": {
+    "member_id": "COE-11228",
+    "network_status": "in_network",
+    "payer_name": "CENTERS OF EXCELLENCE [1026]",
+    "plan_name": "HB AMC MGBHP TRANSPLANT",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220110",
+    "city": "Boston",
+    "ein": "04-2312909",
+    "name": "Brigham and Women's Hospital",
+    "state": "MA"
+  },
+  "narrative": "Aisha's Brigham bill has no coding errors and no EOB mismatch — every line is legitimate. But the charges sit far above what every other payer negotiates for the same codes: a pure benchmarking case.",
+  "patient": {
+    "account_number": "BWH-2026-0422",
+    "dob": "1976-02-27",
+    "name": "Aisha Bello"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Brigham and Women's Hospital"
+    }
+  ],
+  "scenario_id": "sc08_clean_overpriced",
+  "service_date": "2026-04-22",
+  "title": "Aisha Bello — correctly coded, but billed far above the market"
+}

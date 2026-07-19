@@ -1,0 +1,331 @@
+{
+  "ask": {
+    "anchor": 646.41,
+    "excess_above_band": 1703.69,
+    "floor": 430.94,
+    "per_line_multiples": [
+      {
+        "code": "70450",
+        "medicare_multiple": 13.81,
+        "rand_flag": true
+      },
+      {
+        "code": "72110",
+        "medicare_multiple": 6.79,
+        "rand_flag": true
+      },
+      {
+        "code": "96360",
+        "medicare_multiple": 2.67,
+        "rand_flag": true
+      }
+    ],
+    "target": 861.88,
+    "total_medicare_multiple": 6.45
+  },
+  "benchmark_report": {
+    "case_id": "sc06_eob_mismatch",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96360/facility] cms-opps-2026q3"
+    },
+    "hospital": "Newton-Wellesley Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[70450/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 106.81
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 271.3
+          },
+          {
+            "band": {
+              "max": 340.56,
+              "median": 112.51,
+              "min": 112.51,
+              "n_payers": 3,
+              "n_rows": 3,
+              "p25": 112.51,
+              "p75": 226.54
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (3 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/70450] commercial rows",
+            "source_url": null,
+            "value": 112.51
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/70450] cash",
+            "source_url": null,
+            "value": 1106.25
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/70450] gross",
+            "source_url": null,
+            "value": 1475.0
+          }
+        ],
+        "billed": 1475.0,
+        "billing_entity": "facility",
+        "code": "70450",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "CT head/brain without contrast",
+        "excess_above_band": 1207.98,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 267.02,
+          "high_multiple": 2.5,
+          "low": 160.22,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 13.81,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[72110/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 106.81
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 271.3
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "TUFTS HEALTH PLAN [170001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/72110] payer=TUFTS HEALTH PLAN [170001] plan=HB CH TUFTS",
+            "source_url": null,
+            "value": 123.75
+          },
+          {
+            "band": {
+              "max": 429.93,
+              "median": 125.01,
+              "min": 123.75,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 123.75,
+              "p75": 202.19
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/72110] commercial rows",
+            "source_url": null,
+            "value": 125.01
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/72110] cash",
+            "source_url": null,
+            "value": 543.75
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/72110] gross",
+            "source_url": null,
+            "value": 725.0
+          }
+        ],
+        "billed": 725.0,
+        "billing_entity": "facility",
+        "code": "72110",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "X-ray, lumbar spine, 4+ views",
+        "excess_above_band": 457.98,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 267.02,
+          "high_multiple": 2.5,
+          "low": 160.22,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 6.79,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[96360/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 217.31
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 551.97
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "TUFTS HEALTH PLAN [170001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] payer=TUFTS HEALTH PLAN [170001] plan=HB CH TUFTS",
+            "source_url": null,
+            "value": 245.18
+          },
+          {
+            "band": {
+              "max": 344.53,
+              "median": 294.45,
+              "min": 245.18,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 248.93,
+              "p75": 340.17
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] commercial rows",
+            "source_url": null,
+            "value": 294.45
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] cash",
+            "source_url": null,
+            "value": 435.75
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] gross",
+            "source_url": null,
+            "value": 581.0
+          }
+        ],
+        "billed": 581.0,
+        "billing_entity": "facility",
+        "code": "96360",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "IV hydration, initial hour",
+        "excess_above_band": 37.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 543.27,
+          "high_multiple": 2.5,
+          "low": 325.97,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 2.67,
+        "rand_flag": true,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "TUFTS HEALTH PLAN [170001]",
+    "plan_name": "HB CH TUFTS",
+    "totals": {
+      "ask_anchor": 646.41,
+      "ask_target": 861.88,
+      "billed": 2781.0,
+      "excess_above_band": 1703.69,
+      "fair_band_high": 1077.31,
+      "fair_band_low": 646.41,
+      "floor": 430.94,
+      "medicare": 430.94,
+      "medicare_multiple": 6.45
+    }
+  },
+  "call_talking_points": [
+    "eob mismatch on the claim: $2,781.00 (derived flag)",
+    "Billed total $2,781.00 is 6.45x the Medicare rate of $430.94 (benchmark anchor).",
+    "Lines 70450, 72110, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": null,
+      "detail": "provider balance exceeds the EOB patient responsibility",
+      "dollar_impact": 2781.0,
+      "type": "eob_mismatch"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc06_eob_mismatch"
+}

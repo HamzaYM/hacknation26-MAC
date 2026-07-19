@@ -1,0 +1,153 @@
+{
+  "account_number": "MG-4471983",
+  "due_date": "2026-07-20",
+  "facility_name": "Mercy General Hospital",
+  "is_itemized": true,
+  "line_items": [
+    {
+      "billed_amount": 2340.0,
+      "cpt": "99285",
+      "date_of_service": "2026-06-02",
+      "description": "Emergency department visit, high severity (level 5)",
+      "dx_codes": [
+        "J06.9"
+      ]
+    },
+    {
+      "billed_amount": 412.0,
+      "cpt": "71046",
+      "date_of_service": "2026-06-02",
+      "description": "Chest X-ray, 2 views"
+    },
+    {
+      "billed_amount": 412.0,
+      "cpt": "71046",
+      "date_of_service": "2026-06-02",
+      "description": "Chest X-ray, 2 views"
+    },
+    {
+      "billed_amount": 50.0,
+      "cpt": "84295",
+      "date_of_service": "2026-06-02",
+      "description": "Sodium"
+    },
+    {
+      "billed_amount": 50.0,
+      "cpt": "84132",
+      "date_of_service": "2026-06-02",
+      "description": "Potassium"
+    },
+    {
+      "billed_amount": 45.0,
+      "cpt": "82374",
+      "date_of_service": "2026-06-02",
+      "description": "Carbon dioxide"
+    },
+    {
+      "billed_amount": 45.0,
+      "cpt": "82435",
+      "date_of_service": "2026-06-02",
+      "description": "Chloride"
+    },
+    {
+      "billed_amount": 50.0,
+      "cpt": "82947",
+      "date_of_service": "2026-06-02",
+      "description": "Glucose"
+    },
+    {
+      "billed_amount": 52.0,
+      "cpt": "82565",
+      "date_of_service": "2026-06-02",
+      "description": "Creatinine"
+    },
+    {
+      "billed_amount": 50.0,
+      "cpt": "84520",
+      "date_of_service": "2026-06-02",
+      "description": "Urea nitrogen (BUN)"
+    },
+    {
+      "billed_amount": 52.0,
+      "cpt": "82310",
+      "date_of_service": "2026-06-02",
+      "description": "Calcium"
+    },
+    {
+      "billed_amount": 55.0,
+      "cpt": "84075",
+      "date_of_service": "2026-06-02",
+      "description": "Alkaline phosphatase"
+    },
+    {
+      "billed_amount": 50.0,
+      "cpt": "84155",
+      "date_of_service": "2026-06-02",
+      "description": "Protein, total"
+    },
+    {
+      "billed_amount": 52.0,
+      "cpt": "84450",
+      "date_of_service": "2026-06-02",
+      "description": "Transferase, AST"
+    },
+    {
+      "billed_amount": 52.0,
+      "cpt": "84460",
+      "date_of_service": "2026-06-02",
+      "description": "Transferase, ALT"
+    },
+    {
+      "billed_amount": 47.0,
+      "cpt": "82040",
+      "date_of_service": "2026-06-02",
+      "description": "Albumin"
+    },
+    {
+      "billed_amount": 40.0,
+      "cpt": "82247",
+      "date_of_service": "2026-06-02",
+      "description": "Bilirubin, total"
+    },
+    {
+      "billed_amount": 24.0,
+      "cpt": "85025",
+      "date_of_service": "2026-06-02",
+      "description": "Complete blood count w/ differential"
+    },
+    {
+      "billed_amount": 210.0,
+      "cpt": "96374",
+      "date_of_service": "2026-06-02",
+      "description": "IV push, single drug"
+    },
+    {
+      "billed_amount": 1364.0,
+      "cpt": "93005",
+      "date_of_service": "2026-06-02",
+      "description": "Electrocardiogram, tracing only"
+    },
+    {
+      "billed_amount": 1120.0,
+      "cpt": "96361",
+      "date_of_service": "2026-06-02",
+      "description": "IV hydration, each additional hour"
+    },
+    {
+      "billed_amount": 980.0,
+      "cpt": "J7030",
+      "date_of_service": "2026-06-02",
+      "description": "Normal saline solution, 1000 cc"
+    },
+    {
+      "billed_amount": 880.0,
+      "cpt": "J2405",
+      "date_of_service": "2026-06-02",
+      "description": "Ondansetron HCl injection, 4 mg"
+    }
+  ],
+  "nonprofit_status": true,
+  "patient_balance": 4287.0,
+  "statement_date": "2026-06-20",
+  "total_billed": 8432.0
+}

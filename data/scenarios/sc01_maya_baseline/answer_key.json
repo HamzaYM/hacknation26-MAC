@@ -1,0 +1,591 @@
+{
+  "ask": {
+    "anchor": 2060.68,
+    "excess_above_band": 4997.54,
+    "floor": 1373.79,
+    "per_line_multiples": [
+      {
+        "code": "99285",
+        "medicare_multiple": 2.97,
+        "rand_flag": true
+      },
+      {
+        "code": "71046",
+        "medicare_multiple": 3.24,
+        "rand_flag": true
+      },
+      {
+        "code": "71046",
+        "medicare_multiple": 3.24,
+        "rand_flag": true
+      },
+      {
+        "code": "85025",
+        "medicare_multiple": 3.09,
+        "rand_flag": true
+      },
+      {
+        "code": "96374",
+        "medicare_multiple": 0.8,
+        "rand_flag": false
+      },
+      {
+        "code": "96361",
+        "medicare_multiple": 17.83,
+        "rand_flag": true
+      }
+    ],
+    "target": 2747.58,
+    "total_medicare_multiple": 6.14
+  },
+  "benchmark_report": {
+    "case_id": "sc01_maya_baseline",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96361/global] cms-pfs-rvu26a+opps-2026q3"
+    },
+    "hospital": "Mercy General Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "professional + facility (physician-group and hospital-facility components summed)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[99285/global] cms-pfs-rvu26a+opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules",
+            "value": 787.7
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 2000.76
+          }
+        ],
+        "billed": 2340.0,
+        "billing_entity": "unknown",
+        "code": "99285",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "Emergency department visit, high severity (level 5)",
+        "excess_above_band": 370.75,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 1969.25,
+          "high_multiple": 2.5,
+          "low": 1181.55,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 2.97,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "professional + facility (physician-group and hospital-facility components summed)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[71046/global] cms-pfs-rvu26a+opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules",
+            "value": 127.12
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 322.88
+          }
+        ],
+        "billed": 412.0,
+        "billing_entity": "unknown",
+        "code": "71046",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "Chest X-ray, 2 views",
+        "excess_above_band": 94.2,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 317.8,
+          "high_multiple": 2.5,
+          "low": 190.68,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.24,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "professional + facility (physician-group and hospital-facility components summed)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[71046/global] cms-pfs-rvu26a+opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules",
+            "value": 127.12
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 322.88
+          }
+        ],
+        "billed": 412.0,
+        "billing_entity": "unknown",
+        "code": "71046",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "Chest X-ray, 2 views",
+        "excess_above_band": 94.2,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 317.8,
+          "high_multiple": 2.5,
+          "low": 190.68,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.24,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 50.0,
+        "billing_entity": "unknown",
+        "code": "84295",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Sodium",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 50.0,
+        "billing_entity": "unknown",
+        "code": "84132",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Potassium",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 45.0,
+        "billing_entity": "unknown",
+        "code": "82374",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Carbon dioxide",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 45.0,
+        "billing_entity": "unknown",
+        "code": "82435",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Chloride",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 50.0,
+        "billing_entity": "unknown",
+        "code": "82947",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Glucose",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 52.0,
+        "billing_entity": "unknown",
+        "code": "82565",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Creatinine",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 50.0,
+        "billing_entity": "unknown",
+        "code": "84520",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Urea nitrogen (BUN)",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 52.0,
+        "billing_entity": "unknown",
+        "code": "82310",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Calcium",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 55.0,
+        "billing_entity": "unknown",
+        "code": "84075",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Alkaline phosphatase",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 50.0,
+        "billing_entity": "unknown",
+        "code": "84155",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Protein, total",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 52.0,
+        "billing_entity": "unknown",
+        "code": "84450",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Transferase, AST",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 52.0,
+        "billing_entity": "unknown",
+        "code": "84460",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Transferase, ALT",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 47.0,
+        "billing_entity": "unknown",
+        "code": "82040",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Albumin",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 40.0,
+        "billing_entity": "unknown",
+        "code": "82247",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Bilirubin, total",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "flat CLFS national rate (no geographic adjustment)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[85025/global] cms-clfs-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules/clinical-laboratory-fee-schedule-clfs/files",
+            "value": 7.77
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 19.74
+          }
+        ],
+        "billed": 24.0,
+        "billing_entity": "unknown",
+        "code": "85025",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "Complete blood count w/ differential",
+        "excess_above_band": 4.58,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 19.42,
+          "high_multiple": 2.5,
+          "low": 11.65,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.09,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "professional + facility (physician-group and hospital-facility components summed)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[96374/global] cms-pfs-rvu26a+opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules",
+            "value": 261.25
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 663.58
+          }
+        ],
+        "billed": 210.0,
+        "billing_entity": "unknown",
+        "code": "96374",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "IV push, single drug",
+        "excess_above_band": 0.0,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 653.12,
+          "high_multiple": 2.5,
+          "low": 391.88,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 0.8,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 1364.0,
+        "billing_entity": "unknown",
+        "code": "93005",
+        "code_type": "CPT",
+        "coverage": "no_medicare",
+        "description": "Electrocardiogram, tracing only",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "professional + facility (physician-group and hospital-facility components summed)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[96361/global] cms-pfs-rvu26a+opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules",
+            "value": 62.83
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 159.59
+          }
+        ],
+        "billed": 1120.0,
+        "billing_entity": "unknown",
+        "code": "96361",
+        "code_type": "CPT",
+        "coverage": "thin",
+        "description": "IV hydration, each additional hour",
+        "excess_above_band": 962.93,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 157.07,
+          "high_multiple": 2.5,
+          "low": 94.25,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 17.83,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 980.0,
+        "billing_entity": "unknown",
+        "code": "J7030",
+        "code_type": "HCPCS",
+        "coverage": "no_medicare",
+        "description": "Normal saline solution, 1000 cc",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      },
+      {
+        "anchors": [],
+        "billed": 880.0,
+        "billing_entity": "unknown",
+        "code": "J2405",
+        "code_type": "HCPCS",
+        "coverage": "no_medicare",
+        "description": "Ondansetron HCl injection, 4 mg",
+        "excess_above_band": 0.0,
+        "fair_band": null,
+        "medicare_multiple": null,
+        "rand_flag": false,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "Blue Cross Blue Shield of Massachusetts",
+    "plan_name": "PPO",
+    "totals": {
+      "ask_anchor": 2060.68,
+      "ask_target": 2747.58,
+      "billed": 8432.0,
+      "excess_above_band": 4997.54,
+      "fair_band_high": 3434.46,
+      "fair_band_low": 2060.69,
+      "floor": 1373.79,
+      "medicare": 1373.79,
+      "medicare_multiple": 6.14
+    }
+  },
+  "call_talking_points": [
+    "duplicate on 71046: $412.00 (derived flag)",
+    "upcode on 99285: $2,011.21 (derived flag)",
+    "unbundle on 80053: $642.00 (derived flag)",
+    "eob mismatch on the claim: $412.00 (derived flag)",
+    "Billed total $8,432.00 is 6.14x the Medicare rate of $1,373.79 (benchmark anchor).",
+    "Lines 99285, 71046, 71046, 85025, 96361 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "71046",
+      "detail": "71046 billed 2x on the same date",
+      "dollar_impact": 412.0,
+      "type": "duplicate"
+    },
+    {
+      "code": "99285",
+      "detail": "99285 billed; records support 99283",
+      "dollar_impact": 2011.21,
+      "type": "upcode"
+    },
+    {
+      "code": "80053",
+      "detail": "14 components billed instead of 80053",
+      "dollar_impact": 642.0,
+      "type": "unbundle"
+    },
+    {
+      "code": null,
+      "detail": "provider balance exceeds the EOB patient responsibility",
+      "dollar_impact": 412.0,
+      "type": "eob_mismatch"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc01_maya_baseline"
+}
