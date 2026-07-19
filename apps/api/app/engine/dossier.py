@@ -14,9 +14,10 @@ Money math (asserted against data/seed/demo_answer_key.json in tests):
            the state machine rejects any offer above it, and settling above
            target raises an escalation flag (see state_machine.py)
 
-Levers are emitted in ladder order (config ladder.provider): statutory
-(financial_assistance_screen rung) → error disputes (line_item_disputes rung,
-one lever per red flag) → benchmark_anchor. Only armed levers are listed.
+Levers are emitted in ladder order (config ladder.provider): a protected NSA
+statute (armed FIRST when an nsa flag is present — cite, don't negotiate) →
+statutory (financial_assistance_screen rung) → error disputes (line_item_disputes
+rung, one lever per red flag) → benchmark_anchor. Only armed levers are listed.
 """
 from __future__ import annotations
 
@@ -123,6 +124,24 @@ def build_dossier(
         return cited[0] if cited else fallback
 
     levers_list: list[Lever] = []
+
+    # 0) NSA gate — a protected out-of-network emergency/ancillary balance is
+    #    CITED, not negotiated (config thresholds.nsa_do_not_negotiate). There is
+    #    no nsa_dispute rung in the ladder, so we keep the route but arm the NSA
+    #    statute lever FIRST, with the verbatim citation from config/levers.json.
+    nsa_flag = next((f for f in flags if f.type == "nsa"), None)
+    if nsa_flag is not None:
+        try:
+            nsa_cite = levers.citation("nsa_emergency_balance_billing_ban", lever_ctx)[0]
+        except KeyError:
+            nsa_cite = None  # pack missing the lever → arm without a citation
+        levers_list.append(Lever(
+            id="statutory_nsa",
+            armed=True,
+            armed_by=f"derived_flag:nsa (protected OON balance ${nsa_flag.dollar_impact:,.2f})",
+            citation=nsa_cite,
+            dollar_ask=nsa_flag.dollar_impact,
+        ))
 
     # 1) statutory — financial_assistance_screen rung (charity care FIRST).
     # Arms via EITHER the flat FPL gate OR MA HSN Medical Hardship (no FPL ceiling

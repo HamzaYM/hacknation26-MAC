@@ -21,6 +21,10 @@ red_flags:
     tolerance_usd: 1.00                      # bill balance vs EOB patient responsibility
   markup:
     flag_above_band_multiple: 1.0            # any line above band_high
+  nsa:                                       # No Surprises Act — protected out-of-network emergency/ancillary balance bill
+    ancillary_kinds: [anesthesia, er_physician_group, radiology, pathology]  # providers a patient can't choose in an emergency
+    out_of_network_markers: ["out-of-network", "out of network"]             # how a line's spec marks the provider OON
+    min_impact: 100                          # protected surprise-balance delta (billed − in-network share) must be material to fire
 
 # ── Fair-price band (deterministic math) ─────────────────────────────────
 benchmark:
@@ -123,6 +127,18 @@ personas:
   - { key: policy_citer,  file: prompts/personas/policy_citer.md }
   - { key: no_authority,  file: prompts/personas/no_authority.md }
   - { key: collections,   file: prompts/personas/collections.md }
+
+# ── Simulator (POST /calls/launch?simulate=true — app/simulator.py) ───────
+# entity.kind → replay scenario. Config-not-code: flip a mapping here to change
+# which simulated arc an entity plays — no router change. Unmapped kinds fall
+# back to a generic policy_citer replay (never a silent skip). DEMO DEFAULT is
+# unchanged; to replay the facility WIN ($4,287 → $1,650 settle), set
+# facility: human_facility_supervisor.
+simulator:
+  entity_personas:
+    facility: gruff_stonewaller
+    er_physician_group: policy_citer
+    collections: collections_agent
 
 # ── Voice (ElevenLabs settings, from operational-call-flow-spec.md) ──────
 voice:

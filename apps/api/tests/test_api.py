@@ -26,6 +26,19 @@ def test_get_case_flags_endpoint(client):
     assert client.get("/cases/nope/flags").status_code == 404
 
 
+def test_nina_flags_endpoint_returns_engine_nsa(client):
+    """Nina's live /flags now emits the NSA flag from the ENGINE (Finding 2)."""
+    from app.fixtures_users import NINA_CASE_ID
+
+    resp = client.get(f"/cases/{NINA_CASE_ID}/flags")
+    assert resp.status_code == 200
+    flags = resp.json()["flags"]
+    nsa = next(f for f in flags if f["type"] == "nsa")
+    assert nsa["cpt"] == "00840"
+    assert nsa["dollar_impact"] == 2270.00
+    assert nsa["evidence"]["provider_network_status"] == "out_of_network"
+
+
 def test_get_case_brief_serves_computed_flags(client):
     resp = client.post("/tools/get_case_brief", json={})
     assert resp.status_code == 200

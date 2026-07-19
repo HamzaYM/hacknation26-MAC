@@ -4,11 +4,14 @@ Dan (collections): duplicate 71046 $380 + markup 96374 $258.25, route
 "collections", anchor/target from the same benchmark math as Maya (Medicare
 total $438 → 657/876), floor = his $900 lump sum.
 
-Nina (NSA): the engine computes only the eob_mismatch ($3,120 − $850 = $2,270);
-the `nsa` flag is SEEDED, because NSA detection needs network-status facts the
-flag engine doesn't ingest — her story rides config thresholds.nsa_do_not_negotiate
-(cite the statute, file a complaint), not new engine code.
+Nina (NSA): the engine now DETECTS the nsa flag ($3,120 billed − $850 in-network
+share = $2,270) from her spec — an out-of-network ancillary (anesthesia) provider
+above the in-network cost share (config red_flags.nsa). The seeded flag stays as
+the expected-answer key; the engine's output must match it. Her story rides config
+thresholds.nsa_do_not_negotiate (cite the statute, file a complaint).
 """
+import copy
+
 import pytest
 
 from app.config import load_vertical
@@ -79,10 +82,21 @@ def test_dan_dossier_routes_to_collections(dan_spec, dan_flags):
 
 
 # ── Nina — NSA balance bill ───────────────────────────────────────────────
-def test_nina_engine_finds_only_the_eob_mismatch(nina_flags):
-    assert [(f.type, f.cpt) for f in nina_flags] == [("eob_mismatch", None)]
-    assert nina_flags[0].dollar_impact == 2270.00             # 3120 − 850
-    assert nina_flags[0].evidence == {"bill": 3120.00, "eob": 850.00}
+def test_nina_engine_detects_nsa_and_eob_mismatch(nina_flags):
+    by = {(f.type, f.cpt): f for f in nina_flags}
+    assert set(by) == {("nsa", "00840"), ("eob_mismatch", None)}
+    assert by[("nsa", "00840")].dollar_impact == 2270.00          # 3120 billed − 850 in-network share
+    assert by[("eob_mismatch", None)].dollar_impact == 2270.00    # 3120 − 850
+    assert by[("eob_mismatch", None)].evidence == {"bill": 3120.00, "eob": 850.00}
+
+
+def test_nina_engine_nsa_matches_the_seeded_answer_key(nina_spec, nina_flags):
+    """The seeded flag is the expected-answer key; the ENGINE must reproduce it."""
+    seeded = next(f for f in nina_spec.derived_flags if f.type == "nsa")
+    engine = next(f for f in nina_flags if f.type == "nsa")
+    assert (engine.type, engine.cpt, engine.dollar_impact) == \
+        (seeded.type, seeded.cpt, seeded.dollar_impact)
+    assert engine.evidence == seeded.evidence
 
 
 def test_nina_nsa_flag_is_seeded_and_config_says_do_not_negotiate(nina_spec):
@@ -94,11 +108,34 @@ def test_nina_nsa_flag_is_seeded_and_config_says_do_not_negotiate(nina_spec):
     assert threshold["action"] == "cite_statute_and_file_complaint"
 
 
-def test_nina_dossier_builds_cleanly_for_the_oon_anesthesia_entity(nina_spec, nina_flags):
+# ── NSA detection matrix (Finding 2) ──────────────────────────────────────
+def test_maya_case_emits_no_nsa_flag():
+    """Maya has an er_physician_group entity (an ancillary kind) but no
+    out-of-network line, so the NSA rule must NOT fire on her case."""
+    from app.fixtures import demo_flags
+    assert not any(f.type == "nsa" for f in demo_flags())
+
+
+def test_nsa_below_threshold_does_not_fire():
+    """An OON ancillary provider whose balance barely exceeds the in-network
+    share (delta < min_impact) is not a protected surprise bill."""
+    spec = copy.deepcopy(NINA_JOB_SPEC)
+    spec["bill"]["patient_balance"] = 910.00                  # $60 over the $850 in-network share
+    spec["eob"]["patient_responsibility_total"] = 850.00
+    spec["entities"][1]["balance"] = 910.00
+    flags = detect_flags(JobSpec.model_validate(spec), load_vertical(), demo_benchmarks())
+    assert not any(f.type == "nsa" for f in flags)            # $60 < min_impact $100
+
+
+def test_nina_dossier_arms_nsa_lever_first_then_builds_cleanly(nina_spec, nina_flags):
     entity = next(e for e in nina_spec.entities if e.kind == "anesthesia")
     dossier = build_dossier(nina_spec, nina_flags, demo_benchmarks(), load_vertical(), entity=entity)
     assert dossier.route == "provider"
     assert dossier.target_entity == "Commonwealth Anesthesia Associates"
+    # NSA statute lever is armed FIRST (cite, don't negotiate — no ladder rung)
+    assert dossier.levers[0].id == "statutory_nsa"
+    assert dossier.levers[0].armed and dossier.levers[0].dollar_ask == 2270.00
+    assert "No Surprises Act" in (dossier.levers[0].citation or "")
     lever_ids = [l.id for l in dossier.levers]
     assert "statutory_501r" in lever_ids                      # nonprofit + fpl 320 ≤ 400
     assert "error_eob_mismatch" in lever_ids

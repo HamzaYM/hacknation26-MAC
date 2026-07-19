@@ -12,6 +12,9 @@ on them — see apps/api/tests/test_flags.py for the demo arithmetic):
                 (counterfactual = mrf_negotiated_median, else mrf_cash, else
                 band_high of the supported code's benchmark row)
   unbundle      components_total − bundled_price (from the NCCI table)
+  nsa           bill.patient_balance − eob.patient_responsibility_total, for a
+                protected out-of-network emergency/ancillary provider (No
+                Surprises Act — cited, never negotiated)
   eob_mismatch  bill.patient_balance − eob.patient_responsibility_total
   markup        billed − band_high × flag_above_band_multiple
 Markup skips lines already implicated in another flag so the same dollars
@@ -40,7 +43,7 @@ def detect_flags(
     ncci_table: dict | None = None,
 ) -> list[DerivedFlag]:
     """All red flags for a JobSpec, in stable order: duplicate → upcode →
-    unbundle → eob_mismatch → markup."""
+    unbundle → nsa → eob_mismatch → markup."""
     rf = config["red_flags"]
     lines = job_spec.bill.line_items
     if ncci_table is None:
@@ -141,6 +144,44 @@ def detect_flags(
                 },
                 dollar_impact=round(components_billed - bundle["bundled_price"], 2),
             ))
+
+    # ── nsa: No Surprises Act — protected out-of-network emergency/ancillary ──
+    # A line billed by an out-of-network emergency/ancillary provider (kind in
+    # the config list — anesthesia, ER physicians, radiology, pathology) above
+    # the patient's in-network cost share is federally protected: the delta is
+    # CITED, not negotiated (thresholds.nsa_do_not_negotiate). The OON fact lives
+    # on the line's description (config markers); impact reuses the bill-vs-EOB
+    # delta (patient_balance − in-network responsibility) — Nina's $3,120 − $850.
+    nsa_cfg = rf.get("nsa")
+    if nsa_cfg is not None:
+        ancillary_kinds = set(nsa_cfg["ancillary_kinds"])
+        markers = [m.lower() for m in nsa_cfg["out_of_network_markers"]]
+        billed = job_spec.bill.patient_balance                 # what the provider bills
+        in_network_share = job_spec.eob.patient_responsibility_total
+        oon_line = next(
+            (li for li in lines
+             if li.description and any(m in li.description.lower() for m in markers)),
+            None,
+        )
+        entity = next(
+            (e for e in job_spec.entities if e.kind in ancillary_kinds and (e.balance or 0) > 0),
+            None,
+        )
+        if (oon_line is not None and entity is not None
+                and billed is not None and in_network_share is not None):
+            impact = round(billed - in_network_share, 2)
+            if impact > nsa_cfg.get("min_impact", 0):
+                flags.append(DerivedFlag(
+                    type="nsa",
+                    cpt=oon_line.cpt,
+                    evidence={
+                        "emergency": True,
+                        "facility_network_status": "in_network",
+                        "provider_network_status": "out_of_network",
+                        "statute": "No Surprises Act",
+                    },
+                    dollar_impact=impact,
+                ))
 
     # ── eob_mismatch: balance vs EOB patient responsibility ───────────────
     balance = job_spec.bill.patient_balance

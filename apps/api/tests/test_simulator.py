@@ -6,7 +6,15 @@ terminal outcome per persona, and the honesty audit as the LAST tool_call.
 """
 import pytest
 
-from app.simulator import SCENARIOS, build_sequence, lever_event_name
+from app.fixtures_users import NINA_JOB_SPEC
+from app.models import JobSpec
+from app.simulator import (
+    ENTITY_PERSONAS,
+    SCENARIOS,
+    build_sequence,
+    lever_event_name,
+    load_entity_personas,
+)
 
 
 def events(steps, type_):
@@ -122,3 +130,95 @@ def test_lever_event_name_mapping():
     assert lever_event_name("statutory_501r") == "lever_armed:charity_care"
     assert lever_event_name("statutory_nsa") == "lever_armed:nsa"
     assert lever_event_name("error_unbundle_80053") == "lever_armed:error_unbundle_80053"
+
+
+# ── identity retargeting + persona resolution (Findings 3 & 5) ─────────────
+def _nina_entity(kind):
+    return next(e for e in JobSpec.model_validate(NINA_JOB_SPEC).entities if e.kind == kind)
+
+
+def _all_strings(steps):
+    out = []
+    for s in steps:
+        if s["kind"] == "event":
+            p = s["payload"]
+            out += [str(v) for v in (p.get("text"), p.get("result")) if v]
+        elif s["kind"] == "outcome":
+            o = s["outcome"]
+            out += [str(v) for v in (o.get("rep_name"), o.get("next_action")) if v]
+            out += list((o.get("honesty_audit") or {}).get("checked_claims", []))
+    return out
+
+
+def test_nina_sim_speaks_nina_never_maya():
+    """Finding 3: simulating Nina's case speaks HER identity, never Maya's."""
+    entity = _nina_entity("anesthesia")
+    steps = build_sequence("policy_citer", "sim-nina", spec=NINA_JOB_SPEC, entity=entity)
+    blob = " | ".join(_all_strings(steps))
+    assert "Maya" not in blob                                        # never another patient's name
+    assert "Bay State Emergency Physicians" not in blob             # never another case's entity
+    assert "Nina Osei" in blob                                      # speaks her own name
+    assert "Commonwealth Anesthesia Associates" in blob            # her own counterparty
+    # single-anchor scenario → the opening balance is Nina's own ($3,120), not $640
+    assert [e["payload"]["amount"] for e in events(steps, "quote")] == [3120.0]
+
+
+def test_nina_account_number_retargeted_never_mayas():
+    """A script that voices an account number speaks Nina's, never MG-4471983."""
+    entity = _nina_entity("facility")
+    steps = build_sequence("gruff_stonewaller", "sim-nacct", spec=NINA_JOB_SPEC, entity=entity)
+    blob = " | ".join(_all_strings(steps))
+    assert "MG-4471983" not in blob and "Maya" not in blob
+    assert "CAA-2026-8841" in blob and "Nina Osei" in blob
+
+
+def test_missing_patient_data_falls_back_to_neutral_never_maya():
+    """Finding 3c: a spec that can't fill a slot uses neutral phrasing, not Maya."""
+    entity = _nina_entity("anesthesia")
+    thin = {"case_id": "case-thin", "patient": {}, "bill": {}}
+    steps = build_sequence("gruff_stonewaller", "sim-thin", spec=thin, entity=entity)
+    blob = " | ".join(_all_strings(steps))
+    assert "Maya" not in blob and "MG-4471983" not in blob
+    assert "the patient" in blob and "this account" in blob
+
+
+def test_unmapped_kind_falls_back_to_generic_persona_with_note():
+    """Finding 3b: anesthesia (unmapped) → generic replay, noted on first status."""
+    assert ENTITY_PERSONAS.get("anesthesia") == "policy_citer"  # was None (skipped) before
+    entity = _nina_entity("anesthesia")
+    steps = build_sequence("policy_citer", "sim-generic", spec=NINA_JOB_SPEC, entity=entity)
+    first_status = next(s for s in steps if s["kind"] == "status")
+    assert "generic negotiation replay" in first_status.get("note", "")
+    assert "anesthesia" in first_status["note"]
+
+
+def test_mapped_kind_has_no_generic_replay_note():
+    entity = _nina_entity("facility")                          # facility IS mapped
+    steps = build_sequence("gruff_stonewaller", "sim-fac", spec=NINA_JOB_SPEC, entity=entity)
+    assert all("note" not in s for s in steps if s["kind"] == "status")
+
+
+def test_maya_spec_leaves_scripts_untouched():
+    """The default demo path (Maya) is byte-identical with or without her spec."""
+    from app.fixtures import DEMO_JOB_SPEC
+
+    entity = JobSpec.model_validate(DEMO_JOB_SPEC).entities[0]
+    with_spec = build_sequence("gruff_stonewaller", "sim-x", spec=DEMO_JOB_SPEC, entity=entity)
+    plain = build_sequence("gruff_stonewaller", "sim-x")
+    assert _all_strings(with_spec) == _all_strings(plain)
+
+
+def test_config_entity_persona_override_honored():
+    """Finding 5: config simulator.entity_personas overrides the code defaults."""
+    m = load_entity_personas({"simulator": {"entity_personas":
+                                            {"facility": "human_facility_supervisor"}}})
+    assert m.get("facility") == "human_facility_supervisor"    # config wins
+    assert m.get("collections") == "collections_agent"         # code default preserved
+    assert m.get("anesthesia") == "policy_citer"               # unmapped → generic fallback
+
+
+def test_default_entity_personas_unchanged_by_shipped_config():
+    """DEFAULT UNCHANGED: the shipped config keeps the demo mapping."""
+    assert ENTITY_PERSONAS.get("facility") == "gruff_stonewaller"
+    assert ENTITY_PERSONAS.get("er_physician_group") == "policy_citer"
+    assert ENTITY_PERSONAS.get("collections") == "collections_agent"

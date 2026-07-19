@@ -1,10 +1,14 @@
 """Simulated call driver — plays a full negotiation through the REAL engine.
 
 Two layers, deliberately split:
-  · build_sequence(persona, call_id) — PURE: returns the ordered step list
-    (status flips, call_events payloads, the final outcome). No sleeps, no DB —
-    unit-tested in tests/test_simulator.py.
-  · play_call / play_calls — the async PLAYER: replays a sequence against
+  · build_sequence(persona, call_id, spec=None, entity=None) — PURE: returns the
+    ordered step list (status flips, call_events payloads, the final outcome). No
+    sleeps, no DB — unit-tested in tests/test_simulator.py. The scripts are
+    authored around Maya; a spec/entity from another launching case retargets the
+    identity (name, account, single-anchor balance) so a sim NEVER speaks another
+    patient's identity (Finding 3). The negotiation arcs stay Maya-tuned.
+  · play_call / play_calls — the async PLAYER: resolves the launching case's
+    spec/entity from the persisted call, then replays the sequence against
     Supabase with human-ish pacing so the War Room renders it live.
 
 Scenario truth sources: data/seed/persona_configs.json hidden params and
@@ -30,12 +34,46 @@ from .models import JobSpec
 
 log = logging.getLogger("negotiator.simulator")
 
-# entity kind → persona scenario used by POST /calls/launch
-ENTITY_PERSONAS = {
+# entity kind → persona scenario used by POST /calls/launch. Config-not-code:
+# config/verticals/<vertical>.yaml simulator.entity_personas overrides these
+# (Finding 5 — flip facility → human_facility_supervisor there to replay the win).
+DEFAULT_ENTITY_PERSONAS = {
     "facility": "gruff_stonewaller",
     "er_physician_group": "policy_citer",
     "collections": "collections_agent",
 }
+# Unmapped kinds (e.g. Nina's out-of-network "anesthesia") replay a generic
+# negotiation instead of being silently skipped (Finding 3b).
+GENERIC_PERSONA = "policy_citer"
+
+
+class _PersonaMap(dict):
+    """entity.kind → sim persona. An unmapped kind falls back to the generic
+    replay persona, so ``.get()`` (used by routers/calls.py) never returns None
+    and the entity is simulated rather than dropped."""
+
+    def get(self, key, default=None):  # noqa: A003 — mirrors dict.get, calls.py calls it
+        return dict.get(self, key, GENERIC_PERSONA)
+
+
+def load_entity_personas(config: dict | None = None) -> _PersonaMap:
+    """Code defaults overlaid with config simulator.entity_personas (Finding 5)."""
+    config = config if config is not None else load_vertical()
+    mapping = _PersonaMap(DEFAULT_ENTITY_PERSONAS)
+    mapping.update((config.get("simulator") or {}).get("entity_personas") or {})
+    return mapping
+
+
+ENTITY_PERSONAS = load_entity_personas()
+
+# Maya is the ONLY case the scripts are authored around. Any OTHER launching case
+# has these identity tokens retargeted to its own facts (Finding 3); a script
+# never speaks another patient's name, account, or (single-anchor) balance.
+_MAYA_NAME = DEMO_JOB_SPEC["patient"]["legal_name"]
+_MAYA_FIRST = _MAYA_NAME.split()[0]
+_MAYA_ACCOUNT = DEMO_JOB_SPEC["bill"]["account_number"]
+_MAYA_ENTITY_NAMES = tuple(e["name"] for e in DEMO_JOB_SPEC["entities"])
+_MAYA_CASE_ID = DEMO_JOB_SPEC["case_id"]
 
 DISCLOSURE = (
     "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient "
@@ -352,15 +390,123 @@ SCENARIOS = {
 }
 
 
-def build_sequence(persona: str, call_id: str) -> list[dict]:
-    """PURE: the full ordered step list for one simulated call."""
-    return SCENARIOS[persona](call_id)
+# ── identity retargeting (Finding 3) ──────────────────────────────────────
+def _usd(amount: float) -> str:
+    return f"${amount:,.0f}"
+
+
+def _retarget(steps: list[dict], spec: dict, entity) -> list[dict]:
+    """Substitute Maya's identity — patient name, account number, counterparty
+    name — and, for a single-anchor scenario, the opening balance, with the
+    LAUNCHING case's own facts. Missing data falls back to neutral phrasing
+    ("the patient", "this account") — never another patient's identity. The
+    reduction ARC's numbers stay Maya-tuned (Finding 3a/3c)."""
+    name = (spec.get("patient") or {}).get("legal_name")
+    account = (spec.get("bill") or {}).get("account_number")
+
+    # full name before first name so "Maya Chen" is never half-replaced
+    subs: list[tuple[str, str]] = [
+        (_MAYA_NAME, name or "the patient"),
+        (_MAYA_FIRST, name.split()[0] if name else "the patient"),
+        (_MAYA_ACCOUNT, account or "this account"),
+    ]
+    if entity is not None and getattr(entity, "name", None):
+        subs += [(mn, entity.name) for mn in _MAYA_ENTITY_NAMES]
+
+    # opening balance: only when there's no reduction arc to desync (final_amount
+    # is None) — the account's own stated balance, from the launching entity.
+    outcome = next((s["outcome"] for s in steps if s["kind"] == "outcome"), None)
+    quotes = [s for s in steps if s["kind"] == "event" and s["type"] == "quote"]
+    ebal = getattr(entity, "balance", None) if entity is not None else None
+    bal_from = bal_to = None
+    if (outcome is not None and outcome.get("final_amount") is None and quotes
+            and isinstance(ebal, (int, float)) and ebal > 0):
+        bal_from, bal_to = quotes[0]["payload"]["amount"], float(ebal)
+
+    def fix(text: str) -> str:
+        for a, b in subs:
+            text = text.replace(a, b)
+        if bal_from is not None and bal_to != bal_from:
+            text = text.replace(_usd(bal_from), _usd(bal_to))
+        return text
+
+    for s in steps:
+        if s["kind"] == "event":
+            p = s["payload"]
+            if s["type"] == "transcript":
+                p["text"] = fix(p["text"])
+            elif s["type"] == "tool_call" and isinstance(p.get("result"), str):
+                p["result"] = fix(p["result"])
+            elif s["type"] == "quote" and bal_from is not None and p["amount"] == bal_from:
+                p["amount"] = bal_to
+        elif s["kind"] == "outcome":
+            o = s["outcome"]
+            if bal_from is not None and o.get("original_amount") == bal_from:
+                o["original_amount"] = bal_to
+            if o.get("next_action"):
+                o["next_action"] = fix(o["next_action"])
+            audit = o.get("honesty_audit")
+            if isinstance(audit, dict) and isinstance(audit.get("checked_claims"), list):
+                audit["checked_claims"] = [fix(c) for c in audit["checked_claims"]]
+    return steps
+
+
+def _mark_generic_replay(steps: list[dict], kind: str) -> None:
+    """Note on the first status event that this is a default-persona replay for
+    an entity kind with no tuned scenario (Finding 3b)."""
+    for s in steps:
+        if s["kind"] == "status":
+            s["note"] = (f"generic negotiation replay — no scenario tuned for entity "
+                         f"kind '{kind}'; replaying the default {GENERIC_PERSONA} arc")
+            return
+
+
+def build_sequence(persona: str, call_id: str, spec: dict | None = None,
+                   entity=None) -> list[dict]:
+    """PURE: the full ordered step list for one simulated call.
+
+    `spec`/`entity` (the launching case, resolved by play_call from the DB)
+    retarget Maya's identity so a non-Maya case never speaks Maya's name/account
+    (Finding 3). An unmapped entity kind (persona fell back to the generic
+    default) gets a 'generic negotiation replay' note on the first status."""
+    steps = SCENARIOS[persona](call_id)
+    if spec is not None and spec.get("case_id") != _MAYA_CASE_ID:
+        steps = _retarget(steps, spec, entity)
+    if entity is not None and getattr(entity, "kind", None) not in ENTITY_PERSONAS:
+        _mark_generic_replay(steps, entity.kind)
+    return steps
 
 
 # ── async player ──────────────────────────────────────────────────────────
-async def play_call(call_id: str, persona: str) -> None:
+def _resolve_context(call_id: str):
+    """The launching case's spec (dict) + the entity this call targets, from the
+    persisted call/dossier — so the sim speaks the RIGHT patient (Finding 3).
+    Without a DB (tests/offline) → (None, None) → Maya's authored scripts."""
     try:
-        steps = build_sequence(persona, call_id)
+        from .fixtures_users import spec_for_case
+
+        call = db.get_call(call_id)
+        if not call:
+            return None, None
+        spec = spec_for_case(call.get("case_id"))
+        if spec is None:
+            return None, None
+        entity = None
+        dossier = db.get_dossier(call["dossier_id"]) if call.get("dossier_id") else None
+        target = dossier.get("target_entity") if dossier else None
+        if target:
+            entity = next((e for e in JobSpec.model_validate(spec).entities
+                           if e.name == target), None)
+        return spec, entity
+    except Exception:  # noqa: BLE001 — context resolution must never kill a sim
+        log.exception("simulator: context resolution failed for %s", call_id)
+        return None, None
+
+
+async def play_call(call_id: str, persona: str) -> None:
+    spec, entity = await asyncio.to_thread(_resolve_context, call_id)
+    try:
+        steps = build_sequence(persona, call_id, spec, entity)
     except Exception:  # noqa: BLE001 — a bad scenario must not kill the server
         log.exception("simulator: failed to build sequence for %s", call_id)
         await asyncio.to_thread(db.update_call_status, call_id, "failed")
