@@ -225,6 +225,16 @@ def get_call_by_conversation(conversation_id: str) -> dict | None:
     return _jsonable(rows[0]) if rows else None
 
 
+def get_active_real_call() -> dict | None:
+    """The most recent ringing/live call linked to an ElevenLabs conversation —
+    where tool hits that arrive without our call_id attach (ElevenLabs webhook
+    tools don't know internal ids; see tools._resolve_call_id)."""
+    rows = _run("select * from calls where elevenlabs_conversation_id is not null "
+                "and status in ('ringing', 'live') order by started_at desc nulls last limit 1",
+                fetch=True)
+    return _jsonable(rows[0]) if rows else None
+
+
 def set_call_conversation(call_id: str, conversation_id: str):
     """Link a dialed call to its ElevenLabs conversation so the post-call
     webhook (matched by conversation_id) lands transcript + audio on the row."""

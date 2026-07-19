@@ -86,8 +86,8 @@ voice:
 disclosure:
   mode: only_if_asked          # only_if_asked | late | early
   competence_first_open: >-
-    Hi — I'm calling on behalf of {{patient_name}} about account {{account_number}}.
-    I've reviewed the statement and there are a few items I'd like to resolve today.
+    Hi, this is Alex. I'm calling about {{patient_name}}'s account, number
+    {{account_number}}. Got a minute?
   opening_line_unused: >-
     Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient
     {{patient_name}}, who has authorized me to discuss account {{account_number}}.
