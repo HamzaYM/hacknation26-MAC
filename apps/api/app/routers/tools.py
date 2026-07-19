@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from .. import db, scheduler
 from ..config import load_vertical
+from ..engine.dossier import compute_501r_window
 from ..engine.state_machine import LadderStateMachine
 from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_benchmarks, demo_dossier
 from ..fixtures_users import flags_for_spec, spec_for_case
@@ -76,6 +77,12 @@ def _dossier_for_call(row: dict | None) -> StrategyDossier:
     if row and row.get("dossier_id"):
         stored = db.get_dossier(str(row["dossier_id"]))
         if stored:
+            # The 501(r) clock isn't persisted on strategy_dossiers (additive fields);
+            # recompute it from the case's bill so the window survives the DB round-trip.
+            spec_dict = spec_for_case(str(stored["case_id"])) or DEMO_JOB_SPEC
+            bill = spec_dict.get("bill", {}) or {}
+            days_since, inside_window = compute_501r_window(
+                bill.get("statement_date"), bool(bill.get("nonprofit_status")))
             return StrategyDossier(
                 case_id=str(stored["case_id"]),
                 target_entity=stored["target_entity"],
@@ -85,6 +92,8 @@ def _dossier_for_call(row: dict | None) -> StrategyDossier:
                 target=stored["target"],
                 floor=stored["floor"],
                 citations=stored.get("citations") or [],
+                days_since_first_statement=days_since,
+                inside_501r_window=inside_window,
             )
     return demo_dossier()
 
@@ -118,7 +127,14 @@ def get_case_brief(body: dict) -> dict:
             spec_dict = spec_for_case(str(row["case_id"])) or DEMO_JOB_SPEC
     spec = dict(spec_dict)
     spec["derived_flags"] = [f.model_dump() for f in flags_for_spec(spec_dict)]
-    return {"job_spec": spec}
+    bill = spec_dict.get("bill", {}) or {}
+    days_since, inside_window = compute_501r_window(
+        bill.get("statement_date"), bool(bill.get("nonprofit_status")))
+    return {
+        "job_spec": spec,
+        "days_since_first_statement": days_since,
+        "inside_501r_window": inside_window,
+    }
 
 
 @router.post("/get_benchmark")

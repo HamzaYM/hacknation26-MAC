@@ -99,6 +99,9 @@ class StrategyDossier(BaseModel):
     floor: float
     citations: list[str] = Field(default_factory=list)
     notes: Optional[str] = None
+    # 501(r) account-age clock (26 CFR 1.501(r)-6) — additive routing signals.
+    days_since_first_statement: Optional[int] = None
+    inside_501r_window: Optional[bool] = None  # nonprofit-only; None when N/A
 
 
 class CallOutcome(BaseModel):
