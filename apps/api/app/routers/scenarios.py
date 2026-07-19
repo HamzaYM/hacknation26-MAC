@@ -29,11 +29,11 @@ router = APIRouter()
 
 SCENARIOS_DIR = REPO_ROOT / "data" / "scenarios"
 
-# scenario.json expected_flags.type -> JobSpec derived_flags.type
-# (contracts/scenario.schema.json's flag taxonomy is a superset of
-# contracts/job_spec.schema.json's; types with no JobSpec equivalent yet
-# — denial, units_error, absent_from_chargemaster — are carried in the
-# stored answer_key/flags slots but not forced into the JobSpec shape).
+# scenario.json expected_flags.type -> JobSpec derived_flags.type. The
+# contract's flag taxonomy (contracts/scenario.schema.json) maps 1:1 onto
+# models.DerivedFlag.type, except the NSA detector is named
+# "nsa_balance_billing" in the scenario contract and emitted as "nsa" by the
+# engine (integration unified the two NSA paths onto "nsa").
 _FLAG_TYPE_MAP = {
     "duplicate": "duplicate",
     "upcode": "upcode",
@@ -42,6 +42,9 @@ _FLAG_TYPE_MAP = {
     "eob_mismatch": "eob_mismatch",
     "nsa_balance_billing": "nsa",
     "markup": "markup",
+    "denial": "denial",
+    "units_error": "units_error",
+    "absent_from_chargemaster": "absent_from_chargemaster",
 }
 
 
