@@ -113,9 +113,19 @@ def get_case_report(case_id: str) -> dict:
          if o.get("final_amount") is not None and o.get("entity") == facility),
         None,
     )
+    # Open items (parked topics + scheduled callbacks + resolved) — frozen contract
+    # for the case-file UI: [{lever, detail, amount_at_stake, status, next_attempt_at,
+    # reference_number, resolution_date}]. Empty list without a DB / no items.
+    items = db.list_open_items_by_case(spec_dict["case_id"]) or []
+    open_items = [
+        {k: it.get(k) for k in ("lever", "detail", "amount_at_stake", "status",
+                                "next_attempt_at", "reference_number", "resolution_date")}
+        for it in items
+    ]
     return {
         "case_id": case_id,
         "outcomes": ranked,
         "lines": build_lines(spec, flags, benchmarks, best_final),
         "recommendation": build_recommendation(ranked),
+        "open_items": open_items,
     }

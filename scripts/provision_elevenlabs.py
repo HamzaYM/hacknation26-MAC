@@ -188,7 +188,35 @@ NEGOTIATOR_TOOLS = [
             },
         },
     },
+    {
+        "type": "webhook",
+        "name": "log_event",
+        "description": (
+            "Log a structured event to the case record. Use type 'read_back' EVERY time you "
+            "read a number, date, name spelling, or reference/confirmation code back to the rep "
+            "as you hear it — put what you read back in payload (e.g. {\"value\": \"M G dash A D J 22 47\"}). "
+            "A reference number with no logged read_back comes back flagged "
+            "reference_number_unverified. Fire-and-forget; keep talking, don't wait on it."
+        ),
+        "api_schema": {
+            "url": f"{API_BASE}/tools/log_event",
+            "method": "POST",
+            "request_body_schema": {
+                "type": "object",
+                "description": "A structured call event",
+                "properties": {
+                    "type": {"type": "string", "description": "read_back | quote | transcript | state_change"},
+                    "payload": {"type": "object", "description": "Event details, e.g. {\"value\": \"the string you read back\"}"},
+                },
+                "required": ["type"],
+            },
+        },
+    },
 ]
+
+# ElevenLabs native turn config for the negotiator: hang up after ~10s of silence
+# as a per-minute-billing backstop (default -1 disables it).
+NEGOTIATOR_TURN = {"silence_end_call_timeout": 10}
 
 
 def env() -> dict[str, str]:
@@ -318,6 +346,13 @@ def main() -> None:
             if tools is not None:
                 cc["agent"]["prompt"]["tools"] = tools
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
+            if name == "negotiator":
+                # Self-hangup: enable ElevenLabs' end_call SYSTEM tool via built_in_tools.
+                # The old prompt.tools {"type":"system"} shape is HARD-REJECTED by the API —
+                # built_in_tools.end_call = {} is the accepted form. The LLM passes a reason
+                # (+ optional farewell). Plus a silence backstop so we never sit on a per-minute line.
+                cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = {}
+                cc.setdefault("turn", {}).update(NEGOTIATOR_TURN)
             # pin_voice agents override the live voice with the config default;
             # everything else keeps its dashboard voice.
             if spec.get("pin_voice") and default_voice:
@@ -354,6 +389,10 @@ def main() -> None:
                     "speed": vcfg.get("speed", 1.0),
                 },
             }
+            if name == "negotiator":
+                # Self-hangup + silence backstop on create (see the PATCH branch note).
+                conversation_config["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = {}
+                conversation_config["turn"] = dict(NEGOTIATOR_TURN)
             create_body: dict = {"name": name, "conversation_config": conversation_config}
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
                 create_body["platform_settings"] = allow_voice_override(None)

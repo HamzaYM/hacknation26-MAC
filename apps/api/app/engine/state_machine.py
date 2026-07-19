@@ -9,8 +9,13 @@ rung_advanced rows) so state survives restarts and multiple workers.
 
 Rules enforced here, not in the prompt:
   · linear advance through config ladder.<route> on accepted/rejected/partial
-  · stonewall (result == "stonewalled" OR a config escalation_triggers phrase
-    in the reported text) → force the reach_authority rung
+  · impasse (same lever unhedged-stonewalled twice, OR the same non-accepted
+    point made three times) → PARK the topic as an open item and advance to the
+    next lever (escalation_policy: last_resort — a bare stonewall no longer jumps
+    to a supervisor)
+  · reach_authority arms only as a LAST RESORT: when the rep's words say only
+    someone with authority can act, or every other lever is attempted/parked and
+    material still remains
   · result == "hangup" → terminal documented_decline, next_action = callback
   · floor: any offer above dossier.floor is rejected (rung unchanged)
   · target: settling above dossier.target is allowed only with an explicit
@@ -42,14 +47,31 @@ class CallState:
     questions_active: bool = False
     # Rungs already blocked once for coverage — one block max per rung.
     coverage_blocked: set[str] = field(default_factory=set)
+    # Parked topics (impasses set aside as open items): [{lever, reason}].
+    parked_topics: list[dict] = field(default_factory=list)
+    # Unhedged stonewalls seen per lever — a lever parks on the 2nd (impasse).
+    lever_stonewalls: dict[str, int] = field(default_factory=dict)
+    # Set once the rep's own words say only someone with authority can act —
+    # the ONLY per-call signal (besides ladder exhaustion) that arms reach_authority
+    # under escalation_policy: last_resort.
+    authority_requested: bool = False
 
 
 class LadderStateMachine:
     def __init__(self, config: dict):
         self._config = config
         self._triggers = [t.casefold() for t in config.get("escalation_triggers", [])]
+        self._authority_triggers = [t.casefold() for t in config.get("authority_triggers", [])]
+        self._hedge_markers = [t.casefold() for t in config.get("hedge_markers", [])]
+        self._last_resort = config.get("escalation_policy") == "last_resort"
         self._required_questions: dict[str, list[str]] = config.get("required_questions", {})
         self._states: dict[str, CallState] = {}  # in-memory; Supabase later
+
+    def parked_topics(self, call_id: str) -> list[dict]:
+        """Open items the call set aside (impasses) — read by end_call_summary
+        to persist them as scheduled open_items. Empty when the call is unknown."""
+        state = self._states.get(call_id)
+        return list(state.parked_topics) if state else []
 
     def ensure_call(self, call_id: str, dossier: StrategyDossier) -> CallState:
         """Create state on first contact; no-op if the call already exists."""
@@ -67,6 +89,19 @@ class LadderStateMachine:
             "terminal": state.terminal,
             "outcome_type": state.terminal_outcome,
         }
+
+    def _exhausted(self, state: CallState) -> bool:
+        """True when every non-escalation, non-terminal lever has been attempted or
+        parked AND at least one parked topic still needs resolution — condition (a)
+        for arming reach_authority under escalation_policy: last_resort."""
+        if not state.parked_topics:  # nothing material still open
+            return False
+        covered = ({h["lever"] for h in state.history}
+                   | {p["lever"] for p in state.parked_topics})
+        terminal_rung = state.ladder[-1]
+        pending = [r for r in state.ladder
+                   if r not in ("reach_authority", terminal_rung) and r not in covered]
+        return not pending
 
     def advance(
         self,
@@ -119,16 +154,30 @@ class LadderStateMachine:
                 "terminal": True,
                 "outcome_type": "documented_decline",
                 "next_action": "callback",
+                "end_call_now": True,
                 "current_rung": state.ladder[state.index],
                 "rung_index": state.index,
                 "notes": "counterparty hung up — log a documented decline and schedule a callback",
             }
 
-        # stonewall → force reach_authority (Goodbill supervisor script)
+        # Classify the rep's words: normalize unicode curly quotes first so
+        # triggers match LLM output, then read stonewall / authority / hedge signals.
         text = " ".join(filter(None, [result, quote])).casefold()
-        # Normalize unicode curly quotes/apostrophes so triggers match LLM output
-        text = text.replace("\u2018", "'").replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
-        if result == "stonewalled" or any(t in text for t in self._triggers):
+        text = text.replace("‘", "'").replace("’", "'").replace("“", '"').replace("”", '"')
+        is_stonewall = result == "stonewalled" or any(t in text for t in self._triggers)
+        # The rep's own words say only someone with authority can act — the one
+        # per-call signal (besides ladder exhaustion) that arms reach_authority.
+        authority_quote = any(t in text for t in self._authority_triggers)
+        # A hedged/temporary refusal ("right now", "I don't have the authority") is
+        # not a hard impasse: it must NOT count toward parking. Authority quotes are
+        # hedged in this sense (they defer to a supervisor, they don't refuse forever).
+        hedged = authority_quote or any(m in text for m in self._hedge_markers)
+        if authority_quote:
+            state.authority_requested = True
+        if is_stonewall and not hedged:
+            state.lever_stonewalls[lever] = state.lever_stonewalls.get(lever, 0) + 1
+
+        def _to_reach_authority(reason: str) -> dict:
             # Cap forced escalations at 2 per call (live a2a finding: endless
             # "transfer to a supervisor" loop) → close out with a structured decline.
             state.stonewall_escalations += 1
@@ -137,23 +186,51 @@ class LadderStateMachine:
                 return self._respond(state, escalation=True,
                                      notes="escalation limit reached — stop asking for supervisors; "
                                            "capture reference number + rep name, log a documented "
-                                           "decline, and schedule a callback")
-            if "reach_authority" in state.ladder:
-                state.index = state.ladder.index("reach_authority")
-                return self._respond(state, escalation=True,
-                                     notes="stonewall detected — ask for someone with authority to help")
+                                           "decline, and schedule a callback", **q_extra)
+            state.index = state.ladder.index("reach_authority")
+            return self._respond(state, escalation=True, notes=reason, **q_extra)
 
-        # Deterministic anti-repetition guardrail (Hamza, 07-18): the same lever
-        # reported with the same non-accepted result 3 times in a row means the
-        # point is exhausted — force the next rung instead of letting the agent
-        # argue it a fourth time.
+        if self._last_resort:
+            # Escalation is a LAST RESORT (config escalation_policy: last_resort): a
+            # bare stonewall no longer jumps to a supervisor — it parks (below).
+            # reach_authority arms ONLY when (b) the rep says only authority can act,
+            # or (a) every other lever is attempted/parked and material still remains.
+            arm = state.authority_requested or self._exhausted(state)
+            if "reach_authority" in state.ladder and lever != "reach_authority" and arm:
+                if state.authority_requested:
+                    reason = "rep says only someone with authority can act — escalate now"
+                    state.authority_requested = False  # consumed; re-arm on a fresh authority quote
+                else:
+                    reason = ("every other lever is attempted or parked and something material "
+                              "remains — escalate to someone with authority as the last resort")
+                return _to_reach_authority(reason)
+        elif is_stonewall and "reach_authority" in state.ladder:
+            # Legacy policy (verticals without escalation_policy: last_resort):
+            # a stonewall forces reach_authority immediately.
+            return _to_reach_authority("stonewall detected — ask for someone with authority to help")
+
+        # Park the topic on an impasse and move on (Hamza, 07-18: park, don't
+        # escalate). Impasse = the same lever unhedged-stonewalled twice, OR the same
+        # non-accepted point made three times in a row. Set it aside as an open item,
+        # advance to the next lever, and let end_call_summary schedule the follow-up.
         recent = state.history[-3:]
-        if (len(recent) == 3 and result != "accepted"
-                and all(h["lever"] == lever and h["result"] == result for h in recent)):
+        impasse_repetition = (len(recent) == 3 and result != "accepted"
+                              and all(h["lever"] == lever and h["result"] == result for h in recent))
+        impasse_stonewall = (is_stonewall and not hedged
+                             and state.lever_stonewalls.get(lever, 0) >= 2)
+        if impasse_repetition or impasse_stonewall:
+            if lever in state.ladder:
+                state.index = state.ladder.index(lever)
             state.index = min(state.index + 1, len(state.ladder) - 1)
-            return self._respond(state, repetition_cap=True,
-                                 notes="you have made this point three times — drop it, move to "
-                                       "the next lever, and do not repeat the previous ask", **q_extra)
+            reason = ("stonewalled twice on the same point — unhedged refusal"
+                      if impasse_stonewall else "made this same point three times")
+            parked = {"lever": lever, "reason": reason}
+            state.parked_topics.append(parked)
+            return self._respond(
+                state, parked=parked,
+                notes="set this aside as an open item, tell the rep you'll follow up separately, "
+                      "and move on — e.g. \"Okay, let's set that one aside for now, I'll chase it "
+                      "separately.\"", **q_extra)
 
         # Question-coverage gate (A1): don't let the call walk OFF a rung that
         # has required questions until they're covered. One block max per rung
