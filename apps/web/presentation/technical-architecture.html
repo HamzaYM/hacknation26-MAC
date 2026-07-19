@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Haggl · Technical Architecture</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231a1410'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20font-family='sans-serif'%20font-weight='800'%20fill='%23ef6b45'%20text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
+<style>
+:root{
+  --bg:#f6f2ea; --panel:#fffdf8; --panel-2:#f1ece2;
+  --ink:#221c15; --muted:#6c6357; --faint:#a1968a; --line:#e6dccd;
+  --accent:#b8542f; --accent-fill:#ef6b45;
+  --mint:#dcece1; --mint-bd:#aecebb; --mint-ink:#2c5540;
+  --peach:#f8e2cd; --peach-bd:#ecc4a0; --peach-ink:#8a4d24;
+  --lav:#e7e1f2; --lav-bd:#c9bce4; --lav-ink:#4b3d75;
+  --sky:#d9e7f1; --sky-bd:#aecbe0; --sky-ink:#2c5470;
+  --paper:#fbf9f4; --paper-bd:#e3d8c8;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--serif);
+  line-height:1.62;font-size:18px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 78% -8%, #fbf7ef 0%, rgba(251,247,239,0) 60%);
+}
+.wrap{max-width:940px;margin:0 auto;padding:0 26px;}
+
+/* ── kickers, headings ── */
+.kicker{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--accent);}
+h1{font-size:clamp(38px,6.4vw,64px);line-height:1.03;font-weight:600;letter-spacing:-.015em;
+  margin:.28em 0 .5em;}
+h2{font-size:clamp(26px,3.6vw,36px);line-height:1.1;font-weight:600;letter-spacing:-.01em;margin:0;}
+h3{font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:.01em;color:var(--ink);margin:0 0 4px;}
+p{margin:0 0 16px;}
+.lead{font-size:clamp(20px,2.4vw,23px);line-height:1.5;color:#332b21;}
+strong{font-weight:600;}
+em{font-style:italic;}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(184,84,47,.32);}
+a:hover{border-bottom-color:var(--accent);}
+code,.mono{font-family:var(--mono);font-size:.86em;background:var(--panel-2);
+  padding:1px 5px;border-radius:5px;color:#4a4136;border:1px solid var(--line);
+  overflow-wrap:anywhere;word-break:break-word;}
+.small{font-family:var(--sans);font-size:13.5px;line-height:1.55;color:var(--muted);}
+
+/* ── header ── */
+header{padding:76px 0 34px;border-bottom:1px solid var(--line);}
+.masthead{display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--sans);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);}
+.masthead .logo{display:flex;align-items:center;gap:9px;color:var(--ink);font-weight:700;letter-spacing:.02em;text-transform:none;font-size:15px;}
+.mark{width:24px;height:24px;border-radius:6px;background:var(--ink);color:var(--accent-fill);
+  font-family:var(--sans);font-weight:800;display:grid;place-items:center;font-size:15px;}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.02em;
+  padding:5px 11px;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--muted);}
+.chip b{color:var(--ink);font-weight:700;}
+
+/* ── sections ── */
+section{padding:52px 0;border-bottom:1px solid var(--line);}
+.sec-head{display:flex;gap:16px;align-items:baseline;margin-bottom:8px;}
+.sec-letter{font-family:var(--serif);font-style:italic;font-size:30px;font-weight:600;color:var(--accent);
+  line-height:1;min-width:34px;}
+.sec-kicker{margin-bottom:20px;padding-left:50px;}
+.body-cols{padding-left:50px;}
+@media(max-width:640px){.sec-kicker,.body-cols{padding-left:0;}.sec-head{gap:10px;}
+  .arc{font-size:12.5px;gap:6px;}.arc .step{white-space:normal;min-width:0;overflow-wrap:anywhere;}}
+
+/* ── diagram scaffolding ── */
+.diagram-scroll{overflow-x:auto;overflow-y:hidden;margin:26px 0 8px;padding-bottom:6px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.diagram-scroll svg{display:block;height:auto;width:100%;min-width:720px;}
+.dcap{font-family:var(--sans);font-size:12.5px;color:var(--faint);margin:2px 0 0;padding-left:2px;}
+.scroll-hint{display:none;}
+@media(max-width:900px){.scroll-hint{display:inline;font-family:var(--sans);font-size:11px;
+  color:var(--faint);letter-spacing:.04em;}}
+
+/* svg text helpers */
+svg .n-title{font-family:var(--sans);font-weight:700;font-size:14px;fill:var(--ink);}
+svg .n-sub{font-family:var(--mono);font-size:10.5px;}
+svg .lbl{font-family:var(--sans);font-size:11px;fill:var(--muted);}
+svg .lbl-i{font-family:var(--sans);font-size:10.5px;font-style:italic;fill:var(--faint);}
+svg .badge-t{font-family:var(--sans);font-weight:700;font-size:11px;fill:#fff;}
+
+/* ── the turn pipeline (b) ── */
+.flowstrip{display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;min-width:660px;}
+.fs-node{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px 13px;text-align:center;box-shadow:0 1px 2px rgba(34,28,21,.04);}
+.fs-node .t{font-family:var(--sans);font-size:12.5px;font-weight:700;line-height:1.25;}
+.fs-node .s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;display:block;}
+.fs-node.who{background:var(--sky);border-color:var(--sky-bd);}
+.fs-node.llm{background:var(--peach);border-color:var(--peach-bd);}
+.fs-node.code{background:var(--mint);border-color:var(--mint-bd);}
+.fs-arrow{display:flex;align-items:center;color:var(--faint);font-size:18px;padding:0 7px;flex:0 0 auto;}
+
+.gatecard{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px;box-shadow:0 1px 3px rgba(34,28,21,.05);}
+.gatecard .gc-h{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.gate-pill{font-family:var(--mono);font-size:12px;background:var(--mint);border:1px solid var(--mint-bd);
+  color:var(--mint-ink);padding:2px 9px;border-radius:7px;font-weight:500;}
+.gates{list-style:none;margin:16px 0 0;display:grid;gap:0;counter-reset:g;}
+.gates li{display:flex;gap:14px;padding:13px 0;border-top:1px dashed var(--line);align-items:flex-start;}
+.gates li:first-child{border-top:none;}
+.gnum{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;
+  font-family:var(--sans);font-weight:700;font-size:12px;display:grid;place-items:center;margin-top:1px;}
+.gtxt{font-size:16.5px;line-height:1.5;}
+.gtxt b{font-weight:600;}
+.gtxt .src{font-family:var(--mono);font-size:12px;color:var(--muted);}
+
+/* ── info callout ── */
+.callout{margin:26px 0;background:linear-gradient(180deg,#eef4ef,#e7f0e9);
+  border:1px solid var(--mint-bd);border-radius:16px;padding:22px 24px;position:relative;}
+.callout .co-tag{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--mint-ink);display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.callout .co-tag .dot{width:9px;height:9px;border-radius:50%;background:var(--mint-ink);}
+.callout p{margin:0;font-size:17px;color:#28382e;}
+.callout.warn{background:linear-gradient(180deg,#fbf0e4,#f8e7d5);border-color:var(--peach-bd);}
+.callout.warn .co-tag{color:var(--peach-ink);}
+.callout.warn .co-tag .dot{background:var(--peach-ink);}
+
+/* ── audit / method cards ── */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 6px;}
+@media(max-width:720px){.cards{grid-template-columns:1fr;}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 17px;
+  box-shadow:0 1px 2px rgba(34,28,21,.04);}
+.card .c-tag{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:500;}
+.card h3{margin-top:6px;}
+.card p{font-family:var(--sans);font-size:13.5px;line-height:1.5;color:var(--muted);margin:0;}
+
+/* anchor method row */
+.anchors{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 8px;}
+.anchor{font-family:var(--sans);font-size:13px;font-weight:600;padding:7px 13px;border-radius:10px;
+  border:1px solid var(--line);background:var(--panel);}
+.anchor .v{font-family:var(--mono);font-weight:500;color:var(--muted);font-size:12px;}
+.anchor.a-med{background:var(--sky);border-color:var(--sky-bd);color:var(--sky-ink);}
+.anchor.a-cash{background:var(--mint);border-color:var(--mint-bd);color:var(--mint-ink);}
+.anchor.a-band{background:var(--lav);border-color:var(--lav-bd);color:var(--lav-ink);}
+.anchor.a-rand{background:var(--peach);border-color:var(--peach-bd);color:var(--peach-ink);}
+
+.arc{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:15px;
+  margin:16px 0 4px;padding:16px 18px;background:var(--paper);border:1px solid var(--paper-bd);border-radius:12px;}
+.arc .step{white-space:nowrap;}
+.arc .to{color:var(--accent);font-weight:700;}
+.arc .final{background:var(--ink);color:#fff;padding:2px 9px;border-radius:6px;}
+
+/* ── reference table ── */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:24px 0 6px;
+  border:1px solid var(--line);border-radius:14px;background:var(--panel);}
+table{border-collapse:collapse;width:100%;min-width:880px;font-family:var(--sans);}
+thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+  text-align:left;padding:14px 15px;border-bottom:1.5px solid var(--line);background:var(--panel-2);white-space:nowrap;}
+tbody td{font-size:13.5px;line-height:1.45;color:#3b342a;padding:14px 15px;border-bottom:1px solid var(--line);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:#fbf8f2;}
+td .where{font-weight:700;color:var(--ink);display:block;margin-bottom:2px;}
+td .fire{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+td .model{font-family:var(--mono);font-size:12px;color:var(--sky-ink);font-weight:500;}
+td .never{color:var(--accent);}
+.tag-det{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--mint-ink);
+  background:var(--mint);border:1px solid var(--mint-bd);border-radius:5px;padding:1px 6px;white-space:nowrap;}
+
+/* ── config section list ── */
+.yaml-list{list-style:none;margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;}
+@media(max-width:640px){.yaml-list{grid-template-columns:1fr;}}
+.yaml-list li{font-family:var(--sans);font-size:14px;padding-left:20px;position:relative;color:#3b342a;line-height:1.45;}
+.yaml-list li:before{content:"";position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:2px;
+  background:var(--accent-fill);}
+.yaml-list li b{font-weight:700;color:var(--ink);}
+
+/* ── footer ── */
+footer{padding:56px 0 80px;text-align:center;}
+.foot-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:22px 0 26px;}
+.foot-links a{font-family:var(--sans);font-size:14px;font-weight:600;padding:11px 20px;border-radius:26px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);}
+.foot-links a.primary{background:var(--ink);color:#fbf9f4;border-color:var(--ink);}
+.foot-links a:hover{border-color:var(--accent);}
+.foot-note{font-family:var(--sans);font-size:12.5px;color:var(--faint);letter-spacing:.02em;}
+
+.note{font-family:var(--sans);font-size:13px;color:var(--muted);border-left:2px solid var(--line);
+  padding:2px 0 2px 15px;margin:18px 0 4px;line-height:1.55;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="masthead">
+      <span class="logo"><span class="mark">H</span> Haggl</span>
+      <span>Technical Architecture · v1</span>
+    </div>
+    <div style="padding-left:0;max-width:820px;">
+      <div class="kicker" style="margin-top:40px;">The system, as built</div>
+      <h1>How Haggl actually works</h1>
+      <p class="lead">Haggl reads a hospital bill, finds the billing errors and the statutes on the patient's side, then places a real phone call and talks the balance down. The language model is the mouth. The deterministic code is the brain. Every number the agent speaks on the line traces to a database query or a config value, and the code, not the model, decides what is true.</p>
+      <div class="meta-row">
+        <span class="chip"><b>881,668</b> chargemaster rows</span>
+        <span class="chip"><b>3</b> Boston hospitals</span>
+        <span class="chip"><b>gpt-5.4</b> negotiator brain</span>
+        <span class="chip"><b>349</b> tests passing</span>
+        <span class="chip"><b>1</b> YAML per market</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ a. RUNTIME TOPOLOGY ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">a.</span><h2>Runtime topology</h2></div>
+    <div class="sec-kicker kicker">Who talks to whom when a patient runs a case</div>
+    <div class="body-cols">
+      <p>The browser is served from <strong>hagglfor.me</strong> behind Cloudflare. It talks to <strong>Next.js</strong> (the six screens and the War Room), which calls the <strong>FastAPI</strong> engine. FastAPI owns the deterministic pieces: flag detection, the strategy dossier, the ladder state machine, the mid-call tools, and the post-call webhooks. <strong>Supabase</strong> is the spine underneath: Postgres for cases, calls, call events and outcomes, Storage for uploaded documents and call recordings, and Realtime, which streams every <code>call_events</code> insert straight into the live War Room.</p>
+      <p>The voice itself lives at <strong>ElevenLabs</strong>: the negotiator agent (it speaks as "Alex," runs on a gpt-5.4 brain, and uses the Jason voice) plus four counterparty personas for the simulated market. Calls go out over <strong>Twilio</strong>'s native PSTN integration to a real phone. Mid-call, the agent reaches back into FastAPI through webhook tools for every fact and every move, and after the call the transcript and audio flow back through the post-call webhook.</p>
+
+      <div class="diagram-scroll" aria-label="Runtime topology diagram">
+        <svg width="1080" height="430" viewBox="0 0 1080 430" role="img">
+          <defs>
+            <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,1 L9,5 L0,9" fill="none" stroke="#8f8578" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+            <marker id="arw-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,1 L9,5 L0,9" fill="none" stroke="#b8542f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+
+          <!-- connectors (drawn first, under nodes) -->
+          <!-- spine -->
+          <line x1="182" y1="213" x2="198" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <line x1="360" y1="213" x2="376" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <line x1="758" y1="213" x2="776" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <!-- FastAPI -> ElevenLabs (launch) forward, with return webhook arc above -->
+          <line x1="557" y1="222" x2="573" y2="222" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <text class="lbl-i" x="565" y="248" text-anchor="middle">launch</text>
+          <path d="M600,175 C620,140 715,140 735,175" fill="none" stroke="#b8542f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arw-a)"/>
+          <text class="lbl" x="668" y="135" text-anchor="middle">webhook tools · mid-call</text>
+          <!-- Next -> FastAPI: on spine already (Next end 360 -> FastAPI 380) -->
+          <text class="lbl-i" x="368" y="203" text-anchor="middle"></text>
+          <!-- OpenAI vision above FastAPI -->
+          <line x1="467" y1="175" x2="467" y2="120" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <text class="lbl" x="479" y="152" text-anchor="start">PDF parse</text>
+          <!-- Supabase below FastAPI -->
+          <line x1="467" y1="251" x2="467" y2="300" stroke="#8f8578" stroke-width="1.5" marker-start="url(#arw)" marker-end="url(#arw)"/>
+          <text class="lbl" x="479" y="280" text-anchor="start">reads · writes</text>
+          <!-- Realtime -> War Room (Supabase up to Browser) -->
+          <path d="M380,330 C170,330 105,300 105,247" fill="none" stroke="#b8542f" stroke-width="1.5" marker-end="url(#arw-a)"/>
+          <text class="lbl" x="196" y="352" text-anchor="middle">Realtime · call_events → War Room</text>
+          <!-- Twilio -> Phone -->
+          <line x1="835" y1="251" x2="835" y2="300" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <text class="lbl-i" x="847" y="280" text-anchor="start">real PSTN call</text>
+
+          <!-- NODES -->
+          <!-- 1 Browser -->
+          <g>
+            <rect x="32" y="177" width="150" height="72" rx="13" fill="#d9e7f1" stroke="#aecbe0" stroke-width="1.2"/>
+            <circle cx="50" cy="195" r="11" fill="#2c5470"/><text class="badge-t" x="50" y="199" text-anchor="middle">1</text>
+            <text class="n-title" x="70" y="200">Browser</text>
+            <text class="n-sub" x="47" y="228" fill="#2c5470">hagglfor.me</text>
+            <text class="n-sub" x="47" y="241" fill="#2c5470">Cloudflare</text>
+          </g>
+          <!-- 2 Next.js -->
+          <g>
+            <rect x="200" y="177" width="160" height="72" rx="13" fill="#d9e7f1" stroke="#aecbe0" stroke-width="1.2"/>
+            <circle cx="218" cy="195" r="11" fill="#2c5470"/><text class="badge-t" x="218" y="199" text-anchor="middle">2</text>
+            <text class="n-title" x="238" y="200">Next.js</text>
+            <text class="n-sub" x="215" y="228" fill="#2c5470">apps/web</text>
+            <text class="n-sub" x="215" y="241" fill="#2c5470">6 screens + War Room</text>
+          </g>
+          <!-- 3 FastAPI -->
+          <g>
+            <rect x="380" y="177" width="177" height="72" rx="13" fill="#dcece1" stroke="#aecebb" stroke-width="1.2"/>
+            <circle cx="398" cy="195" r="11" fill="#2c5540"/><text class="badge-t" x="398" y="199" text-anchor="middle">3</text>
+            <text class="n-title" x="418" y="200">FastAPI engine</text>
+            <text class="n-sub" x="395" y="228" fill="#2c5540">flags · dossier · state_machine</text>
+            <text class="n-sub" x="395" y="241" fill="#2c5540">tools · webhooks · simulator</text>
+          </g>
+          <!-- 4 ElevenLabs -->
+          <g>
+            <rect x="577" y="177" width="181" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+            <circle cx="595" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="595" y="199" text-anchor="middle">4</text>
+            <text class="n-title" x="615" y="200">ElevenLabs agent</text>
+            <text class="n-sub" x="592" y="228" fill="#8a4d24">"Alex" · gpt-5.4 brain</text>
+            <text class="n-sub" x="592" y="241" fill="#8a4d24">Jason voice</text>
+          </g>
+          <!-- 5 Twilio -->
+          <g>
+            <rect x="776" y="177" width="118" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+            <circle cx="794" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="794" y="199" text-anchor="middle">5</text>
+            <text class="n-title" x="814" y="200">Twilio</text>
+            <text class="n-sub" x="791" y="228" fill="#8a4d24">native PSTN</text>
+          </g>
+          <!-- 6 Phone -->
+          <g>
+            <rect x="776" y="302" width="118" height="66" rx="13" fill="#fbf9f4" stroke="#e3d8c8" stroke-width="1.2"/>
+            <circle cx="794" cy="320" r="11" fill="#221c15"/><text class="badge-t" x="794" y="324" text-anchor="middle">6</text>
+            <text class="n-title" x="814" y="325">Real phone</text>
+            <text class="n-sub" x="791" y="352" fill="#6c6357">a person on the PSTN</text>
+          </g>
+          <!-- OpenAI vision -->
+          <g>
+            <rect x="380" y="70" width="177" height="50" rx="12" fill="#fbeee0" stroke="#ecc4a0" stroke-width="1.2"/>
+            <text class="n-title" x="396" y="92" font-size="13">OpenAI vision</text>
+            <text class="n-sub" x="396" y="108" fill="#8a4d24">gpt-5.6-terra → gpt-4o</text>
+          </g>
+          <!-- Supabase -->
+          <g>
+            <rect x="380" y="302" width="270" height="66" rx="13" fill="#e7e1f2" stroke="#c9bce4" stroke-width="1.2"/>
+            <text class="n-title" x="396" y="325">Supabase</text>
+            <text class="n-sub" x="396" y="343" fill="#4b3d75">Postgres · Storage · Realtime</text>
+            <text class="n-sub" x="396" y="356" fill="#4b3d75">calls · call_events · outcomes · recordings</text>
+          </g>
+          <!-- config + data feeders -->
+          <g>
+            <rect x="672" y="302" width="222" height="0" rx="0" fill="none"/>
+          </g>
+        </svg>
+      </div>
+      <p class="dcap">Numbered spine, left to right. Solid arrows are requests; the dashed terracotta arcs are the two loops that make Haggl live: webhook tools mid-call, and Supabase Realtime streaming into the War Room. <span class="scroll-hint">Scroll sideways to see the full diagram.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ b. ONE NEGOTIATION TURN ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">b.</span><h2>One negotiation turn</h2></div>
+    <div class="sec-kicker kicker">Where the LLM fires, and where it does not</div>
+    <div class="body-cols">
+      <p>Every exchange on a live call runs the same loop. The rep says something, the agent proposes a move in words, and then it hands control to the server: it calls <code>report_lever_result</code> with what just happened, and the deterministic <code>advance()</code> in the ladder state machine decides the next move. The agent voices whatever comes back. It never picks the escalation, and it never chooses the price.</p>
+
+      <div class="diagram-scroll" aria-label="Negotiation turn flow">
+        <div class="flowstrip">
+          <div class="fs-node who"><span class="t">Rep speaks</span><span class="s">on the PSTN</span></div>
+          <div class="fs-arrow">&rsaquo;</div>
+          <div class="fs-node llm"><span class="t">LLM proposes</span><span class="s">a move, in words</span></div>
+          <div class="fs-arrow">&rsaquo;</div>
+          <div class="fs-node code"><span class="t">report_lever_result</span><span class="s">tool call</span></div>
+          <div class="fs-arrow">&rsaquo;</div>
+          <div class="fs-node code"><span class="t">advance()</span><span class="s">the gates below</span></div>
+          <div class="fs-arrow">&rsaquo;</div>
+          <div class="fs-node code"><span class="t">next move</span><span class="s">allowed or forced</span></div>
+          <div class="fs-arrow">&rsaquo;</div>
+          <div class="fs-node llm"><span class="t">LLM voices it</span><span class="s">the agent speaks</span></div>
+        </div>
+      </div>
+      <p class="dcap"><span class="scroll-hint">Scroll sideways for the full loop. </span>Peach is the language model. Mint is deterministic code. The price move lives entirely in mint.</p>
+
+      <div class="gatecard">
+        <div class="gc-h"><span class="gate-pill">engine/state_machine.py · advance()</span></div>
+        <p class="small" style="margin:6px 0 0;">Every reported result runs this gauntlet before any move is allowed. Each gate is plain, tested Python, not a prompt instruction.</p>
+        <ol class="gates">
+          <li><span class="gnum">1</span><span class="gtxt"><b>Bounds check.</b> A non-positive offer, a plan under 1 or over 96 months, or interest outside 0 to 100 percent is rejected outright, so a garbled report can never bank nonsense.</span></li>
+          <li><span class="gnum">2</span><span class="gtxt"><b>Floor check.</b> Any offer above <span class="src">dossier.floor</span> (the most the patient can actually pay) is rejected before it can be spoken.</span></li>
+          <li><span class="gnum">3</span><span class="gtxt"><b>Plan total, with interest.</b> Payment plans are multiplied out as <span class="src">monthly × months × (1 + interest)</span>. A plan that only clears the ceiling once interest is added is still rejected, and the note names the interest as the culprit.</span></li>
+          <li><span class="gnum">4</span><span class="gtxt"><b>Repetition cap.</b> The same non-accepted point made three times in a row is parked as an open item, and the call moves to the next lever instead of grinding.</span></li>
+          <li><span class="gnum">5</span><span class="gtxt"><b>Question-coverage gate.</b> The agent cannot walk off a rung with required questions (for example account hold, records alignment, rep name) until those tags are covered. One block per rung, so a live call is never hard-deadlocked.</span></li>
+          <li><span class="gnum">6</span><span class="gtxt"><b>Bad-faith, two strikes.</b> A stonewall parks the topic rather than escalating; reaching a supervisor is a last resort, and forced escalations are capped at two per call before the agent closes out with a documented decline.</span></li>
+        </ol>
+      </div>
+      <p style="margin-top:22px;">Settling above <span class="src" style="font-family:var(--mono);font-size:13px;">dossier.target</span> is allowed, but only with an explicit escalation flag that surfaces in the War Room as a human-approval event. That is exactly why the flagship demo settles at $1,650: under Maya's $1,700 ceiling, so allowed, but above the engine's target, so a human confirmed it on camera.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ c. THE HONESTY LAYER ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">c.</span><h2>The honesty layer</h2></div>
+    <div class="sec-kicker kicker">The agent cannot bluff, by construction</div>
+    <div class="body-cols">
+      <p>Numbers reach the agent only through tools. <code>get_case_brief</code> returns the verbatim case file. <code>get_benchmark</code> is the single citable price source. <code>get_authorization</code> returns the patient's recorded consent. The config names the allowed sources in <code>honesty.citable_sources_only</code>, the deployed tool descriptions repeat the rule to the model, and if the agent did not get a number from a tool or from the case brief, it does not say it.</p>
+
+      <div class="callout">
+        <div class="co-tag"><span class="dot"></span>Verified, not asserted</div>
+        <p>After every call, a deterministic audit reads the full transcript against a per-case set of allowed numbers and produces a pass or fail that lands in the War Room. The thing that judges the AI is itself not an AI: it is plain regex and arithmetic in <code>engine/honesty.py</code>.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="c-tag">D1 · disclosure</div>
+          <h3>Says it is an AI</h3>
+          <p>The agent discloses that it is an AI acting for the patient. Under the team's disclose-when-asked policy, this is satisfied by the robot-question check below.</p>
+        </div>
+        <div class="card">
+          <div class="c-tag">D2 · never deny</div>
+          <h3>Never denies being AI</h3>
+          <p>If the rep asks whether it is a bot, the agent confirms plainly and immediately. Denial is an automatic fail. The config sets <code>never_deny_ai: true</code> as absolute.</p>
+        </div>
+        <div class="card">
+          <div class="c-tag">D3 · number honesty</div>
+          <h3>Every number traces</h3>
+          <p>Each dollar figure the agent speaks must match the allowed set or a number the counterparty said. An uncited number fails the audit.</p>
+        </div>
+      </div>
+
+      <p style="margin-top:24px;">Two more boundaries hold on the line. <strong>Prompt injection is refused by policy:</strong> the rep is never the agent's operator, so a request to reveal instructions or to dictate what a tool returns is declined once, politely, and treated as bad faith on repeat. And when a rep challenges the caller's authority, the <strong>recorded patient authorization is presented verbatim:</strong> the agent reads the exact words on file, states plainly that it is reading a recording rather than playing audio on the line, and never calls a recording a signed release. A separate audit catches that overclaim if it ever happens.</p>
+
+      <div class="callout warn">
+        <div class="co-tag"><span class="dot"></span>Why this layer exists</div>
+        <p>The first tool-less test call invented a CPT code and a date out loud. The tools, the citable-source rule, and the post-call audit are the direct answer to that failure. Code decides what is true; the model decides how to say it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ d. THE DATA LAYER ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">d.</span><h2>The data layer</h2></div>
+    <div class="sec-kicker kicker">Real prices, real statutes, computed keys</div>
+    <div class="body-cols">
+      <p>The benchmarks the agent cites are grounded in real market data. The chargemaster is <strong>881,668 per-payer rows</strong> pulled from three Boston hospitals' published price-transparency files (Massachusetts General, Brigham and Women's, and Newton-Wellesley), staged into Postgres and queried per code. Alongside it sits real <strong>CMS Medicare</strong> data: PFS rates computed from RVUs and Boston-locality GPCIs, OPPS Addendum B for hospital outpatient facility fees, and the CLFS for labs, all staged by code with their formulas attached.</p>
+
+      <p>The multi-anchor engine (<code>engine/anchors.py</code>) builds an anchor set for every bill line. Each anchor carries full provenance: a source, a source URL, the formula, a confidence level, and a display label. A missing lookup becomes an honest coverage status, never a guessed price.</p>
+
+      <div class="anchors">
+        <span class="anchor a-med">Medicare rate <span class="v">RVU × GPCI × CF</span></span>
+        <span class="anchor a-cash">Hospital cash price <span class="v">posted MRF</span></span>
+        <span class="anchor a-band">Cross-payer band <span class="v">p25 · median · p75</span></span>
+        <span class="anchor a-rand">RAND-norm estimate <span class="v">×2.54, labeled</span></span>
+      </div>
+
+      <p style="margin-top:22px;">Nine scenarios (a duplicate, an upcoded ER visit, an unbundled panel, a self-pay gross bill, an EOB mismatch, an out-of-network balance bill, and more) ship with <strong>answer keys generated by code</strong>, not by hand. Tests run the whole pipeline over each scenario's artifacts and assert exact equality with its key, so the numbers cannot drift. The flagship arc, all of it computed and reconciled by <code>transform.py --check</code>:</p>
+
+      <div class="arc">
+        <span class="step">$4,287 billed</span>
+        <span class="to">→</span>
+        <span class="step">$3,875 <span style="color:var(--muted)">(duplicate removed)</span></span>
+        <span class="to">→</span>
+        <span class="step">Medicare $438 · cash $2,633.25 cited</span>
+        <span class="to">→</span>
+        <span class="step final">$1,650 settled, -62%</span>
+      </div>
+      <p class="note">Provenance kept honest: the demo locks the $438 Medicare total for consistency with the rehearsed arc and the archived call audio. The real CMS MA-01 Boston rates for those exact lines total $1,373.79 and live in <code>data/seed/medicare_rates.json</code>, with the code-computed key at <code>data/scenarios/sc01_maya_baseline/answer_key.json</code>. The story is checkable, not pending.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ e. EVERY AI CALL IN THE APP ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">e.</span><h2>Every AI call in the app</h2></div>
+    <div class="sec-kicker kicker">The complete inventory, and what bounds each one</div>
+    <div class="body-cols">
+      <p>Language models appear in a small, named set of places. Each one is fenced by a deterministic gate that constrains what it is allowed to do. Here is the whole list.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>AI touchpoint</th>
+              <th>Model</th>
+              <th>What bounds it</th>
+              <th>What it can never do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="where">Document parse</span><span class="fire">on bill / EOB upload · routers/documents.py</span></td>
+              <td><span class="model">OpenAI vision</span><br><span class="fire">gpt-5.6-terra → luna → gpt-4o</span></td>
+              <td>Output reconciled field by field against the fixtures (<span class="tag-det">reconcile_bill</span>), verdict exact / partial / failed; the deterministic flag engine runs over the parsed lines.</td>
+              <td><span class="never">Decide what is a billing error, or set any price.</span></td>
+            </tr>
+            <tr>
+              <td><span class="where">Intake voice interview</span><span class="fire">phone intake · webhooks._capture_intake_financials</span></td>
+              <td><span class="model">ElevenLabs agent</span><br><span class="fire">intake agent</span></td>
+              <td>Transcript parsed for financial answers only (<span class="tag-det">parse_financial_answers</span>) and written to the case profile.</td>
+              <td><span class="never">Negotiate, or quote any benchmark or price.</span></td>
+            </tr>
+            <tr>
+              <td><span class="where">Negotiator brain</span><span class="fire">mid-call, every exchange · the live call</span></td>
+              <td><span class="model">gpt-5.4</span><br><span class="fire">via ElevenLabs</span></td>
+              <td>Every move is decided by <span class="tag-det">state_machine.advance()</span>: floor, plan-total, coverage and two-strike gates.</td>
+              <td><span class="never">Pick the escalation, or the number it settles at.</span></td>
+            </tr>
+            <tr>
+              <td><span class="where">TTS voice</span><span class="fire">every negotiator utterance</span></td>
+              <td><span class="model">ElevenLabs · Jason</span><br><span class="fire">eleven_flash_v2_5</span></td>
+              <td>Reads only the words the brain produced; pacing pinned in config (speed 0.85, ~130 wpm).</td>
+              <td><span class="never">Change a figure or add a claim of its own.</span></td>
+            </tr>
+            <tr>
+              <td><span class="where">Counterparty personas</span><span class="fire">simulated market · 4 role-play agents</span></td>
+              <td><span class="model">ElevenLabs agents</span><br><span class="fire">stonewaller, policy-citer, ...</span></td>
+              <td>Role-play only, each with a hidden concession function; drives the same <span class="tag-det">call_events</span> contract as a real call.</td>
+              <td><span class="never">Touch a real patient's outcome or data.</span></td>
+            </tr>
+            <tr>
+              <td><span class="where">Honesty eval harness</span><span class="fire">after every call · engine/honesty.py</span></td>
+              <td><span class="model">no model</span><br><span class="fire">deterministic</span></td>
+              <td>Pure regex and arithmetic over the transcript and the allowed-number set; pass / fail into the War Room.</td>
+              <td><span class="never">Be argued with. It has no model to persuade.</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dcap"><span class="scroll-hint">Scroll the table sideways for all four columns. </span>The negotiator is the only model in the live loop that speaks freely, and it is the one wrapped most tightly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ f. CONFIG NOT CODE ══════════════════ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-letter">f.</span><h2>Config, not code</h2></div>
+    <div class="sec-kicker kicker">One YAML per market</div>
+    <div class="body-cols">
+      <p>Everything specific to medical bills is data in a single file, <code>config/verticals/medical_bills.yaml</code>. The engine modules read that file and hard-code none of it. A <code>moving.yaml</code> stub sits next to it against the same schema, which is the honest measure of the claim: retargeting the system is writing that file, plus the benchmark data for the new market. Changing a vertical touches exactly these knobs, and no engine code:</p>
+
+      <ul class="yaml-list">
+        <li><b>Red-flag thresholds</b> and the E/M upcode pairs</li>
+        <li><b>Both negotiation ladders</b>, provider and collections</li>
+        <li><b>Fair-band multiples</b> over Medicare</li>
+        <li><b>Routing thresholds</b> and the charity-care gate</li>
+        <li><b>Required questions</b> per rung</li>
+        <li><b>Escalation policy</b> and the stonewall trigger phrases</li>
+        <li><b>Persona roster</b> for the simulated market</li>
+        <li><b>Voice settings</b>: model, voice ID, speed, brain LLM</li>
+        <li><b>Disclosure policy</b> and the opener</li>
+        <li><b>Honesty boundary</b>: the citable sources list</li>
+      </ul>
+      <p style="margin-top:24px;">The rule the whole build follows: anything with a number, a threshold, or a legal claim is computed in code and served to the model through a tool. The model decides how to say it. Code decides what is true.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="kicker">See it running</div>
+    <div class="foot-links">
+      <a class="primary" href="https://hagglfor.me">hagglfor.me</a>
+      <a href="/pitch-sf-2026">The pitch deck</a>
+      <a href="/tech-video">60-second tech tour</a>
+      <a href="https://github.com/HamzaYM/hacknation26-MAC">GitHub repo</a>
+    </div>
+    <p class="foot-note">Haggl · Hack-Nation 6th Global AI Hackathon · Challenge 01, powered by ElevenLabs</p>
+  </div>
+</footer>
+
+</body>
+</html>
