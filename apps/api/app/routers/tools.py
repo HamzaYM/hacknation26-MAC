@@ -115,6 +115,7 @@ class LeverResult(BaseModel):
     offer_amount: float | None = None  # what the agent is about to offer/settle at
     plan_monthly: float | None = None  # payment-plan terms under discussion, if any
     plan_months: int | None = None
+    plan_interest_pct: float | None = None  # plan interest rate, if the plan carries one
     quote: str | None = None           # counterparty's words (stonewall phrase detection)
     questions_asked: list[str] = []    # coverage tags the agent covered this exchange
 
@@ -176,6 +177,7 @@ def report_lever_result(body: LeverResult) -> dict:
         call_id, body.lever, body.result,
         offer_amount=body.offer_amount, quote=body.quote,
         plan_monthly=body.plan_monthly, plan_months=body.plan_months,
+        plan_interest_pct=body.plan_interest_pct,
         questions_asked=body.questions_asked,
     )
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
@@ -234,8 +236,9 @@ def get_authorization(body: dict) -> dict:
         "reference": (spec.get("bill") or {}).get("account_number"),
         "playback_note": ("Read statement_text VERBATIM. You cannot play the audio on this line — "
                           "say that plainly, tell them you are reading her recorded authorization on "
-                          "file, and offer to send the recording and a written release to their email "
-                          "or fax right now."),
+                          "file, and offer to have the recording and a written release sent to their "
+                          "office today (get their email or fax). Do not promise it is sent while you "
+                          "are on the call; frame it as a next step you will have handled today."),
     }
 
 

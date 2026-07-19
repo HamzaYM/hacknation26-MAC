@@ -200,3 +200,71 @@ def test_plan_total_within_floor_is_allowed(machine, call):
     resp = machine.advance(call, "payment_plan_fallback", "accepted",
                            plan_monthly=150, plan_months=10)
     assert resp["move_allowed"] is True
+
+
+# ── plan interest (919 chaos-call follow-on) ──────────────────────────────
+def test_plan_interest_pushes_total_over_floor_is_rejected(machine, call):
+    """150 x 10 = $1,500 clears the $1,700 floor, but 20% interest brings the
+    effective total to $1,800 — the interest is what puts it over, and the note
+    must say so (the 919 case)."""
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=150, plan_months=10, plan_interest_pct=20)
+    assert resp["move_allowed"] is False
+    assert "1,800" in resp["notes"]
+    assert "interest" in resp["notes"].lower()
+
+
+def test_plan_interest_within_floor_is_allowed(machine, call):
+    """100 x 12 = $1,200, +20% = $1,440, still under the $1,700 floor."""
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=100, plan_months=12, plan_interest_pct=20)
+    assert resp["move_allowed"] is True
+
+
+def test_zero_interest_behaves_like_no_interest(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=150, plan_months=10, plan_interest_pct=0)
+    assert resp["move_allowed"] is True
+
+
+# ── bounds sanity: nonsensical offer/plan values are rejected ─────────────
+def test_nonpositive_offer_is_rejected(machine, call):
+    resp = machine.advance(call, "lump_sum_settlement", "partial", offer_amount=0)
+    assert resp["move_allowed"] is False
+    assert "positive" in resp["notes"]
+
+
+def test_negative_offer_is_rejected(machine, call):
+    resp = machine.advance(call, "lump_sum_settlement", "partial", offer_amount=-50)
+    assert resp["move_allowed"] is False
+
+
+def test_nonpositive_plan_monthly_is_rejected(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=0, plan_months=12)
+    assert resp["move_allowed"] is False
+    assert "monthly" in resp["notes"]
+
+
+def test_plan_months_below_one_is_rejected(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=100, plan_months=0)
+    assert resp["move_allowed"] is False
+    assert "range" in resp["notes"]
+
+
+def test_plan_months_above_ninety_six_is_rejected(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=10, plan_months=120)
+    assert resp["move_allowed"] is False
+    assert "range" in resp["notes"]
+
+
+def test_plan_interest_out_of_range_is_rejected(machine, call):
+    high = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=100, plan_months=12, plan_interest_pct=150)
+    assert high["move_allowed"] is False
+    assert "interest" in high["notes"].lower()
+    low = machine.advance(call, "payment_plan_fallback", "accepted",
+                          plan_monthly=100, plan_months=12, plan_interest_pct=-5)
+    assert low["move_allowed"] is False

@@ -14,6 +14,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import uuid
 
 from fastapi import APIRouter, Request
@@ -148,12 +149,14 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
     # this was hardcoded to Maya's figures, so any other case's legitimate
     # numbers would flag as uncited). Maya's stay as the no-DB fallback.
     spec = None
+    case_id = DEMO_CASE_ID
     if call_id:
         try:
             row = db.get_call(call_id)
             if row:
+                case_id = str(row["case_id"])
                 from ..fixtures_users import spec_for_case
-                spec = spec_for_case(str(row["case_id"]))
+                spec = spec_for_case(case_id)
         except Exception:  # noqa: BLE001 — allowed-set building must not raise
             spec = None
     if spec:
@@ -188,6 +191,18 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
     from ..fixtures import demo_flags
     for f in demo_flags():
         nums.append(f.dollar_impact)
+    # Recorded-authorization tokens: when the case has an authorization on file,
+    # the agent reads the patient's recorded statement VERBATIM when challenged
+    # (DOB, account-number chunks, years). Those spoken numbers are legitimate quotes
+    # of an on-file record, so add every numeric run from statement_text or the
+    # honest read-back would trip the D3 number-honesty audit as "uncited".
+    try:
+        auth = db.get_case_authorization(case_id)
+    except Exception:  # noqa: BLE001 — allowed-set building must not raise
+        auth = None
+    if auth and auth.get("authorization_statement"):
+        for tok in re.findall(r"\d+", auth["authorization_statement"]):
+            nums.append(float(tok))
     return nums
 
 

@@ -174,3 +174,49 @@ class TestArming:
             quote="We don't negotiate balances here.",
         )
         assert "authorization challenged" not in (resp.get("notes") or "")
+
+
+# ── honesty audit allows the recorded-authorization numbers (D3) ───────────
+class TestAuditAllowsAuthorizationNumbers:
+    """When the case has a recorded authorization, the agent reads Maya's recorded
+    statement VERBATIM if a rep challenges authority. Those spoken numbers (DOB
+    year, account digits) are legitimate quotes of an on-file record, so
+    _allowed_numbers_for_call folds them into the allowed set and the honest
+    read-back passes D3 rather than flagging as uncited."""
+
+    STMT = (
+        "My name is Maya Chen, date of birth March 14, 1995. This is about my account "
+        "M G 4 4 7 1 9 8 3 at Mercy General Hospital. I authorize Haggl to discuss, "
+        "negotiate, dispute, and adjust the charges on this account on my behalf."
+    )
+
+    def test_statement_year_is_added_to_allowed(self, monkeypatch):
+        from app.routers import webhooks
+        monkeypatch.setattr(webhooks.db, "get_case_authorization",
+                            lambda cid: {"authorization_path": "x",
+                                         "authorization_statement": self.STMT})
+        allowed = webhooks._allowed_numbers_for_call()
+        assert 1995.0 in allowed
+
+    def test_quoting_seeded_statement_passes_d3(self, monkeypatch):
+        from app.engine.honesty import audit_call
+        from app.routers import webhooks
+        monkeypatch.setattr(webhooks.db, "get_case_authorization",
+                            lambda cid: {"authorization_path": "x",
+                                         "authorization_statement": self.STMT})
+        allowed = webhooks._allowed_numbers_for_call()
+        transcript = [
+            {"speaker": "rep", "text": "Do you have authorization on file?"},
+            {"speaker": "agent", "text": "I do. Her recorded words were: " + self.STMT},
+        ]
+        result = audit_call(transcript, allowed, disclosure_mode="only_if_asked")
+        assert result["checks"]["numbers"]["passed"] is True
+        assert result["passed"] is True
+
+    def test_without_authorization_the_year_is_not_allowed(self, monkeypatch):
+        """Guard: absent a recorded authorization, the statement's numbers are NOT
+        silently citable (the allowance is scoped to an on-file record)."""
+        from app.routers import webhooks
+        monkeypatch.setattr(webhooks.db, "get_case_authorization", lambda cid: None)
+        allowed = webhooks._allowed_numbers_for_call()
+        assert 1995.0 not in allowed
