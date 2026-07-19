@@ -29,6 +29,7 @@ class CallState:
     dossier: StrategyDossier
     ladder: list[str]
     index: int = 0
+    stonewall_escalations: int = 0
     terminal: bool = False
     terminal_outcome: str | None = None
     history: list[dict] = field(default_factory=list)
@@ -99,6 +100,15 @@ class LadderStateMachine:
         # Normalize unicode curly quotes/apostrophes so triggers match LLM output
         text = text.replace("\u2018", "'").replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
         if result == "stonewalled" or any(t in text for t in self._triggers):
+            # Cap forced escalations at 2 per call (live a2a finding: endless
+            # "transfer to a supervisor" loop) → close out with a structured decline.
+            state.stonewall_escalations += 1
+            if state.stonewall_escalations > 2:
+                state.index = len(state.ladder) - 1
+                return self._respond(state, escalation=True,
+                                     notes="escalation limit reached — stop asking for supervisors; "
+                                           "capture reference number + rep name, log a documented "
+                                           "decline, and schedule a callback")
             if "reach_authority" in state.ladder:
                 state.index = state.ladder.index("reach_authority")
                 return self._respond(state, escalation=True,
