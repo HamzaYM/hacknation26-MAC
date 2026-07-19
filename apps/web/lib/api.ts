@@ -1,4 +1,15 @@
-import type { Call, CaseReport, ConfirmResponse, DerivedFlag, FlagsResponse, JobSpec, LaunchResponse } from "./types";
+import type {
+  BenchmarkReport,
+  Call,
+  CaseReport,
+  ConfirmResponse,
+  DerivedFlag,
+  FlagsResponse,
+  JobSpec,
+  LaunchResponse,
+  ScenarioLoadResponse,
+  ScenarioSummary,
+} from "./types";
 
 // Same-origin in the browser (proxied by next.config.mjs rewrites → :8000,
 // avoids CORS entirely); server components/scripts can override via env.
@@ -17,6 +28,61 @@ export async function getMyCase(email?: string): Promise<JobSpec> {
   const res = await fetch(`${API_BASE}/cases/mine${qs}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`GET /cases/mine failed: ${res.status}`);
   return res.json();
+}
+
+// GET /cases/{id} — any case by id (fixture or a generalized new-bill case
+// once WS3's case creation lands). Used by bills/[caseId] instead of always
+// showing the demo case.
+export async function getCase(caseId: string): Promise<JobSpec> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /cases/${caseId} failed: ${res.status}`);
+  return res.json();
+}
+
+// POST /cases — creates a fresh case for the new-bill upload flow. This
+// endpoint is being built in parallel (WS3); until it lands, callers should
+// catch and fall back to a client-generated id so the upload/parse calls
+// still have somewhere to attach documents.
+export async function createCase(): Promise<{ case_id: string }> {
+  const res = await fetch(`${API_BASE}/cases`, { method: "POST" });
+  if (!res.ok) throw new Error(`POST /cases failed: ${res.status}`);
+  return res.json();
+}
+
+// ---- Scenarios (War Room picker, decision #11) ----
+// GET /scenarios / POST /scenarios/{id}/load are WS3/WS4 deliverables landing
+// in parallel worktrees. Until they merge, listScenarios() resolves to an
+// empty array (never throws) so the picker shows its empty state instead of
+// an error banner.
+export async function listScenarios(): Promise<ScenarioSummary[]> {
+  try {
+    const res = await fetch(`${API_BASE}/scenarios`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.scenarios ?? []);
+  } catch {
+    return [];
+  }
+}
+
+export async function loadScenario(scenarioId: string): Promise<ScenarioLoadResponse> {
+  const res = await fetch(`${API_BASE}/scenarios/${scenarioId}/load`, { method: "POST" });
+  if (!res.ok) throw new Error(`POST /scenarios/${scenarioId}/load failed: ${res.status}`);
+  return res.json();
+}
+
+// GET /cases/{id}/benchmark_report — the per-line anchor set (decision #10)
+// behind the multiples table + evidence toggle. WS2/WS3 deliverable; null
+// (never throws) when unavailable so the dossier degrades to flags-only,
+// same convention as getActionPlan/getReport below.
+export async function getBenchmarkReport(caseId: string): Promise<BenchmarkReport | null> {
+  try {
+    const res = await fetch(`${API_BASE}/cases/${caseId}/benchmark_report`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 // apps/api/app/routers/calls.py's GET /calls/{id} is still a stub
