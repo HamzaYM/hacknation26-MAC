@@ -282,12 +282,36 @@ function CoveragePanel({ events, rung }: { events: CallEvent[]; rung?: string })
 
 // Bill + EOB embedded so the patient can watch the source documents while the
 // call runs. PDFs render white; a thin border + rounded corners keeps them calm
-// against the dark War Room. Borrows the intake iframe-preview pattern.
+// against the dark War Room. Borrows the intake iframe-preview pattern — and,
+// like that pattern, clicking the small preview opens it full-screen so the
+// patient can actually read the line items (a 360px iframe can't be read).
 function DocumentsPanel() {
   const [active, setActive] = useState(CASE_DOCUMENTS[0]);
+  const [lightbox, setLightbox] = useState<(typeof CASE_DOCUMENTS)[number] | null>(null);
+
+  // Escape closes the lightbox (matches the click-outside close below).
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
+
   return (
     <div className="wr-panel wr-docs">
-      <h2>Documents</h2>
+      <div className="wr-docs-head">
+        <h2 style={{ marginBottom: 0 }}>Documents</h2>
+        <button
+          type="button"
+          className="wr-docs-expand"
+          onClick={() => setLightbox(active)}
+          aria-label={`Open ${active.label} full screen`}
+        >
+          ⤢ Enlarge
+        </button>
+      </div>
       <div className="wr-docs-tabs">
         {CASE_DOCUMENTS.map((d) => (
           <button
@@ -300,7 +324,45 @@ function DocumentsPanel() {
         ))}
       </div>
       <p className="wr-docs-caption mono-figure">{active.caption}</p>
-      <iframe className="wr-doc-frame" src={active.url} title={active.label} />
+      {/* The iframe swallows pointer events, so the wrapper carries the click and
+          the iframe is pointer-inert — clicking anywhere on the preview enlarges. */}
+      <div
+        className="wr-doc-preview"
+        role="button"
+        tabIndex={0}
+        aria-label={`Enlarge ${active.label}`}
+        onClick={() => setLightbox(active)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setLightbox(active);
+          }
+        }}
+      >
+        <iframe className="wr-doc-frame" src={active.url} title={active.label} />
+        <span className="wr-doc-hint">⤢ Click to enlarge</span>
+      </div>
+
+      {lightbox && (
+        <div className="wr-doc-overlay" onClick={() => setLightbox(null)}>
+          <div className="wr-doc-lightbox" onClick={(e) => e.stopPropagation()}>
+            <div className="wr-doc-lightbox-head">
+              <span className="wr-doc-lightbox-title">
+                {lightbox.label} <span className="mono-figure">· {lightbox.caption}</span>
+              </span>
+              <button
+                type="button"
+                className="wr-doc-lightbox-close"
+                onClick={() => setLightbox(null)}
+                aria-label="Close document"
+              >
+                ✕
+              </button>
+            </div>
+            <iframe className="wr-doc-lightbox-frame" src={lightbox.url} title={lightbox.label} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
