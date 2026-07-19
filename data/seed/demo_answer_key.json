@@ -40,7 +40,7 @@
   "data_provenance": {
     "mrf_source": "042697983_Massachusetts-General-Hospital_StandardCharges.csv (real, CMS v3.0.0, 159k rows)",
     "mrf_url": "https://www.massgeneralbrigham.org/content/dam/mgb-global/en/price-transparency/042697983_Massachusetts-General-Hospital_StandardCharges.zip",
-    "medicare_source": "synthetic (locked at $438 total pending MA-locality verification)",
+    "medicare_source": "locked demo benchmark ($438 total). Real CMS MA-01 Boston rates for these lines total $1,373.79 (see data/seed/medicare_rates.json, staged from PFS/OPPS/CLFS by scripts/fetch_medicare.py; code-computed key at data/scenarios/sc01_maya_baseline/answer_key.json). The demo keeps $438 for consistency with the rehearsed arc and the archived call audio; decision Hamza 2026-07-19.",
     "talking_point": "Commercial insurers pay below the cash price here ($999.30 vs $2,633.25)"
   }
 }
