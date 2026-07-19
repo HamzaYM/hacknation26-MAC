@@ -124,6 +124,14 @@ export interface Call {
   ended_at?: string | null;
 }
 
+// A `calls` row as the War Room multi-call overview reads it via PostgREST:
+// the bare row plus the joined dossier's target entity (calls.dossier_id →
+// strategy_dossiers). Client-side read shape, not a new contract.
+export interface ActiveCall extends Call {
+  dossier_id?: string | null;
+  dossier?: { target_entity?: string | null; route?: string | null } | null;
+}
+
 export type OutcomeType =
   | "reduction" | "payment_plan" | "charity_app_initiated" | "callback" | "documented_decline";
 
@@ -166,6 +174,12 @@ export const LADDER_LABELS: Record<string, string> = {
   lump_sum_settlement: "Offer lump-sum settlement",
   payment_plan_fallback: "Fall back to a payment plan",
   escalate_or_exit: "Escalate or exit with a documented outcome",
+  // collections route — config/verticals/medical_bills.yaml `ladder.collections`
+  diagnostic_questions: "Diagnostic questions: ownership, interest, floor",
+  debt_validation_posture: "Set the debt-validation posture",
+  lump_sum_anchor: "Anchor a lump-sum settlement",
+  settle: "Settle with written paid-in-full terms",
+  exit_with_written_confirmation: "Exit with written confirmation",
 };
 
 // ---- API response envelopes (apps/api routers — frozen integration contract) ----

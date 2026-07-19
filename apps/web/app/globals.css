@@ -746,3 +746,87 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .wr-idle h2 { color: #f5f1ec; font-size: 20px; margin-bottom: var(--space-sm); }
 .wr-idle p { font-size: 14px; line-height: 1.6; }
 .wr-idle code { font-family: var(--font-mono); background: rgba(245,241,236,0.08); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+/* ---- War Room: multi-call overview grid ---- */
+.wr-overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-md); }
+.wr-call-card {
+  display: block;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(245,241,236,0.12);
+  border-radius: var(--radius-card);
+  padding: var(--space-md) var(--space-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+.wr-call-card:hover { border-color: rgba(239,107,69,0.5); background: rgba(255,255,255,0.06); }
+.wr-call-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-sm); margin-bottom: 4px; }
+.wr-call-entity { font-size: 14px; font-weight: 600; }
+.wr-status-pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(245,241,236,0.08);
+  color: rgba(245,241,236,0.5);
+  white-space: nowrap;
+}
+.wr-status-pill.live { background: rgba(239,107,69,0.16); color: var(--accent); }
+.wr-status-pill.ringing { background: rgba(201,138,46,0.2); color: #e0b25c; }
+.wr-status-pill.ended { background: rgba(245,241,236,0.12); color: #f5f1ec; }
+.wr-sim-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: rgba(245,241,236,0.45);
+  border: 1px solid rgba(245,241,236,0.18);
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+.wr-call-quote { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--accent); margin: 6px 0 2px; }
+.wr-call-delta { font-size: 12px; color: var(--accent); }
+.wr-call-rung { font-size: 12px; color: rgba(245,241,236,0.55); margin-top: var(--space-sm); min-height: 16px; }
+.wr-overview-note { font-size: 12.5px; color: rgba(245,241,236,0.45); line-height: 1.6; margin: var(--space-md) 0 0; }
+.wr-overview-note code { font-family: var(--font-mono); background: rgba(245,241,236,0.08); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+
+/* ---- War Room: price-move emphasis (design-system.md "Price-change moment") ---- */
+.wr-ticker-wrap { position: relative; }
+.wr-ticker-drop { animation: wr-price-drop 200ms ease-out; }
+@keyframes wr-price-drop {
+  from { transform: scale(1.1); color: var(--accent-tint); }
+  to { transform: scale(1); color: var(--accent); }
+}
+.wr-drop-chip {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translate(-50%, 0);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(239,107,69,0.14);
+  border: 1px solid rgba(239,107,69,0.35);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  pointer-events: none;
+  animation: wr-chip-float 1.6s ease-out forwards;
+}
+@keyframes wr-chip-float {
+  0% { opacity: 0; transform: translate(-50%, 6px); }
+  12% { opacity: 1; transform: translate(-50%, -2px); }
+  100% { opacity: 0; transform: translate(-50%, -34px); }
+}
+
+/* ---- War Room: milestone feed icons ---- */
+.wr-mile-icon { display: inline-block; width: 15px; margin-right: 4px; text-align: center; color: rgba(245,241,236,0.45); }
+.wr-mile-icon.disclosure { color: var(--accent); }
+.wr-mile-icon.lever { color: #e0b25c; }
+.wr-mile-icon.quote { color: var(--accent); }
+.wr-mile-icon.outcome { color: rgba(245,241,236,0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .wr-ticker-drop, .wr-drop-chip { animation: none; }
+  .wr-call-card { transition: none; }
+}
