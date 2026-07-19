@@ -13,6 +13,21 @@ Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block 
 
 ---
 
+## Navigation & transitions — budget ~5s for the clicks
+You don't teleport between screens; each cut lands on a click, and page loads take a beat. The app has a **persistent top nav** (Bills · Action Items · Voice · Profile · War Room) and the bill detail has **tabs** (Diagnosis · Plan · Call History). Budget these so the flow reads, not jumps:
+
+| # | The click | Lands on | Budget |
+|---|---|---|---|
+| 1 | Landing hero → `Start saving, it's free →` (or Log in) | the app (Bills) | ~1s |
+| 2 | Upload on `/intake`; parse runs → opens the bill | Bill detail (Diagnosis) | ~1s load |
+| 3 | On the bill: `Plan` tab → `Start the calls` | launches calls | ~1.5s |
+| 4 | Auto-routes (or top nav → `War Room`) | War Room | ~0.5s |
+| 5 | Call ends → the new `See the report →` CTA (PR #56) | Report | ~1s |
+
+**Live-site notes (for Hamza):** `/intake` shows "Voice interview is offline" (set `NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE` on the deploy); the `Plan` tab didn't switch content when tested (step 3 depends on it); the `See the report` CTA is PR #56, not yet deployed.
+
+---
+
 ## SHOT LIST
 
 ### SHOT 1 · 0:00–0:03 · The brand (3s)
@@ -21,23 +36,28 @@ Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block 
 **VO:** *"Maya owes $4,287 for one ER visit — with insurance."*
 **On-screen text:** none (the hero speaks).
 
-### SHOT 2 · 0:03–0:11 · Intake: document + voice (8s) — proves S2
+> ▸ *transition 0:03–0:04 (~1s): click `Start saving` → app opens on the bill (signed in as maya@hagglfor.me).*
+
+### SHOT 2 · 0:04–0:11 · Intake: document + voice (7s) — proves S2
 **SCREEN:** `/intake` (logged in as `maya@hagglfor.me`): drag `data/demo_docs/mercy_general_bill.pdf` into the upload card → parse animation ("line items extracted") → **quick cut** to the embedded ElevenLabs voice-interview widget mid-question.
 **Screenshot ref:** capture live at `hagglfor.me/intake` (no repo PNG yet — REHEARSAL NOTE: the vision parse takes ~10s real time; start the upload before the in-point and film the tail of it).
 **AUDIO (real widget, 3s):** Intake: *"…what could you comfortably pay today?"* → Maya: *"Maybe seventeen hundred."*
 **VO (over the upload, before the audio):** *"Upload the bill. A short voice interview asks only what documents can't answer."*
 
-### SHOT 3 · 0:11–0:19 · Diagnosis: the findings (8s) — proves S2 (spec) + sets up S4
+> ▸ *transition 0:11–0:12 (~1s): parse finishes → the bill opens on the Diagnosis view. Let the load beat land.*
+
+### SHOT 3 · 0:12–0:18 · Diagnosis: the findings (6s) — proves S2 (spec) + sets up S4
 **SCREEN:** Bill detail → **Diagnosis** tab (`/bills/…0001`): "THE CENTRAL ARGUMENT" card, then the **4 findings** with dollar chips — Duplicate 71046 **+$412** · Upcode 99285 **+$2,011** · Unbundle 80053 **+$642** · EOB mismatch **+$412** · "TOTAL FLAGGED: $3,065". Slow scroll down the findings; end on the projected-savings bar ($1,327–$2,653 possible).
 **Screenshot ref:** live capture of the Diagnosis tab (layout as toured 07-18: title row $3,875/$4,287, savings bar, findings cards).
 **VO:** *"Haggl reads it like an auditor: four billing errors, three thousand dollars flagged — each one with evidence."*
 
-### SHOT 4 · 0:19–0:24 · Approve + the War Room fills (5s) — proves S2 gate, S3 setup
+### SHOT 4 · 0:18–0:20 · Approve → War Room fills (2s = the transition) — proves S2 gate, S3 setup
+This shot IS the navigation into the call: `Plan` tab → `Start the calls` → hard cut to the dark War Room going ● LIVE. The contrast (light bill → dark War Room) is the drama; don't linger.
 **SCREEN:** The approve moment (Plan tab → confirm/"make the calls" control), **1s beat** on the Voice picker strip if it fits (`/voice` — "ON CALLS WE'LL USE — Adam · Assertive and unbudging"), then cut to the **War Room** (`/warroom`): dark theme, call cards going ● LIVE, Advocates panel on the right.
 **Screenshot refs:** `deck/assets/warroom.png` + live `/voice` capture. CUT-IF-OVER: the voice-picker beat is the first thing to drop if the edit runs long.
 **VO:** *"Maya approves — nothing dials until she does. Then Haggl picks up the phone."*
 
-### SHOT 5 · 0:24–0:56 · THE LIVE CALL (32s, continuous) — proves S4, S5, S6
+### SHOT 5 · 0:20–0:52 · THE LIVE CALL (32s, continuous) — proves S4, S5, S6
 **SCREEN:** War Room call view, full frame. The through-line is the **price ticker** — it must be readable the whole time: **$4,287 → $3,875 → $2,400 → $1,650**, lever chips arming before each move, `escalation_required` event firing at $1,650. Picture-in-picture (small): Jay on a real phone, or the phone screen with the inbound call — sells "live human on the line."
 **AUDIO:** the call IS the audio. No VO. Record the full call with Jay as Pat (concession rules in `human_role_play_guide.md`); cut to these beats, ticker carrying continuity:
 
@@ -45,19 +65,21 @@ Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block 
 
 | ~t | Beat (agent = Adam's voice) | Ticker |
 |---|---|---|
-| 0:24 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat, wary: *"…what is it you're asking for?"* | $4,287 |
-| 0:29 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* | $4,287 |
-| 0:33 | **Consideration beat.** Pat: *"Hold on… let me pull that up."* — keys clacking, a pause — *"…we bill what's documented, sir."* Adam, easy: *"Sure — but it's the same code, same day. Two X-rays, one visit."* Pat, beat: *"…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one."* | **→ $3,875** |
-| 0:41 | The benchmark, slow and clean: *"Appreciate that. Now — Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, bristling: *"Our rates are our rates."* — pause — *"…look, I've got some room. Best I can do is 2,400."* | **→ $2,400** |
-| 0:49 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* Pat, exhaling: *"…give me a second."* — hold music, 2s — *"Okay. Approved at 1,650."* | **→ $1,650** |
-| 0:55 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
+| 0:20 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat, wary: *"…what is it you're asking for?"* | $4,287 |
+| 0:25 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* | $4,287 |
+| 0:29 | **Consideration beat.** Pat: *"Hold on… let me pull that up."* — keys clacking, a pause — *"…we bill what's documented, sir."* Adam, easy: *"Sure — but it's the same code, same day. Two X-rays, one visit."* Pat, beat: *"…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one."* | **→ $3,875** |
+| 0:37 | The benchmark, slow and clean: *"Appreciate that. Now — Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, bristling: *"Our rates are our rates."* — pause — *"…look, I've got some room. Best I can do is 2,400."* | **→ $2,400** |
+| 0:46 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* Pat, exhaling: *"…give me a second."* — hold music, 2s — *"Okay. Approved at 1,650."* | **→ $1,650** |
+| 0:51 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
 
-*(Timing note: the call block now runs 0:24–0:56; Shot 6 compresses to 0:56–1:00 — the report needs 4s, it's a receipt, not a tour.)*
+*(Timing note: call block 0:20–0:52 leaves ~5s of the 60 for navigation clicks and 0:53–0:58 for the report + a 2s end card. The ~4s earlier start vs. the pre-nav version is exactly the transition budget moved up front.)*
 
 **On-screen text (small, bottom):** at 0:29 "finding #1: duplicate charge" · at 0:37 "the hospital's own posted price" · at 0:52 "every call ends structured: ref MG-ADJ-2247".
 **FALLBACK:** if the live take breaks twice, use the best golden recording replayed through the identical War Room view (the UI is the same code path) — label honestly in the submission text, not on screen.
 
-### SHOT 6 · 0:56–1:00 · The receipt (4s) — proves S7 + closes S1
+> ▸ *transition 0:52–0:53 (~1s): call ends → click the new `See the report →` CTA (PR #56). Before that fix there was no clear way out of the War Room.*
+
+### SHOT 6 · 0:53–0:58 · The receipt (5s) — proves S7 + closes S1
 **SCREEN:** `/report` (or bill → Call History/outcome view): ranked outcomes with ref#s + rep names, **billed vs fair vs achieved** per line, Evidence expanded to a cited transcript line, then the savings headline.
 **Screenshot ref:** `deck/assets/report.png`.
 **VO:** *"Ranked, cited, in plain English. $4,287 became $1,650 — sixty-two percent off. Haggl."*

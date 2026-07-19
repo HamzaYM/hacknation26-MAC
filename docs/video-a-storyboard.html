@@ -12,15 +12,24 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);padding:40px 20px;line-height:1.45}
   .wrap{max-width:1080px;margin:0 auto}
-  header{margin-bottom:8px}
   h1{font-size:30px;letter-spacing:-.5px}
   h1 .accent{color:var(--accent)}
   .sub{color:var(--muted);margin-top:6px;font-size:14px}
-  .meta{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 28px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 22px}
   .meta span{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px}
-  .timeline{display:flex;height:14px;border-radius:8px;overflow:hidden;margin-bottom:34px;border:1px solid var(--line)}
+  .timeline{display:flex;height:16px;border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid var(--line)}
   .timeline div{display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden}
-  .shot{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:26px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .tl-nav{background:repeating-linear-gradient(45deg,#8a4a2e,#8a4a2e 3px,#6f3b25 3px,#6f3b25 6px);min-width:6px}
+  .legend{font-size:11.5px;color:var(--muted);margin-bottom:26px}
+  .legend b{color:#8a4a2e}
+  .navmap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:28px}
+  .navmap h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px}
+  .navmap table{width:100%;border-collapse:collapse;font-size:13px}
+  .navmap td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:top}
+  .navmap .step{font-weight:800;color:var(--accent);white-space:nowrap}
+  .navmap .budget{text-align:right;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .navmap code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:11.5px}
+  .shot{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
   .shot-head{display:flex;align-items:baseline;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
   .time{font-weight:800;font-size:15px;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
   .shot-title{font-weight:700;font-size:16px}
@@ -28,22 +37,34 @@
   .proves b{color:var(--ink)}
   .shot-body{display:grid;grid-template-columns:minmax(0,54%) minmax(0,46%);gap:0}
   @media(max-width:840px){.shot-body{grid-template-columns:1fr}}
-  .shot-img{background:#efe7dc;display:flex;flex-direction:column}
+  .shot-img{background:#efe7dc;position:relative}
   .shot-img img{width:100%;height:auto;display:block;border-right:1px solid var(--line)}
   .imgcap{font-size:11px;color:var(--muted);padding:8px 14px}
   .imgcap code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:10.5px}
   .shot-script{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
   .block h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+  .navline{font-size:12.5px;background:#f4e4d6;border-left:3px solid #8a4a2e;padding:7px 11px;border-radius:0 8px 8px 0}
+  .navline b{color:#8a4a2e}
   .vo{font-size:15px;font-style:italic;background:var(--chip);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0}
-  .aud{font-size:13.5px}
-  .aud .who{font-weight:700}
+  .aud{font-size:13.5px}.aud .who{font-weight:700}
   .dir{font-size:12.5px;color:var(--muted)}
   .ost{font-size:12px;background:var(--dark);color:#f5ede2;padding:6px 10px;border-radius:6px;display:inline-block}
   .beats{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px}
   .beats td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:top}
   .beats .t{font-weight:800;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
   .beats .tick{font-weight:800;white-space:nowrap;text-align:right}
-  .note{background:#fdf1e4;border:1px dashed #e0b184;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:26px}
+  /* transition card */
+  .trans{display:flex;align-items:stretch;gap:0;margin:0 0 14px;border:1px dashed #c99a72;border-radius:14px;overflow:hidden;background:#fbf1e6}
+  .trans-frame{position:relative;width:38%;min-width:38%;background:#efe7dc;border-right:1px dashed #c99a72}
+  .trans-frame img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;max-height:150px}
+  .click-marker{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:3px solid #d9704a;box-shadow:0 0 0 4px rgba(217,112,74,.28);animation:pulse 1.4s infinite}
+  .click-label{position:absolute;transform:translateX(-50%);background:#221d19;color:#fff;font-size:10px;padding:2px 7px;border-radius:5px;white-space:nowrap}
+  @keyframes pulse{0%{box-shadow:0 0 0 3px rgba(217,112,74,.4)}70%{box-shadow:0 0 0 10px rgba(217,112,74,0)}100%{box-shadow:0 0 0 3px rgba(217,112,74,0)}}
+  .trans-body{padding:12px 18px;display:flex;flex-direction:column;justify-content:center;gap:5px;font-size:13px}
+  .trans-body .th{font-weight:800;color:#8a4a2e;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .trans-body .tb-budget{font-size:12px;color:var(--muted)}
+  .trans-body code{background:#f3e2d2;padding:1px 5px;border-radius:4px;font-size:11.5px}
+  .note{background:#fdf1e4;border:1px dashed #e0b184;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:22px}
   .note b{color:#b4531f}
   footer{color:var(--muted);font-size:11.5px;margin-top:8px}
   .call .shot-head{background:var(--dark)}
@@ -53,109 +74,168 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Video A · UI/UX Showcase <span class="accent">60s storyboard</span></h1>
-    <div class="sub">Director/VO: Kar Shin · Phone rep: Jay as “Pat” (live) · Record on <b>https://hagglfor.me</b>, address bar visible · Full script: <code>docs/video-a-uiux-script.md</code></div>
-  </header>
+  <h1>Video A · UI/UX Showcase <span class="accent">60s storyboard</span></h1>
+  <div class="sub">Director/VO: Kar Shin · Phone rep: Jay as “Pat” (live) · Record on <b>https://hagglfor.me</b>, address bar visible · Full script: <code>docs/video-a-uiux-script.md</code></div>
   <div class="meta">
-    <span>VO total ≈ 82 words</span><span>Call block 0:24–0:56 · audio = the call</span><span>No instant concessions — every move earns a consideration beat</span><span>Numbers = demo_answer_key.json</span><span>Fallback: golden replay through the same War Room view</span>
+    <span>VO ≈ 78 words</span><span>Call block 0:20–0:52 (32s) · audio = the call</span><span>~5s budgeted for navigation clicks</span><span>No instant concessions</span><span>Numbers = demo_answer_key.json</span>
   </div>
 
   <div class="timeline">
     <div style="flex:3;background:#d9704a">0–3 brand</div>
-    <div style="flex:8;background:#c2643f">3–11 intake</div>
-    <div style="flex:8;background:#a85735">11–19 diagnosis</div>
-    <div style="flex:5;background:#8a4a2e">19–24 approve</div>
-    <div style="flex:32;background:#221d19">24–56 THE LIVE CALL</div>
-    <div style="flex:4;background:#d9704a">56–60 report</div>
+    <div class="tl-nav" style="flex:1" title="navigate into app"></div>
+    <div style="flex:7;background:#c2643f">4–11 intake</div>
+    <div class="tl-nav" style="flex:1" title="parse → bill opens"></div>
+    <div style="flex:6;background:#a85735">12–18 diagnosis</div>
+    <div class="tl-nav" style="flex:2" title="Plan → start calls → War Room"></div>
+    <div style="flex:32;background:#221d19">20–52 THE LIVE CALL</div>
+    <div class="tl-nav" style="flex:1" title="See the report CTA"></div>
+    <div style="flex:5;background:#d9704a">53–58 report</div>
+    <div style="flex:2;background:#8a4a2e">end</div>
+  </div>
+  <div class="legend"><b>▨ hatched = navigation beats</b> — the clicks/page-loads between screens, now budgeted (~5s total). The app has a persistent top nav (Bills · Action Items · Voice · Profile · War Room); bill detail has tabs (Diagnosis · Plan · Call History). You don't teleport between screens — each cut lands on a click.</div>
+
+  <div class="navmap">
+    <h3>The click-path, start to finish (what the cursor actually does)</h3>
+    <table>
+      <tr><td class="step">1</td><td>Landing hero → click <code>Start saving, it's free →</code> (or Log in)</td><td>→ enters the app</td><td class="budget">~1s</td></tr>
+      <tr><td class="step">2</td><td>Upload the bill on <code>/intake</code>; parse runs → it opens the bill</td><td>→ Bill detail (Diagnosis)</td><td class="budget">~1s load</td></tr>
+      <tr><td class="step">3</td><td>On the bill: click the <code>Plan</code> tab → <code>Start the calls</code></td><td>→ launches calls</td><td class="budget">~1.5s</td></tr>
+      <tr><td class="step">4</td><td>Auto-routes (or click <code>War Room</code> in the top nav) to the live call</td><td>→ War Room</td><td class="budget">~0.5s</td></tr>
+      <tr><td class="step">5</td><td>Call ends → the new <code>See the report →</code> CTA (PR #56)</td><td>→ Report</td><td class="budget">~1s</td></tr>
+    </table>
   </div>
 
-  <div class="note"><b>Pre-shoot blocker found on the live site:</b> /intake currently shows “Voice interview is offline — set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> in <code>apps/web/.env.local</code>.” Hamza must set that env on the deployment before Shot 2 can film the widget live.</div>
+  <div class="note"><b>Two things for Hamza before the shoot:</b> (1) <code>/intake</code> currently shows “Voice interview is offline” — set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> on the deploy. (2) The <code>Plan</code> tab didn't switch content on the live site when I tested (stayed on Diagnosis) — needs a look, since step 3 depends on it. (3) The <code>See the report</code> CTA is PR #56, not yet deployed — the War Room→Report transition needs it live.</div>
 
   <!-- SHOT 1 -->
   <div class="shot">
     <div class="shot-head"><span class="time">0:00–0:03</span><span class="shot-title">The brand</span><span class="proves">proves <b>hook / S1 setup</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="../deck/assets/home-hero.png" alt="hagglfor.me landing hero"><div class="imgcap">SCREEN: <code>hagglfor.me</code> landing hero, URL visible. Frame exactly as shown.</div></div>
+      <div class="shot-img"><img src="../deck/assets/home-hero.png" alt="hagglfor.me landing hero"><div class="imgcap">SCREEN: <code>hagglfor.me</code> landing hero, URL visible.</div></div>
       <div class="shot-script">
         <div class="block"><h4>VO</h4><div class="vo">“Maya owes $4,287 for one ER visit — with insurance.”</div></div>
-        <div class="block"><h4>Direction</h4><div class="dir">One steady beat on the hero. No zoom. Cut on the VO's last word.</div></div>
+        <div class="block"><h4>Direction</h4><div class="dir">One steady beat on the hero. No zoom.</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- TRANSITION 1 -->
+  <div class="trans">
+    <div class="trans-frame">
+      <img src="../deck/assets/home-hero.png" alt="landing with Start saving button">
+      <div class="click-marker" style="left:44%;top:64%"></div>
+      <div class="click-label" style="left:44%;top:76%">Start saving →</div>
+    </div>
+    <div class="trans-body">
+      <div class="th">▸ Transition · 0:03–0:04 (~1s)</div>
+      <div>Click <code>Start saving, it's free →</code> on the hero. Hard cut to the product; don't film a login form — open already signed in as <code>maya@hagglfor.me</code>.</div>
+      <div class="tb-budget">Budget: 1s (click + cut)</div>
     </div>
   </div>
 
   <!-- SHOT 2 -->
   <div class="shot">
-    <div class="shot-head"><span class="time">0:03–0:11</span><span class="shot-title">Intake — document + voice</span><span class="proves">proves <b>S2</b></span></div>
+    <div class="shot-head"><span class="time">0:04–0:11</span><span class="shot-title">Intake — document + voice</span><span class="proves">proves <b>S2</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="video-assets/intake.png" alt="Intake screen — Add your documents"><div class="imgcap">SCREEN: <code>/intake</code> — drag <code>mercy_general_bill.pdf</code> into “Upload the itemized bill”, parse runs, then cut to the voice-interview card mid-question.</div></div>
+      <div class="shot-img"><img src="video-assets/intake.png" alt="Intake screen"><div class="imgcap">SCREEN: <code>/intake</code> — drag <code>mercy_general_bill.pdf</code> into “Upload the itemized bill”, parse runs, cut to the voice-interview card mid-question.</div></div>
       <div class="shot-script">
         <div class="block"><h4>VO (over the upload)</h4><div class="vo">“Upload the bill. A short voice interview asks only what documents can't answer.”</div></div>
-        <div class="block"><h4>Real audio (widget, ~3s)</h4><div class="aud"><span class="who">Intake:</span> “…what could you comfortably pay today?”<br><span class="who">Maya:</span> “Maybe seventeen hundred.”</div></div>
-        <div class="block"><h4>Direction</h4><div class="dir">Parse takes ~10s real time — start the upload before the in-point, film the tail. Widget must be live (see blocker note).</div></div>
+        <div class="block"><h4>Real audio (~3s)</h4><div class="aud"><span class="who">Intake:</span> “…what could you comfortably pay today?” <span class="who">Maya:</span> “Maybe seventeen hundred.”</div></div>
+        <div class="block"><h4>Direction</h4><div class="dir">Parse takes ~10s real time — start the upload before the in-point.</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- TRANSITION 2 -->
+  <div class="trans">
+    <div class="trans-frame">
+      <img src="video-assets/diagnosis.png" alt="bill opens after parse">
+      <div class="click-marker" style="left:50%;top:22%"></div>
+      <div class="click-label" style="left:50%;top:6%">bill opens ↓</div>
+    </div>
+    <div class="trans-body">
+      <div class="th">▸ Transition · 0:11–0:12 (~1s)</div>
+      <div>Parse finishes → the app opens the confirmed bill. A brief loading beat is honest here; let it land on the Diagnosis view.</div>
+      <div class="tb-budget">Budget: 1s (page load)</div>
     </div>
   </div>
 
   <!-- SHOT 3 -->
   <div class="shot">
-    <div class="shot-head"><span class="time">0:11–0:19</span><span class="shot-title">Diagnosis — the findings</span><span class="proves">proves <b>S2 · sets up S4</b></span></div>
+    <div class="shot-head"><span class="time">0:12–0:18</span><span class="shot-title">Diagnosis — the findings</span><span class="proves">proves <b>S2 · sets up S4</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="video-assets/diagnosis.png" alt="Bill detail — Diagnosis tab with findings"><div class="imgcap">SCREEN: bill detail → <code>Diagnosis</code> tab. Slow scroll: central argument → 4 findings ($412 · $2,011 · $642 · $412) → end on “TOTAL FLAGGED: $3,065”.</div></div>
+      <div class="shot-img"><img src="video-assets/diagnosis.png" alt="Diagnosis tab with 4 findings"><div class="imgcap">SCREEN: bill detail → <code>Diagnosis</code> tab. Slow scroll: central argument → 4 findings ($412 · $2,011 · $642 · $412) → “TOTAL FLAGGED: $3,065”.</div></div>
       <div class="shot-script">
         <div class="block"><h4>VO</h4><div class="vo">“Haggl reads it like an auditor: four billing errors, three thousand dollars flagged — each one with evidence.”</div></div>
-        <div class="block"><h4>Direction</h4><div class="dir">Scroll speed steady; let the dollar chips land. Don't open the evidence accordions — the chips carry it.</div></div>
+        <div class="block"><h4>Direction</h4><div class="dir">Steady scroll; let the dollar chips land. Don't open the evidence accordions.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- SHOT 4 -->
-  <div class="shot">
-    <div class="shot-head"><span class="time">0:19–0:24</span><span class="shot-title">Approve → War Room fills</span><span class="proves">proves <b>S2 gate · S3 setup</b></span></div>
-    <div class="shot-body">
-      <div class="shot-img"><img src="../deck/assets/warroom.png" alt="War Room — live call cards"><div class="imgcap">SCREEN: approve control on the Plan tab → optional 1s on <code>/voice</code> (“ON CALLS WE'LL USE — Adam”, see <code>video-assets/voice.png</code>) → <code>/warroom</code> cards going ● LIVE. <b>CUT-IF-OVER:</b> drop the voice beat first.</div></div>
-      <div class="shot-script">
-        <div class="block"><h4>VO</h4><div class="vo">“Maya approves — nothing dials until she does. Then Haggl picks up the phone.”</div></div>
-        <div class="block"><h4>Direction</h4><div class="dir">The click is the beat: cursor → “make the calls” → hard cut to the dark War Room. Contrast does the drama.</div></div>
-      </div>
+  <!-- TRANSITION 3 -->
+  <div class="trans">
+    <div class="trans-frame">
+      <img src="video-assets/diagnosis.png" alt="bill detail tabs — click Plan">
+      <div class="click-marker" style="left:15%;top:48%"></div>
+      <div class="click-label" style="left:15%;top:60%">1· Plan tab</div>
+      <div class="click-marker" style="left:91%;top:5%"></div>
+      <div class="click-label" style="left:88%;top:16%">or nav → War Room</div>
+    </div>
+    <div class="trans-body">
+      <div class="th">▸ Transition · 0:18–0:20 (~2s)</div>
+      <div>Two clicks: the <code>Plan</code> tab, then <code>Start the calls</code> — then it routes to the War Room (or click <code>War Room</code> in the top nav). Hard cut from the light bill screen to the dark War Room; the contrast is the drama.</div>
+      <div class="tb-budget">Budget: 2s (tab + button + route)</div>
     </div>
   </div>
 
-  <!-- SHOT 5 — THE CALL -->
+  <!-- SHOT 4 — THE CALL -->
   <div class="shot call">
-    <div class="shot-head"><span class="time">0:24–0:56</span><span class="shot-title">THE LIVE CALL — one continuous conversation</span><span class="proves">proves <b>S4 · S5 · S6</b></span></div>
+    <div class="shot-head"><span class="time">0:20–0:52</span><span class="shot-title">THE LIVE CALL — one continuous conversation</span><span class="proves">proves <b>S4 · S5 · S6</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="../deck/assets/warroom.png" alt="War Room call view during the live call"><div class="imgcap">SCREEN: War Room call view FULL FRAME the entire block; the <b>price ticker is the through-line</b> ($4,287 → $3,875 → $2,400 → $1,650), lever chips arming before each move, <code>escalation_required</code> at $1,650. PiP (small): Jay on a real phone.</div></div>
+      <div class="shot-img"><img src="../deck/assets/warroom.png" alt="War Room call view"><div class="imgcap">SCREEN: War Room call view FULL FRAME; the <b>price ticker is the through-line</b> ($4,287 → $3,875 → $2,400 → $1,650), lever chips arm before each move, <code>escalation_required</code> at $1,650. PiP: Jay on a real phone.</div></div>
       <div class="shot-script">
-        <div class="block"><h4>Audio = the call (no VO)</h4>
+        <div class="block"><h4>Audio = the call (no VO). No instant concessions — each move earns a consideration beat.</h4>
           <table class="beats">
-            <tr><td class="t">0:24</td><td><b>Adam:</b> “Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?” <b>Pat, wary:</b> “…what is it you're asking for?”</td><td class="tick">$4,287</td></tr>
-            <tr><td class="t">0:29</td><td><b>Adam:</b> “So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?”</td><td class="tick">$4,287</td></tr>
-            <tr><td class="t">0:33</td><td><b>CONSIDERATION BEAT · Pat:</b> “Hold on… let me pull that up.” <i>(keys clacking, pause)</i> “…we bill what's documented, sir.” <b>Adam, easy:</b> “Sure — but it's the same code, same day. Two X-rays, one visit.” <b>Pat, beat:</b> “…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one.”</td><td class="tick">→ $3,875</td></tr>
-            <tr><td class="t">0:41</td><td><b>Adam:</b> “Appreciate that. Now — Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three.” <b>Pat, bristling:</b> “Our rates are our rates.” <i>(pause)</i> “…look, I've got some room. Best I can do is 2,400.”</td><td class="tick">→ $2,400</td></tr>
-            <tr><td class="t">0:49</td><td><b>Adam:</b> “She can do sixteen-fifty today, paid in full — can you take that to your supervisor?” <b>Pat, exhaling:</b> “…give me a second.” <i>(hold, 2s)</i> “Okay. Approved at 1,650.”</td><td class="tick">→ $1,650</td></tr>
-            <tr><td class="t">0:55</td><td><b>Adam:</b> “Appreciate you, Pat.” Outcome card lands: ref <b>MG-ADJ-2247</b>; <code>escalation_required</code> = a human signs off the final number.</td><td class="tick">settled</td></tr>
+            <tr><td class="t">0:20</td><td><b>Adam:</b> “Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?” <b>Pat, wary:</b> “…what is it you're asking for?”</td><td class="tick">$4,287</td></tr>
+            <tr><td class="t">0:25</td><td><b>Adam:</b> “So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?”</td><td class="tick">$4,287</td></tr>
+            <tr><td class="t">0:29</td><td><b>CONSIDERATION · Pat:</b> “Hold on… let me pull that up.” <i>(keys, pause)</i> “…we bill what's documented, sir.” <b>Adam:</b> “Sure — same code, same day. Two X-rays, one visit.” <b>Pat:</b> “…hm. Yeah, okay, I do see it twice. I can adjust one.”</td><td class="tick">→ $3,875</td></tr>
+            <tr><td class="t">0:37</td><td><b>Adam:</b> “Appreciate that. Now — Medicare pays four thirty-eight… and your own posted cash price is twenty-six thirty-three.” <b>Pat, bristling:</b> “Our rates are our rates.” <i>(pause)</i> “…best I can do is 2,400.”</td><td class="tick">→ $2,400</td></tr>
+            <tr><td class="t">0:46</td><td><b>Adam:</b> “She can do sixteen-fifty today, paid in full — take that to your supervisor?” <b>Pat:</b> “…give me a second.” <i>(hold, 2s)</i> “Okay. Approved at 1,650.”</td><td class="tick">→ $1,650</td></tr>
+            <tr><td class="t">0:51</td><td><b>Adam:</b> “Appreciate you, Pat.” Outcome card: ref <b>MG-ADJ-2247</b>; <code>escalation_required</code> = a human signs off.</td><td class="tick">settled</td></tr>
           </table>
         </div>
-        <div class="block"><h4>On-screen text (small, bottom)</h4><div class="dir">0:29 “finding #1: duplicate charge” · 0:37 “the hospital's own posted price” · 0:52 “every call ends structured: ref MG-ADJ-2247”</div></div>
-        <div class="block"><h4>Direction</h4><div class="dir"><b>No instant concessions</b> — Pat always checks/deflects before moving (the consideration beats above); that friction is what makes the price moves read as earned, not scripted. Record the full call once, uncut (it doubles as golden-call + eval material); edit to these beats with the ticker carrying continuity. If Pat asks “am I talking to a robot?”, KEEP IT — the honest “I am—” confirmation is an S5 gift.</div></div>
+        <div class="block"><h4>Direction</h4><div class="dir">Record the full call once, uncut (doubles as golden-call + eval material). If Pat asks “am I talking to a robot?”, KEEP IT — the honest “I am—” is an S5 gift.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- SHOT 6 -->
+  <!-- TRANSITION 4 -->
+  <div class="trans">
+    <div class="trans-frame" style="background:#221d19">
+      <img src="../deck/assets/warroom.png" alt="War Room with See the report CTA" style="opacity:.85">
+      <div class="click-marker" style="left:80%;top:20%"></div>
+      <div class="click-label" style="left:74%;top:32%">See the report → (new, PR #56)</div>
+    </div>
+    <div class="trans-body">
+      <div class="th">▸ Transition · 0:52–0:53 (~1s)</div>
+      <div>The call ends → the new <code>See the report →</code> banner appears (the fix from PR #56 — before it, there was no clear way out of the War Room). Click it → the report. <b>Needs PR #56 deployed to film.</b></div>
+      <div class="tb-budget">Budget: 1s (click + load)</div>
+    </div>
+  </div>
+
+  <!-- SHOT 5 -->
   <div class="shot">
-    <div class="shot-head"><span class="time">0:56–1:00</span><span class="shot-title">The receipt</span><span class="proves">proves <b>S7 · closes S1</b></span></div>
+    <div class="shot-head"><span class="time">0:53–0:58</span><span class="shot-title">The receipt</span><span class="proves">proves <b>S7 · closes S1</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="../deck/assets/report.png" alt="Report — ranked, cited outcomes"><div class="imgcap">SCREEN: <code>/report</code> — ranked outcomes with ref#s + rep names, billed vs fair vs achieved, one Evidence row expanded. End card: Haggl + <code>hagglfor.me</code>.</div></div>
+      <div class="shot-img"><img src="../deck/assets/report.png" alt="Report — ranked, cited"><div class="imgcap">SCREEN: <code>/report</code> — ranked outcomes with ref#s + rep names, billed vs fair vs achieved, one Evidence row expanded.</div></div>
       <div class="shot-script">
         <div class="block"><h4>VO</h4><div class="vo">“Ranked, cited, in plain English. $4,287 became $1,650 — sixty-two percent off. Haggl.”</div></div>
-        <div class="block"><h4>On-screen text</h4><span class="ost">−62% · every number cited to the transcript</span></div>
+        <div class="block"><h4>End card · 0:58–1:00</h4><span class="ost">Haggl · hagglfor.me · −62%</span></div>
       </div>
     </div>
   </div>
 
-  <footer>Open this file from the repo (<code>docs/</code>) so the relative screenshots resolve · images: <code>deck/assets/</code> + <code>docs/video-assets/</code> (captured from the live site 07-18) · criteria map + pre-shoot checklist in <code>docs/video-a-uiux-script.md</code></footer>
+  <footer>Open from the repo (<code>docs/</code>) so relative screenshots resolve · click-markers are approximate — position by eye on the real screen · full criteria map + checklist in <code>docs/video-a-uiux-script.md</code></footer>
 </div>
 </body>
 </html>
