@@ -1,7 +1,7 @@
 """Tests for the deterministic honesty audit (engine/honesty.py) and its
 case-scoped allowed-numbers builder (routers/webhooks.py)."""
 import pytest
-from app.engine.honesty import audit_call
+from app.engine.honesty import audit_authorization_claim, audit_call
 
 
 # Dollar amounts + CPT codes the agent may cite (mirrors _allowed_numbers_for_call)
@@ -218,3 +218,39 @@ class TestAllowedNumbersForCallCaseScoped:
 
         nums = webhooks._allowed_numbers_for_call(self.CALL_ID)
         assert 63.0 in nums  # falls back to the demo benchmark set
+
+
+class TestAuthorizationClaim:
+    """The agent RELAYS the recorded authorization; it must never claim to PLAY
+    the audio on the line, nor call the recording a signed/legal release."""
+
+    def test_verbatim_relay_with_honest_limit_passes(self):
+        tr = _transcript([
+            ("rep", "Do you have authorization to discuss this account?"),
+            ("agent", "I do. Maya recorded her authorization with us on the 14th. Her exact "
+                      "words were: I authorize Haggl to negotiate this account on my behalf."),
+            ("agent", "I can't play the audio right here on the line, but I can send you the "
+                      "recording and a written release. What's the best fax for your team?"),
+        ])
+        result = audit_authorization_claim(tr)
+        assert result["passed"] is True
+        assert result["violations"] == []
+
+    def test_claiming_to_play_audio_fails(self):
+        tr = _transcript([
+            ("rep", "Do you have authorization?"),
+            ("agent", "Sure, let me play you the audio of her recording right now."),
+        ])
+        result = audit_authorization_claim(tr)
+        assert result["passed"] is False
+        assert result["violations"][0]["kind"] == "audio_playback"
+
+    def test_claiming_recording_is_a_signed_release_fails(self):
+        tr = _transcript([
+            ("agent", "This recording is legally valid HIPAA authorization and you are "
+                      "required to accept this recording."),
+        ])
+        result = audit_authorization_claim(tr)
+        assert result["passed"] is False
+        kinds = {v["kind"] for v in result["violations"]}
+        assert "legal_overclaim" in kinds

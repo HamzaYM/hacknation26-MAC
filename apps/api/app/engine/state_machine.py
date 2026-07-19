@@ -58,6 +58,8 @@ class CallState:
     authority_requested: bool = False
     # 501(r) pre-collections window: the compact fact is surfaced only ONCE (early).
     notified_501r: bool = False
+    # Authorization move armed once the rep challenges authority/identity (surfaced once).
+    authorization_armed: bool = False
 
 
 class LadderStateMachine:
@@ -69,6 +71,7 @@ class LadderStateMachine:
         self._last_resort = config.get("escalation_policy") == "last_resort"
         self._required_questions: dict[str, list[str]] = config.get("required_questions", {})
         self._collections_threats = [t.casefold() for t in config.get("collections_threat_phrases", [])]
+        self._authorization_challenges = [t.casefold() for t in config.get("authorization_challenge_phrases", [])]
         self._states: dict[str, CallState] = {}  # in-memory; Supabase later
 
     def parked_topics(self, call_id: str) -> list[dict]:
@@ -118,7 +121,30 @@ class LadderStateMachine:
     ) -> dict:
         resp = self._advance_core(call_id, lever, result, offer_amount, quote, questions_asked)
         self._augment_501r_notes(call_id, quote, resp)
+        self._augment_authorization_notes(call_id, quote, resp)
         return resp
+
+    def _augment_authorization_notes(self, call_id: str, quote: str | None, resp: dict) -> None:
+        """When the rep challenges the caller's authority/identity to discuss the
+        account, arm the authorization move (once): present the patient's RECORDED
+        authorization. The agent must call get_authorization and may only claim a
+        recording the tool confirms. Read it verbatim, be explicit it is a recorded
+        authorization on file (not audio played over the line), and offer to send
+        the recording + a written release. No overclaiming — a recording is not a
+        signed 164.508 form. Notes only, no menace."""
+        state = self._states.get(call_id)
+        if not state or state.authorization_armed:
+            return
+        text = (quote or "").casefold()
+        if text and any(t in text for t in self._authorization_challenges):
+            state.authorization_armed = True
+            note = ("authorization challenged — call get_authorization now; if on_file, tell them "
+                    "you hold the patient's recorded authorization (give the date), read it verbatim, "
+                    "be clear you're reading a recorded authorization on file rather than playing audio "
+                    "on the line, and offer to send the recording plus a written release to their email "
+                    "or fax; never claim a recording is a signed release, and never overclaim")
+            existing = resp.get("notes")
+            resp["notes"] = " · ".join([existing, note]) if existing else note
 
     def _augment_501r_notes(self, call_id: str, quote: str | None, resp: dict) -> None:
         """When the call's account is still inside the 501(r) pre-collections window
@@ -167,6 +193,12 @@ class LadderStateMachine:
         already = [t for t in qa if t in state.questions_covered]
         if already:
             q_extra["already_asked"] = already
+        # Tags covered for the FIRST time this exchange — the War Room coverage
+        # panel flips each to green off a question_covered event (tools.py emits
+        # one per tag). Deduped, order-preserving; computed before the union in.
+        newly = [t for t in dict.fromkeys(qa) if t not in state.questions_covered]
+        if newly:
+            q_extra["newly_covered"] = newly
         for t in qa:
             state.questions_covered.setdefault(t, quote or "")
         if qa:

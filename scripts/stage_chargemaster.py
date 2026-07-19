@@ -1,5 +1,5 @@
 """Batched, resumable SQLite -> Supabase loader for chargemaster_charges /
-chargemaster_coverage (supabase/migrations/0007_chargemaster.sql formalizes
+chargemaster_coverage (supabase/migrations/0009_chargemaster.sql formalizes
 the target schema).
 
 Idempotent by design: before doing any work, compares the source SQLite

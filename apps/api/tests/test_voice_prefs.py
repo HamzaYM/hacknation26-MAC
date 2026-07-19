@@ -8,7 +8,7 @@ from app.main import app
 from app.services import voice_prefs
 
 ALEX = "jTWqplUkOPQwOegNjhal"
-ADAM = "pNInz6obpgDQGcFmaJgB"
+JASON = "8duqbsrxNeN6j4yugadv"
 RILEY = "saQ3GQHMonWJoYcm6AJJ"
 
 
@@ -31,15 +31,15 @@ def hermetic_voice_store(monkeypatch):
 
 
 def test_the_three_voices_are_allowlisted():
-    assert set(voice_prefs.VOICES) == {ALEX, ADAM, RILEY}
-    assert voice_prefs.DEFAULT_VOICE_ID == ADAM
-    assert voice_prefs.is_allowed(ADAM)
+    assert set(voice_prefs.VOICES) == {ALEX, JASON, RILEY}
+    assert voice_prefs.DEFAULT_VOICE_ID == JASON
+    assert voice_prefs.is_allowed(JASON)
     assert not voice_prefs.is_allowed("some-random-id")
 
 
 def test_resolve_falls_back_to_default_without_a_choice():
     # No DB in tests, so nothing is persisted → default (Adam).
-    assert voice_prefs.resolve_voice("demo") == ADAM
+    assert voice_prefs.resolve_voice("demo") == JASON
 
 
 def test_set_voice_rejects_unknown_id():
@@ -57,15 +57,15 @@ def test_server_payload_carries_the_override():
 
 def test_initiation_client_data_uses_resolved_voice():
     data = voice_prefs.initiation_client_data("demo")
-    assert data["conversation_config_override"]["tts"]["voice_id"] == ADAM  # default w/o DB
+    assert data["conversation_config_override"]["tts"]["voice_id"] == JASON  # default w/o DB
 
 
-def test_get_voice_endpoint_defaults_to_adam(client):
+def test_get_voice_endpoint_defaults_to_jason(client):
     resp = client.get("/cases/demo/voice")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["voice_id"] == ADAM
-    assert body["voice_label"] == "Adam"
+    assert body["voice_id"] == JASON
+    assert body["voice_label"] == "Jason"
     assert body["is_default"] is True
     assert body["persisted"] is False  # no DB in tests
 

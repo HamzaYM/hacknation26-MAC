@@ -1,5 +1,6 @@
 import type { ParseDocumentResponse, Reconciliation } from "../lib/api";
 import { money } from "../lib/savings";
+import { evidenceLine } from "../lib/evidence";
 import { FLAG_LABELS } from "../lib/types";
 
 // Renders a POST /documents/parse result: line items, the reconciliation
@@ -151,6 +152,9 @@ export default function ParsedDocPreview({
                   <strong>{FLAG_LABELS[flag.type] ?? flag.type}</strong>
                 </div>
                 <span className="impact">+{money(flag.dollar_impact)}</span>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 6 }}>
+                {evidenceLine(flag)}
               </div>
             </div>
           ))}

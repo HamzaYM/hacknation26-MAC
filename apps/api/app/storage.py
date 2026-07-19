@@ -64,6 +64,30 @@ def store_recording(call_id: str, audio: bytes) -> str | None:
     return None
 
 
+def store_authorization(case_id: str, audio: bytes, content_type: str = "audio/webm") -> str | None:
+    """Upload the patient's recorded authorization to the authorizations bucket;
+    returns "authorizations/<case_id>.<ext>" or None. One clip per case (upsert)."""
+    url, key = _env()
+    if not (url and key):
+        return None
+    ext = "mp3" if content_type == "audio/mpeg" else "webm"
+    path = f"{case_id}.{ext}"
+    try:
+        resp = httpx.post(
+            f"{url}/storage/v1/object/authorizations/{path}",
+            headers={"Authorization": f"Bearer {key}", "apikey": key,
+                     "Content-Type": content_type, "x-upsert": "true"},
+            content=audio,
+            timeout=60,
+        )
+        if resp.status_code in (200, 201):
+            return f"authorizations/{path}"
+        log.warning("authorization upload failed: %s %s", resp.status_code, resp.text[:200])
+    except httpx.HTTPError as err:
+        log.warning("authorization upload failed: %s", err)
+    return None
+
+
 def sign_url(storage_path: str, expires_in: int = 3600) -> str | None:
     """Signed URL for a stored object; storage_path includes the bucket
     (e.g. "recordings/<call_id>.mp3", the shape set_call_recording stores)."""
