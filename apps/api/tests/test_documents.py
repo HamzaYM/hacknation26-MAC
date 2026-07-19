@@ -5,11 +5,13 @@ import copy
 import pytest
 from fastapi.testclient import TestClient
 
-from app import db
-from app.fixtures import DEMO_LINE_ITEMS
+from app import case_store, db
+from app.fixtures import DEMO_CASE_ID, DEMO_LINE_ITEMS
 from app.main import app
 from app.routers import documents
-from app.routers.documents import parsed_flags, reconcile_bill, reconcile_eob
+from app.routers.documents import (
+    _schema, case_reconciliation, parsed_flags, reconcile_bill, reconcile_eob,
+)
 
 
 def exact_bill_extraction() -> dict:
@@ -112,3 +114,69 @@ def test_parse_endpoint_rejects_bad_kind_and_empty_file(client):
                        files={"file": ("x.pdf", b"", "application/pdf")},
                        data={"kind": "bill"})
     assert resp.status_code == 422
+
+
+# ── generalized pipeline (WS2): richer EOB extraction + case_store + real recon ──
+def test_eob_schema_now_extracts_reconciliation_columns():
+    """The EOB extraction schema populates the adjudication columns the reconciler
+    needs (contract already supported them; extraction now fills them)."""
+    props = _schema("eob")["schema"]["properties"]["line_items"]["items"]["properties"]
+    assert {"units", "allowed_amount", "plan_paid", "patient_responsibility"} <= set(props)
+    # the bill schema stays lean (no EOB-only columns)
+    bill_props = _schema("bill")["schema"]["properties"]["line_items"]["items"]["properties"]
+    assert "allowed_amount" not in bill_props
+
+
+def _real_bill():
+    return {"line_items": [
+        {"cpt": "99283", "description": "ED visit", "date_of_service": "2026-06-02",
+         "billed_amount": 2000.0, "dx_codes": []},
+        {"cpt": "71046", "description": "CXR", "date_of_service": "2026-06-02",
+         "billed_amount": 200.0, "dx_codes": []},
+    ], "total_billed": 2200.0, "patient_balance": 900.0}
+
+
+def _real_eob():
+    return {"line_items": [
+        {"cpt": "99283", "description": "ED visit", "date_of_service": "2026-06-02", "units": 1,
+         "billed_amount": 2000.0, "allowed_amount": 500.0, "plan_paid": 500.0,
+         "patient_responsibility": 0.0, "dx_codes": []},
+    ], "total_billed": 2000.0, "patient_responsibility_total": 0.0}
+
+
+def test_real_case_accumulates_both_docs_and_reconciles():
+    case = "11111111-1111-1111-1111-111111111111"
+    case_store.clear(case)
+    # first the bill lands → no counterpart yet
+    rec1 = case_reconciliation(case, _real_bill(), "bill")
+    assert rec1["verdict"] == "pending_counterpart"
+    case_store.put(case, "job_spec",
+                   documents._splice(copy.deepcopy(documents._base_job_spec(case)), _real_bill(), "bill"))
+    # then the EOB lands → real bill<->EOB reconciliation over the accumulated case
+    rec2 = case_reconciliation(case, _real_eob(), "eob")
+    assert rec2["verdict"] == "reconciled"
+    assert [m["code"] for m in rec2["matched"]] == ["99283"]
+    assert [b["code"] for b in rec2["bill_only"]] == ["71046"]  # phantom candidate
+    case_store.clear(case)
+
+
+def test_parsed_flags_for_real_case_uses_case_store_not_fixture():
+    """A real case's flags come from its own accumulated spec, never Maya's fixture."""
+    case = "22222222-2222-2222-2222-222222222222"
+    case_store.clear(case)
+    # accumulate the bill, then run flags with the EOB present → phantom on 71046
+    case_store.put(case, "job_spec",
+                   documents._splice(copy.deepcopy(documents._base_job_spec(case)), _real_bill(), "bill"))
+    flags = parsed_flags(_real_eob(), "eob", case)
+    types = {f.type for f in flags}
+    assert "phantom" in types  # 71046 billed, never adjudicated on a covered date
+    # Maya-only artifacts (upcode 99285) must NOT appear — we're not on the fixture
+    assert not any(f.cpt == "99285" for f in flags)
+    case_store.clear(case)
+
+
+def test_demo_case_still_backed_by_fixture():
+    """DEMO_CASE_ID keeps the pristine fixture spec (maya-compat path)."""
+    case_store.clear(DEMO_CASE_ID)
+    flags = parsed_flags(exact_bill_extraction(), "bill", DEMO_CASE_ID)
+    assert {f.type for f in flags} == {"duplicate", "upcode", "unbundle", "eob_mismatch"}

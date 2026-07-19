@@ -26,7 +26,43 @@ from datetime import date
 from . import levers
 from ..models import DerivedFlag, Entity, JobSpec, Lever, StrategyDossier
 
-ERROR_FLAG_TYPES = ("duplicate", "upcode", "unbundle", "phantom", "eob_mismatch")
+ERROR_FLAG_TYPES = (
+    "duplicate", "upcode", "unbundle", "phantom", "eob_mismatch",
+    "nsa_balance_billing", "denial", "units_error", "absent_from_chargemaster",
+)
+
+
+def build_ask_table(benchmark_report: dict) -> tuple[list[dict], dict]:
+    """Dual-framing ask surface (decision #10) from a BenchmarkReport:
+    a per-line table (billed / Medicare multiple / fair band / excess / RAND flag)
+    plus a total-level band framing (anchor / target / floor + multiples). Both are
+    pure projections of the report — no new numbers are introduced here."""
+    table = [
+        {
+            "code": ln["code"], "code_type": ln.get("code_type"),
+            "description": ln.get("description"), "billed": ln["billed"],
+            "medicare_multiple": ln.get("medicare_multiple"),
+            "fair_band": ln.get("fair_band"),
+            "excess_above_band": ln.get("excess_above_band"),
+            "rand_flag": ln.get("rand_flag", False),
+            "coverage": ln.get("coverage"),
+        }
+        for ln in benchmark_report.get("lines", [])
+    ]
+    t = benchmark_report.get("totals", {})
+    framing = {
+        "billed": t.get("billed"),
+        "medicare": t.get("medicare"),
+        "medicare_multiple": t.get("medicare_multiple"),
+        "fair_band_low": t.get("fair_band_low"),
+        "fair_band_high": t.get("fair_band_high"),
+        "excess_above_band": t.get("excess_above_band"),
+        "ask_anchor": t.get("ask_anchor"),
+        "ask_target": t.get("ask_target"),
+        "floor": t.get("floor"),
+        "rand_flagged_lines": [ln["code"] for ln in benchmark_report.get("lines", []) if ln.get("rand_flag")],
+    }
+    return table, framing
 
 # 26 CFR 1.501(r)-6: a 501(c)(3) nonprofit hospital may not begin extraordinary
 # collection actions until 120 days after the first post-discharge billing
@@ -94,6 +130,7 @@ def build_dossier(
     config: dict,
     entity: Entity | None = None,
     today: date | None = None,
+    benchmark_report: dict | None = None,
 ) -> StrategyDossier:
     entity = entity or job_spec.entities[0]
     route = "collections" if entity.kind == "collections" else "provider"
@@ -194,6 +231,12 @@ def build_dossier(
         job_spec.bill.statement_date, job_spec.bill.nonprofit_status, today
     )
 
+    # Dual-framing ask surface (decision #10) — only when a BenchmarkReport is
+    # supplied; otherwise these stay None and every existing consumer is unaffected.
+    ask_table = band_framing = None
+    if benchmark_report is not None:
+        ask_table, band_framing = build_ask_table(benchmark_report)
+
     return StrategyDossier(
         case_id=job_spec.case_id,
         target_entity=entity.name,
@@ -205,4 +248,6 @@ def build_dossier(
         citations=[_cite(benchmarks[c]) for c in sorted(cpts)],
         days_since_first_statement=days_since,
         inside_501r_window=inside_window,
+        ask_table=ask_table,
+        band_framing=band_framing,
     )

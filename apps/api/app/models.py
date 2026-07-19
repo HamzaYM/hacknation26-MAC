@@ -25,7 +25,15 @@ class LineItem(BaseModel):
 
 
 class DerivedFlag(BaseModel):
-    type: Literal["duplicate", "upcode", "unbundle", "phantom", "eob_mismatch", "nsa", "markup"]
+    # Flag taxonomy mirrors contracts/scenario.schema.json expected_flags[].type
+    # (generalized-pipeline decision #13). Integration unified the two NSA
+    # detectors (#67 marker path + WS2 generalized path) onto the single emitted
+    # type "nsa"; "nsa_balance_billing" is retained only as a dormant alias.
+    type: Literal[
+        "duplicate", "upcode", "unbundle", "phantom", "markup",
+        "eob_mismatch", "nsa", "nsa_balance_billing", "denial",
+        "units_error", "absent_from_chargemaster",
+    ]
     cpt: Optional[str] = None
     evidence: dict = Field(default_factory=dict)
     dollar_impact: float
@@ -102,6 +110,11 @@ class StrategyDossier(BaseModel):
     # 501(r) account-age clock (26 CFR 1.501(r)-6) — additive routing signals.
     days_since_first_statement: Optional[int] = None
     inside_501r_window: Optional[bool] = None  # nonprofit-only; None when N/A
+    # Dual-framing ask surface (decision #10), populated from a BenchmarkReport
+    # when one is available. Both optional/None so every existing consumer of
+    # StrategyDossier is unaffected (generalized-pipeline WS2).
+    ask_table: Optional[list] = None      # per-line billed / medicare× / fair band / excess
+    band_framing: Optional[dict] = None   # total-level anchor/target/floor + multiples
 
 
 class CallOutcome(BaseModel):
