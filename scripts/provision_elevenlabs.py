@@ -224,6 +224,7 @@ END_CALL_TOOL = {
     "description": ("End the call as soon as both you and the rep have exchanged a closing "
                     "thank-you or goodbye and there is no outstanding ask. Do not wait for "
                     "the rep to hang up first, and do not linger on the line."),
+    "params": {"system_tool_type": "end_call"},  # required discriminator (docs: SystemToolConfig)
 }
 
 NEGOTIATOR_TURN = {"silence_end_call_timeout": 10}
