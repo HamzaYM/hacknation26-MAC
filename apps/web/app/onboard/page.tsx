@@ -32,12 +32,10 @@ export default function Onboard() {
   // reconciling them against each other is where a lot of leverage lives
   // (see the eob_mismatch flag) — but we only require ONE to continue, since
   // plenty of people only have one on hand right now. The other can be added
-  // later from that bill's Documents tab. Returning users who already have a
-  // case can skip past this entirely via the escape hatch below.
+  // later from that bill's Documents tab.
   const [hasBill, setHasBill] = useState(false);
   const [hasEob, setHasEob] = useState(false);
-  const [skippingUpload, setSkippingUpload] = useState(false);
-  const canContinue = hasBill || hasEob || skippingUpload;
+  const canContinue = hasBill || hasEob;
 
   return (
     <div className="card" style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -58,37 +56,20 @@ export default function Onboard() {
         We use both together to find the strongest leverage, but one is enough to start. Missing the
         other? Add it later from that bill&apos;s Documents tab.
       </p>
-      {!skippingUpload && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <UploadCard
-            title="Medical bill"
-            hint="The itemized bill from the provider"
-            onSelect={() => setHasBill(true)}
-            demoFile={{ url: "/demo-docs/mercy_general_bill.pdf", name: "mercy_general_bill.pdf" }}
-          />
-          <UploadCard
-            title="Explanation of Benefits"
-            hint="The EOB from your insurer"
-            onSelect={() => setHasEob(true)}
-            demoFile={{ url: "/demo-docs/bcbs_eob.pdf", name: "bcbs_eob.pdf" }}
-          />
-        </div>
-      )}
-      {!hasBill && !hasEob && !skippingUpload && (
-        <button
-          type="button"
-          onClick={() => setSkippingUpload(true)}
-          style={{ background: "none", border: "none", color: "var(--text-tertiary)", fontSize: 13, marginTop: 8, cursor: "pointer", textDecoration: "underline" }}
-        >
-          I already have a case set up, skip this
-        </button>
-      )}
-      {skippingUpload && (
-        <p className="todo" style={{ marginTop: 8 }}>
-          Skipping upload: assuming an existing case already has documents on file. New cases need
-          at least one before we can negotiate anything.
-        </p>
-      )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <UploadCard
+          title="Medical bill"
+          hint="The itemized bill from the provider"
+          onSelect={() => setHasBill(true)}
+          demoFile={{ url: "/demo-docs/mercy_general_bill.pdf", name: "mercy_general_bill.pdf" }}
+        />
+        <UploadCard
+          title="Explanation of Benefits"
+          hint="The EOB from your insurer"
+          onSelect={() => setHasEob(true)}
+          demoFile={{ url: "/demo-docs/bcbs_eob.pdf", name: "bcbs_eob.pdf" }}
+        />
+      </div>
 
       <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)", margin: "24px 0 12px" }}>
         Your details

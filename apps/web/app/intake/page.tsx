@@ -178,8 +178,7 @@ function DocSlot({
     return (
       <div>
         <p className="todo" style={{ marginBottom: 8 }}>
-          Couldn&apos;t parse <strong>{state.fileName}</strong>. The API at :8000 didn&apos;t answer.
-          Your file is still here; nothing was lost.
+          We could not read <strong>{state.fileName}</strong> right now. Your file is still here, nothing was lost. Refresh in a moment and try again.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn btn-secondary" onClick={() => onFile(state.file)}>
@@ -460,7 +459,7 @@ function ManualFinancialCard({
         )}
         {status === "error" && (
           <span style={{ fontSize: 14, color: "var(--flag)" }}>
-            Couldn&apos;t save — the API at :8000 didn&apos;t answer. Nothing was lost; try again.
+            We could not save that right now. Nothing was lost. Refresh in a moment and try again.
           </span>
         )}
       </div>

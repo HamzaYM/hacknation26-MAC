@@ -89,10 +89,7 @@ export default function Confirm() {
 
   if (loadError) {
     return (
-      <p className="todo">
-        Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
-        apps/api, then reload this page.
-      </p>
+      <p className="todo">We could not load your case right now. Refresh in a moment.</p>
     );
   }
 
@@ -243,17 +240,12 @@ export default function Confirm() {
         </div>
       </div>
 
-      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-        <div>
-          <h3 style={{ marginBottom: 4 }}>The voice we&apos;ll call in</h3>
-          <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-            {voiceById(voiceId ?? undefined)?.name ?? "Jason"}
-            <span style={{ color: "var(--text-tertiary)" }}> · {voiceById(voiceId ?? undefined)?.tagline ?? "calm and unhurried"}</span>
-          </div>
+      <div className="card">
+        <h3 style={{ marginBottom: 4 }}>The voice we&apos;ll call in</h3>
+        <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+          {voiceById(voiceId ?? undefined)?.name ?? "Jason"}
+          <span style={{ color: "var(--text-tertiary)" }}> · {voiceById(voiceId ?? undefined)?.tagline ?? "calm and unhurried"}</span>
         </div>
-        <a href="/voice" className="btn btn-secondary" style={{ padding: "8px 18px", fontSize: 14 }}>
-          Change voice
-        </a>
       </div>
 
       <RecordAuthorization
@@ -280,9 +272,7 @@ export default function Confirm() {
       )}
 
       {confirmError && (
-        <p className="todo">
-          Couldn&apos;t confirm the plan. The API at :8000 didn&apos;t answer. Nothing was dialed; try again.
-        </p>
+        <p className="todo">We could not confirm the plan right now. Nothing was dialed. Refresh in a moment and try again.</p>
       )}
 
       <div style={{ marginTop: 24, textAlign: "center" }}>

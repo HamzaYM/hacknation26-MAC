@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getBenchmarkReport, getCase, launchCalls } from "../../../lib/api";
+import { getBenchmarkReport, getCase, getReport, launchCalls } from "../../../lib/api";
 import { subscribeToCallsForCase } from "../../../lib/realtime";
 import { facilitySavings, money } from "../../../lib/savings";
 import { procedureLabel } from "../../../lib/procedures";
@@ -10,8 +10,8 @@ import UploadCard from "../../../components/UploadCard";
 import ActionItemCard from "../../../components/ActionItemCard";
 import MultiplesTable from "../../../components/MultiplesTable";
 import { itemsForEntity } from "../../../lib/actionItems";
-import { FLAG_LABELS, LADDER_LABELS, PROVIDER_LADDER } from "../../../lib/types";
-import type { JobSpec, DerivedFlag, Call, BenchmarkReport } from "../../../lib/types";
+import { FLAG_LABELS, LADDER_LABELS, OUTCOME_LABELS, PROVIDER_LADDER } from "../../../lib/types";
+import type { JobSpec, DerivedFlag, Call, BenchmarkReport, CaseReport } from "../../../lib/types";
 
 function findLineItem(spec: JobSpec, cpt?: string | null) {
   return spec.bill.line_items.find((li) => li.cpt === cpt);
@@ -41,9 +41,9 @@ export default function BillDetail() {
   const [cashedIn, setCashedIn] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [wrappingUp, setWrappingUp] = useState(false);
-  // Bill-scoped completion state — separate from the aggregate /action-items
-  // page's own state (no shared store yet; TODO(Hamza) once this persists
-  // server-side, both views should read/write the same source of truth).
+  // Bill-scoped completion state, mirrored to localStorage per case so checks
+  // survive reload. Separate from the aggregate /action-items page's own store;
+  // a shared server-side source of truth for both views is still to come.
   const [completedActionIds, setCompletedActionIds] = useState<Set<string>>(new Set());
   // Real state, not a guess — only true when a `calls` row for this case is
   // actually ringing/live (via the Realtime subscription below), so the
@@ -64,6 +64,28 @@ export default function BillDetail() {
       .catch(() => setLoadError(true));
     getBenchmarkReport(caseId).then(setBenchmarkReport);
   }, [caseId]);
+
+  // Restore this case's completed action items from localStorage (reset when
+  // switching cases so completions never leak across bills).
+  useEffect(() => {
+    if (!caseId) return;
+    try {
+      const raw = window.localStorage.getItem(`haggl.actionItems.${caseId}`);
+      setCompletedActionIds(raw ? new Set(JSON.parse(raw) as string[]) : new Set());
+    } catch {
+      setCompletedActionIds(new Set());
+    }
+  }, [caseId]);
+
+  function completeAction(id: string) {
+    setCompletedActionIds((prev) => {
+      const next = new Set(prev).add(id);
+      try {
+        window.localStorage.setItem(`haggl.actionItems.${caseId}`, JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!spec) return;
@@ -87,9 +109,8 @@ export default function BillDetail() {
   if (loadError) {
     return (
       <p className="todo">
-        Couldn&apos;t load this case (<span className="mono-figure">{caseId}</span>). Either the API at :8000
-        isn&apos;t running, or this case hasn&apos;t been created there yet. Go back to{" "}
-        <a href="/bills">your bills</a> and try again.
+        We could not load this case right now. Refresh in a moment, or go back to{" "}
+        <a href="/bills">your bills</a>.
       </p>
     );
   }
@@ -192,10 +213,7 @@ export default function BillDetail() {
             {tab === "plan" && <PlanTab spec={spec} cashedIn={cashedIn} wrappingUp={wrappingUp} liveCall={liveCall} />}
             {tab === "history" && <HistoryTab spec={spec} cashedIn={cashedIn} />}
             {tab === "actions" && (
-              <ActionsTab
-                items={pendingActions}
-                onComplete={(id) => setCompletedActionIds((prev) => new Set(prev).add(id))}
-              />
+              <ActionsTab items={pendingActions} onComplete={completeAction} />
             )}
             {tab === "documents" && <DocumentsTab spec={spec} cashedIn={cashedIn} />}
           </>
@@ -237,7 +255,11 @@ function DiagnosisTab({ spec, benchmarkReport }: { spec: JobSpec; benchmarkRepor
       </h2>
       <div className="argument-card">
         {hasNsa && <>You&apos;re likely protected under the <strong>No Surprises Act</strong>, </>}
-        there&apos;s a billing error inflating this bill by <strong>{money(eobMismatch?.dollar_impact)}</strong>
+        {eobMismatch ? (
+          <>there&apos;s a billing error inflating this bill by <strong>{money(eobMismatch.dollar_impact)}</strong></>
+        ) : (
+          <>we found <strong>{money(totalFlagged)}</strong> in charges worth challenging on this bill</>
+        )}
         {markupFlag && <>, and {spec.bill.facility_name} is charging roughly 200% of the fair benchmark price</>}
         {!markupFlag && <>, and several line items are priced well above the Medicare and posted-cash-price benchmark</>}.
       </div>
@@ -322,10 +344,15 @@ function PlanTab({
       if (!first) throw new Error("no calls launched");
       setLaunchedCallId(first.call_id);
       router.push(`/warroom?call_id=${first.call_id}`);
-    } catch {
+    } catch (err) {
       setLaunching(false);
+      // A fetch network failure rejects with a TypeError (nothing reached the
+      // server); anything else means we got a response back and it went wrong.
+      const networkFailure = err instanceof TypeError;
       setLaunchError(
-        "Couldn't start the calls. The API at :8000 didn't answer. Nothing was dialed; try again in a moment."
+        networkFailure
+          ? "We could not reach Haggl to start the calls. Check your connection and try again in a moment."
+          : "We could not start the calls just now. Nothing was dialed. Refresh in a moment and try again."
       );
     }
   }
@@ -404,8 +431,8 @@ function PlanTab({
                 )}
                 {state === "active" && (
                   <div className="step-detail">
-                    Agent is arguing Medicare pays $438 for these codes and the facility&apos;s own posted
-                    cash price is $2,633. Is this negotiable?
+                    Agent is citing the Medicare rate and {spec.bill.facility_name}&apos;s own posted cash price
+                    for these codes to argue the balance down.
                   </div>
                 )}
               </div>
@@ -418,9 +445,22 @@ function PlanTab({
 }
 
 function HistoryTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
-  // Static demo content — call_events/call_outcome persistence is a Hamza TODO
-  // (see apps/api/app/routers/tools.py log_quote/log_event/end_call_summary).
+  // Real call history, read from GET /cases/{id}/report — the outcomes the
+  // calls actually produced. Empty (honest empty state) until a call wraps up.
   const savings = facilitySavings(spec);
+  const [report, setReport] = useState<CaseReport | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    let active = true;
+    getReport(spec.case_id)
+      .then((r) => { if (active) setReport(r); })
+      .catch(() => {})
+      .finally(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, [spec.case_id]);
+
+  const outcomes = report?.outcomes ?? [];
+
   return (
     <div>
       {cashedIn && (
@@ -440,49 +480,52 @@ function HistoryTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
           </div>
         </div>
       )}
-      <div className="call-row">
-        <div className="call-row-head">
-          <div>
-            <strong>{spec.bill.facility_name} · billing dept</strong>
-            <div className="call-row-meta">Mar 18, 2026 · 14m 20s · rep Denise</div>
+      {outcomes.map((o, i) => {
+        const removed =
+          o.original_amount != null && o.final_amount != null ? o.original_amount - o.final_amount : null;
+        const settled = o.outcome_type !== "callback" && o.outcome_type !== "documented_decline";
+        const resolved =
+          o.resolved_at && !Number.isNaN(new Date(o.resolved_at).getTime())
+            ? new Date(o.resolved_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : null;
+        const meta = [resolved, o.rep_name ? `rep ${o.rep_name}` : null].filter(Boolean).join(" · ");
+        const hasTakeaways = o.winning_lever || o.reference_number || (removed != null && removed > 0) || o.next_action;
+        return (
+          <div className="call-row" key={o.call_id ?? i}>
+            <div className="call-row-head">
+              <div>
+                <strong>{o.entity ?? spec.bill.facility_name}</strong>
+                {meta && <div className="call-row-meta">{meta}</div>}
+              </div>
+              <span className={`pill ${settled ? "pill-accent" : "pill-muted"}`}>
+                {o.outcome_type ? OUTCOME_LABELS[o.outcome_type] : "Outcome"}
+              </span>
+            </div>
+            {hasTakeaways && (
+              <div className="call-takeaways">
+                {o.winning_lever && <div><dt>Winning lever</dt><dd>{o.winning_lever}</dd></div>}
+                {o.reference_number && <div><dt>Reference #</dt><dd className="mono-figure">{o.reference_number}</dd></div>}
+                {removed != null && removed > 0 && (
+                  <div><dt>Amount removed</dt><dd className="mono-figure" style={{ color: "var(--accent)" }}>−{money(removed)}</dd></div>
+                )}
+                {o.next_action && <div><dt>Next action</dt><dd>{o.next_action}</dd></div>}
+              </div>
+            )}
           </div>
-          <span className="pill pill-accent">Partial win</span>
-        </div>
-        <div className="call-takeaways">
-          <div><dt>Winning lever</dt><dd>Duplicate charge, EOB-backed</dd></div>
-          <div><dt>Reference #</dt><dd className="mono-figure">MG-2026-04471</dd></div>
-          <div><dt>Amount removed</dt><dd className="mono-figure" style={{ color: "var(--accent)" }}>−$412.00</dd></div>
-          <div><dt>Next action</dt><dd>Supervisor callback · Tue 10a</dd></div>
-        </div>
-      </div>
-      <div className="call-row">
-        <div className="call-row-head">
-          <div>
-            <strong>Bay State Emergency Physicians</strong>
-            <div className="call-row-meta">Mar 16, 2026 · 2m 03s</div>
-          </div>
-          <span className="pill pill-muted">Callback scheduled</span>
-        </div>
-      </div>
-      <div className="call-row">
-        <div className="call-row-head">
-          <div>
-            <strong>{spec.bill.facility_name} · records</strong>
-            <div className="call-row-meta">Mar 12, 2026 · 6m 41s</div>
-          </div>
-          <span className="pill pill-muted">Itemized bill requested</span>
-        </div>
-      </div>
+        );
+      })}
+      {loaded && !cashedIn && outcomes.length === 0 && (
+        <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
+          No calls have wrapped up on this bill yet. When Haggl finishes a call, the outcome and its reference number show up here.
+        </p>
+      )}
     </div>
   );
 }
 
 function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
   // Real files: the actual demo PDFs (data/demo_docs/, mirrored to
-  // apps/web/public/demo-docs/) — this demo case's real uploaded documents,
-  // not placeholders. Everything else (Supabase Storage for a real user's
-  // own uploads) is still TODO(J)/TODO(Hamza) — bucket layout in
-  // negotiator-intake-data-schema.md. Metadata fields (account #, claim #,
+  // apps/web/public/demo-docs/). Metadata fields (account #, claim #,
   // statement/due dates, line-item count) come straight from the JobSpec.
   const savings = facilitySavings(spec);
   const docs = [
@@ -534,12 +577,10 @@ function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) 
               ))}
             </dl>
           </div>
-          {doc.url ? (
+          {doc.url && (
             <a href={doc.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ textDecoration: "none" }}>
               View {doc.type}
             </a>
-          ) : (
-            <button className="btn btn-secondary" disabled>Generating…</button>
           )}
         </div>
       ))}
@@ -549,10 +590,6 @@ function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) 
           hint="Drag a PDF or photo: a follow-up letter, a second EOB, anything relevant to this bill"
         />
       </div>
-      <p className="todo" style={{ marginTop: 16 }}>
-        These are this demo case&apos;s real documents (data/demo_docs/). A real user&apos;s own uploads
-        aren&apos;t wired to Supabase Storage yet (TODO Hamza/J).
-      </p>
     </div>
   );
 }

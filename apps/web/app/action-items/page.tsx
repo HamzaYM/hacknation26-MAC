@@ -1,25 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ACTION_ITEMS } from "../../lib/actionItems";
 import ActionItemCard from "../../components/ActionItemCard";
+
+// Completions survive reload via localStorage. This is the aggregate view, so
+// the set isn't case-scoped (the per-bill Action Items tab keys by case id).
+const COMPLETED_KEY = "haggl.actionItems.completed";
+
+function saveCompleted(set: Set<string>): Set<string> {
+  try {
+    window.localStorage.setItem(COMPLETED_KEY, JSON.stringify([...set]));
+  } catch {}
+  return set;
+}
 
 export default function ActionItems() {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"focus" | "bulk">("focus");
 
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(COMPLETED_KEY);
+      if (raw) setCompleted(new Set(JSON.parse(raw) as string[]));
+    } catch {}
+  }, []);
+
   const pending = ACTION_ITEMS.filter((i) => !completed.has(i.id));
   const easyCount = pending.filter((i) => i.type === "confirm").length;
 
   function complete(id: string) {
-    setCompleted((prev) => new Set(prev).add(id));
+    setCompleted((prev) => saveCompleted(new Set(prev).add(id)));
   }
 
   function clearEasyOnes() {
     setCompleted((prev) => {
       const next = new Set(prev);
       pending.filter((i) => i.type === "confirm").forEach((i) => next.add(i.id));
-      return next;
+      return saveCompleted(next);
     });
   }
 

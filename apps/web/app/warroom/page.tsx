@@ -198,10 +198,9 @@ function CallsOverview({ caseId }: { caseId: string }) {
           <div className="wr-idle-icon">☎</div>
           <h2>Waiting for the calls</h2>
           <p>
-            This overview renders directly off the <code>calls</code> and <code>call_events</code> Realtime
-            streams. Nothing here is scripted. Launch from a bill&apos;s Plan tab (&quot;Start the
-            calls&quot;) and every line appears here as it dials. Or open{" "}
-            <code>?call_id=&lt;id&gt;</code> to watch a single one — or pick a different scenario above.
+            No live calls right now. When Haggl dials, they appear here the moment they connect.
+            Launch from a bill&apos;s Plan tab with &quot;Start the calls,&quot; or pick a different
+            scenario above.
           </p>
         </div>
       </>
@@ -513,11 +512,9 @@ function WarRoom() {
               <div className="wr-idle-icon pulse">●</div>
               <h2>{isLive ? "Connected. The negotiator is on the line." : "Connected, waiting for the call to start"}</h2>
               <p>
-                {isLive ? (
-                  "Moves appear here the moment the engine drives one — required questions, quotes, and reference numbers land live."
-                ) : (
-                  <>No events yet for call <span className="mono-figure">{callId}</span>. This will populate live the moment the agent dials.</>
-                )}
+                {isLive
+                  ? "Moves appear here the moment the engine drives one: required questions, quotes, and reference numbers land live."
+                  : "No moves yet on this call. It will populate live the moment the agent dials."}
               </p>
             </div>
           ) : (

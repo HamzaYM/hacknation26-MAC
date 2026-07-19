@@ -99,21 +99,6 @@ export async function getVoicePref(caseId: string): Promise<string> {
   return DEFAULT_VOICE_ID;
 }
 
-// Write the choice to localStorage first (instant, always works), then best-effort
-// to the API. A failed/absent DB never breaks the UI.
-export async function setVoicePref(caseId: string, voiceId: string): Promise<void> {
-  if (typeof window !== "undefined") window.localStorage.setItem(lsKey(caseId), voiceId);
-  try {
-    await fetch(`${API_BASE}/cases/${caseId}/voice`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ voice_id: voiceId }),
-    });
-  } catch {
-    // best-effort; localStorage already holds the choice
-  }
-}
-
 // Overrides block for a browser-session call via the ElevenLabs web SDK:
 //   conversation.startSession({ agentId, ...browserSessionOverrides(voiceId) })
 // The agent must allow the tts.voice_id override (see scripts/provision_elevenlabs.py).

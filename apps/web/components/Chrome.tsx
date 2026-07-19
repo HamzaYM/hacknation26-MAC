@@ -12,10 +12,9 @@ const BARE_PREFIXES = ["/warroom"];
 const NAV_ITEMS = [
   { href: "/bills", label: "Bills" },
   { href: "/action-items", label: "Action Items" },
-  { href: "/voice", label: "Voice" },
+  { href: "/report", label: "Case file" },
   { href: "/profile", label: "Profile" },
   { href: "/warroom", label: "War Room" },
-  { href: "/report", label: "Case file" },
 ];
 
 export default function Chrome({ children }: { children: React.ReactNode }) {
