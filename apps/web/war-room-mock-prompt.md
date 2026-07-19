@@ -25,7 +25,7 @@ Generate a high-fidelity static UI mock for the "War Room" screen of Haggl — a
 
 Focus on **ONE live call** — not multiple parallel calls (there's no need to show three simultaneous call cards; this screen goes deep on a single call instead of wide across several). Layout: two side-by-side panels, roughly equal width, on a single screen.
 
-**Demo content to use** (for realism): Maya's case, calling Mercy General Hospital's billing supervisor about her ER visit balance. Balance moving from $4,287 to $3,875 (duplicate chest X-ray charge conceded) to a final settlement of $1,650. Benchmark citations: Medicare rate $438, Mercy's own posted cash price $1,890. Lever being armed: duplicate-charge dispute (CPT 71046), followed by price-benchmark citation, followed by lump-sum settlement offer.
+**Demo content to use** (for realism): Maya's case, calling Mercy General Hospital's billing supervisor about her ER visit balance. Balance moving from $4,287 to $3,875 (duplicate chest X-ray charge conceded) to a final settlement of $1,650. Benchmark citations: Medicare rate $438, Mercy's own posted cash price $2,633. Lever being armed: duplicate-charge dispute (CPT 71046), followed by price-benchmark citation, followed by lump-sum settlement offer.
 
 ### Left panel — the human side
 What this call sounds and reads like:
@@ -40,13 +40,13 @@ Technical content that never appears anywhere else in the product — this is wh
 - A live event log, monospace type, timestamped, showing tool calls firing in real time as the call progresses — e.g.:
   ```
   14:32:07  get_benchmark(71046)
-            → medicare: $438 · mrf_cash: $1,890
+            → medicare: $438 · mrf_cash: $2,633
   14:32:19  report_lever_result(duplicate_charge, conceded)
             → next_move: benchmark_anchor
   14:33:02  log_quote($3,875)
   ```
   Design this to feel like a real system console — each entry timestamped, monospace, appearing in sequence.
-- A statute/lever "arming" panel below or beside the log — a short list of negotiation levers (e.g. "Duplicate-charge dispute," "No Surprises Act," "§501(r) charity care," "Price benchmark"), each shown as a row that is either dormant (grey/muted) or armed (accent-colored, with its citation shown inline, e.g. "ARMED — Medicare $438 / Mercy cash $1,890").
+- A statute/lever "arming" panel below or beside the log — a short list of negotiation levers (e.g. "Duplicate-charge dispute," "No Surprises Act," "§501(r) charity care," "Price benchmark"), each shown as a row that is either dormant (grey/muted) or armed (accent-colored, with its citation shown inline, e.g. "ARMED — Medicare $438 / Mercy cash $2,633").
 - A small persistent status card showing a running honesty-audit counter, e.g. "0 unverified claims" — styled to stay visible and reassuring throughout, not just a final badge.
 - A single logged line showing the exact disclosure moment, timestamped — e.g. "14:31:44 — Disclosed: AI advocate, calling on Maya's behalf, call recorded."
 

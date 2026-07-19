@@ -1,19 +1,20 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getCall } from "../../lib/api";
-import { subscribeToCall, subscribeToCallEvents } from "../../lib/realtime";
+import { fetchCallEvents, subscribeToActiveCalls, subscribeToCall, subscribeToCallEvents } from "../../lib/realtime";
 import Logo from "../../components/Logo";
-import type { Call, CallEvent } from "../../lib/types";
+import { LADDER_LABELS } from "../../lib/types";
+import type { ActiveCall, Call, CallEvent } from "../../lib/types";
 
 // This is a real live-call viewer, not a scripted before/after demo — it
 // renders off the actual call_events/calls Realtime streams (lib/realtime.ts).
-// There is currently nothing writing to those tables yet (tools.py's
-// log_quote/log_event/end_call_summary are still stubs — see Hamza's TODOs),
-// so right now this mostly shows the "waiting for a call" state below. That's
-// intentional: once a real ElevenLabs call is launched and the backend
-// writes events, this screen updates live with no further frontend changes.
+// Two modes: with ?call_id= it's the single-call deep view; without it, a
+// multi-call overview of every call on the case (CallsOverview), one card per
+// line. The writers are app/simulator.py (counterparty=agent, labeled
+// "simulated persona · replay") and, when real dialing is on, the ElevenLabs
+// webhook pipeline — either way this screen just renders what lands in the DB.
 
 const KNOWN_LEVERS = [
   { id: "duplicate_charge", label: "Duplicate-charge dispute" },
@@ -50,11 +51,125 @@ const ADVOCATE_PERSONAS = [
   },
 ];
 
+// The demo fixture's case UUID (apps/api/app/fixtures.py DEMO_CASE_ID). The
+// overview has no case picker yet — the demo case is the only case that exists.
+const DEMO_CASE_UUID = "00000000-0000-0000-0000-000000000001";
+
 export default function WarRoomPage() {
   return (
     <Suspense fallback={null}>
       <WarRoom />
     </Suspense>
+  );
+}
+
+/** Append without duplicates (seed fetch + Realtime can overlap), id-ordered. */
+function mergeEvents(prev: CallEvent[], incoming: CallEvent[]): CallEvent[] {
+  const seen = new Set(prev.map((e) => e.id));
+  const fresh = incoming.filter((e) => !seen.has(e.id));
+  if (fresh.length === 0) return prev;
+  return [...prev, ...fresh].sort((a, b) => a.id - b.id);
+}
+
+// Milestone feed icons — keyed off the same detection tokens the simulator
+// and tools.py emit (disclose/honesty, lever_armed, quote, end_call_summary).
+function milestoneIcon(e: CallEvent): { glyph: string; cls: string } {
+  if (e.type === "quote") return { glyph: "$", cls: "quote" };
+  const name = String(e.payload.name ?? "");
+  if (name.includes("disclose") || name.includes("honesty")) return { glyph: "✓", cls: "disclosure" };
+  if (name.includes("lever")) return { glyph: "⚡", cls: "lever" };
+  if (name.includes("quote")) return { glyph: "$", cls: "quote" };
+  if (name.includes("end_call") || name.includes("summary")) return { glyph: "⏹", cls: "outcome" };
+  return { glyph: "·", cls: "" };
+}
+
+/** One compact card per call — live status, latest quote, current rung. */
+function OverviewCard({ call }: { call: ActiveCall }) {
+  const [events, setEvents] = useState<CallEvent[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCallEvents(call.id).then((list) => {
+      if (!cancelled && list.length) setEvents((prev) => mergeEvents(prev, list));
+    });
+    const unsub = subscribeToCallEvents(call.id, (e) => setEvents((prev) => mergeEvents(prev, [e])));
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [call.id]);
+
+  const quotes = events.filter((e) => e.type === "quote");
+  const first = quotes[0]?.payload.amount as number | undefined;
+  const latest = quotes.at(-1)?.payload.amount as number | undefined;
+  const rung = events.filter((e) => e.type === "state_change").at(-1)?.payload.rung as string | undefined;
+
+  return (
+    <a className="wr-call-card" href={`/warroom?call_id=${call.id}`}>
+      <div className="wr-call-head">
+        <span className="wr-call-entity">{call.dossier?.target_entity ?? `Call ${call.id.slice(0, 8)}`}</span>
+        <span className={`wr-status-pill ${call.status}`}>{call.status === "live" ? "● live" : call.status}</span>
+      </div>
+      {call.counterparty === "agent" && <span className="wr-sim-badge">simulated persona · replay</span>}
+      <div className="wr-call-quote">{latest != null ? `$${latest.toLocaleString()}` : "–"}</div>
+      {first != null && latest != null && first > latest && (
+        <div className="wr-call-delta">▼ ${(first - latest).toLocaleString()} this call</div>
+      )}
+      <div className="wr-call-rung">{rung ? LADDER_LABELS[rung] ?? rung : "waiting for the first event"}</div>
+    </a>
+  );
+}
+
+/**
+ * No ?call_id: every call for the case at once — the parallel-negotiation
+ * view. Rendered off the calls + call_events Realtime streams, same as the
+ * single-call view; nothing scripted on this side of the wire.
+ */
+// Keep the grid a live overview rather than an archive: every non-terminal
+// call, plus calls that ended in the last 30 minutes (an outcome stays on
+// screen through a demo run; yesterday's replays don't pile up).
+const RECENT_ENDED_MS = 30 * 60 * 1000;
+function isCurrent(call: ActiveCall): boolean {
+  if (call.status !== "ended" && call.status !== "failed") return true;
+  const endedAt = call.ended_at ? new Date(call.ended_at).getTime() : 0;
+  return Date.now() - endedAt < RECENT_ENDED_MS;
+}
+
+function CallsOverview() {
+  const [allCalls, setAllCalls] = useState<ActiveCall[]>([]);
+  const calls = allCalls.filter(isCurrent);
+
+  useEffect(() => subscribeToActiveCalls(DEMO_CASE_UUID, setAllCalls), []);
+
+  if (calls.length === 0) {
+    return (
+      <div className="wr-idle">
+        <div className="wr-idle-icon">☎</div>
+        <h2>Waiting for the calls</h2>
+        <p>
+          This overview renders directly off the <code>calls</code> and <code>call_events</code> Realtime
+          streams. Nothing here is scripted. Launch from a bill&apos;s Plan tab (&quot;Start the
+          calls&quot;) and every line appears here as it dials. Or open{" "}
+          <code>?call_id=&lt;id&gt;</code> to watch a single one.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="wr-overview-grid">
+        {calls.map((c) => (
+          <OverviewCard key={c.id} call={c} />
+        ))}
+      </div>
+      <p className="wr-overview-note">
+        One negotiator, {calls.length} lines in parallel. Click a card for the full transcript and
+        event log. Cards marked <span className="wr-sim-badge">simulated persona · replay</span> are
+        negotiations against a scripted counterpart persona, not a human on a phone line. The{" "}
+        <code>calls.counterparty</code> field is the source of that label.
+      </p>
+    </>
   );
 }
 
@@ -117,10 +232,19 @@ function WarRoom() {
 
     getCall(callId).then((c) => !cancelled && setCall(c)).catch(() => {});
 
+    // Seed with what's already persisted, so a card clicked mid-call (or an
+    // ended call) shows its history — then stay live off the same stream.
+    fetchCallEvents(callId).then((list) => {
+      if (!cancelled && list.length) {
+        setConnected(true);
+        setEvents((prev) => mergeEvents(prev, list));
+      }
+    });
+
     const unsubCall = subscribeToCall(callId, (c) => setCall(c));
     const unsubEvents = subscribeToCallEvents(callId, (e) => {
       setConnected(true);
-      setEvents((prev) => [...prev, e]);
+      setEvents((prev) => mergeEvents(prev, [e]));
     });
 
     return () => {
@@ -133,8 +257,27 @@ function WarRoom() {
   const quotes = events.filter((e) => e.type === "quote");
   const latestQuote = quotes.at(-1)?.payload.amount as number | undefined;
   const firstQuote = quotes[0]?.payload.amount as number | undefined;
+
+  // Price-move emphasis: when a new quote LOWERS the amount, flash the ticker
+  // and float a −$X chip. The seed fetch lands as one batch (prev is null on
+  // the first quote seen), so only live downward moves fire it.
+  const prevQuoteRef = useRef<number | null>(null);
+  const [drop, setDrop] = useState<{ amount: number; key: number } | null>(null);
+  useEffect(() => {
+    if (latestQuote == null) return;
+    const prev = prevQuoteRef.current;
+    prevQuoteRef.current = latestQuote;
+    if (prev != null && latestQuote < prev) setDrop({ amount: prev - latestQuote, key: Date.now() });
+  }, [latestQuote]);
+  useEffect(() => {
+    if (!drop) return;
+    // Timeout (not animationend) so the chip also clears under prefers-reduced-motion.
+    const t = setTimeout(() => setDrop(null), 1800);
+    return () => clearTimeout(t);
+  }, [drop]);
   const transcript = events.filter((e) => e.type === "transcript");
   const toolCalls = events.filter((e) => e.type === "tool_call");
+  const milestones = events.filter((e) => e.type === "tool_call" || e.type === "quote");
   const stateChanges = events.filter((e) => e.type === "state_change");
   const latestRung = stateChanges.at(-1)?.payload as { rung?: string; rung_index?: number } | undefined;
   const disclosed = toolCalls.some((e) => String(e.payload.name ?? "").includes("disclose"));
@@ -148,21 +291,23 @@ function WarRoom() {
         </span>
       </div>
       <div className="warroom-meta">
-        {call ? `Call ${String(call.id ?? callId).slice(0, 8)} · ${call.counterparty ?? "–"} · status: ${call.status}` : callId ? `Call ${callId.slice(0, 8)}` : "War Room"}
+        {call ? (
+          <>
+            {`Call ${String(call.id ?? callId).slice(0, 8)} · status: ${call.status}`}
+            {call.counterparty === "agent" && (
+              <span className="wr-sim-badge" style={{ marginLeft: 10 }}>simulated persona · replay</span>
+            )}
+            <a href="/warroom" style={{ marginLeft: 14, fontSize: 12, color: "rgba(245,241,236,0.5)" }}>
+              ← all calls
+            </a>
+          </>
+        ) : callId ? `Call ${callId.slice(0, 8)}` : "War Room · every line for this case, live"}
       </div>
 
       <div className="warroom-layout">
         <div>
           {!callId ? (
-            <div className="wr-idle">
-              <div className="wr-idle-icon">☎</div>
-              <h2>Waiting for a live call</h2>
-              <p>
-                This screen renders directly off the <code>call_events</code> Realtime stream. Nothing
-                here is scripted. Launch a call from a bill&apos;s Plan tab (&quot;Start the calls&quot;)
-                or open this page with <code>?call_id=&lt;id&gt;</code> to watch a specific one.
-              </p>
-            </div>
+            <CallsOverview />
           ) : events.length === 0 ? (
             <div className="wr-idle">
               <div className="wr-idle-icon pulse">●</div>
@@ -178,7 +323,19 @@ function WarRoom() {
                 <div style={{ textAlign: "center", fontSize: 13, color: "rgba(245,241,236,0.5)" }}>
                   Balance · negotiating
                 </div>
-                <div className="wr-ticker">{latestQuote != null ? `$${latestQuote.toLocaleString()}` : "–"}</div>
+                <div className="wr-ticker-wrap">
+                  {/* key remounts restart the CSS animations on every drop;
+                      ticker and chip keys must differ or React reconciliation
+                      cross-matches the two divs and strands stale text. */}
+                  <div className={`wr-ticker${drop ? " wr-ticker-drop" : ""}`} key={`ticker-${drop?.key ?? "idle"}`}>
+                    {latestQuote != null ? `$${latestQuote.toLocaleString()}` : "–"}
+                  </div>
+                  {drop && (
+                    <div className="wr-drop-chip mono-figure" key={`chip-${drop.key}`}>
+                      −${drop.amount.toLocaleString()}
+                    </div>
+                  )}
+                </div>
                 {firstQuote != null && latestQuote != null && firstQuote !== latestQuote && (
                   <div className="wr-ticker-delta">
                     {latestQuote < firstQuote ? "▼" : "▲"} ${Math.abs(firstQuote - latestQuote).toLocaleString()} moved this call
@@ -209,21 +366,29 @@ function WarRoom() {
 
                 <h2>Current step</h2>
                 <div style={{ fontSize: 15, marginBottom: 20 }}>
-                  {latestRung?.rung ?? "–"}
+                  {latestRung?.rung ? LADDER_LABELS[latestRung.rung] ?? latestRung.rung : "–"}
                 </div>
 
-                <h2>Event log · tool calls <span style={{ color: "var(--accent)" }}>live</span></h2>
+                <h2>Milestone feed <span style={{ color: "var(--accent)" }}>live</span></h2>
                 <div className="wr-event-log">
-                  {toolCalls.length === 0 && <p style={{ color: "rgba(245,241,236,0.4)" }}>No tool calls yet.</p>}
-                  {toolCalls.map((e) => (
-                    <div key={e.id}>
-                      <div>
-                        <span className="ts">{new Date(e.ts).toLocaleTimeString()}</span>
-                        <span className="call-fn">{String(e.payload.name ?? "tool_call")}</span>
+                  {milestones.length === 0 && <p style={{ color: "rgba(245,241,236,0.4)" }}>No milestones yet.</p>}
+                  {milestones.map((e) => {
+                    const icon = milestoneIcon(e);
+                    return (
+                      <div key={e.id}>
+                        <div>
+                          <span className={`wr-mile-icon ${icon.cls}`}>{icon.glyph}</span>
+                          <span className="ts">{new Date(e.ts).toLocaleTimeString()}</span>
+                          <span className="call-fn">{e.type === "quote" ? "quote" : String(e.payload.name ?? "tool_call")}</span>
+                        </div>
+                        {e.type === "quote" ? (
+                          <div className="ret">→ ${Number(e.payload.amount ?? 0).toLocaleString()}</div>
+                        ) : (
+                          typeof e.payload.result === "string" && <div className="ret">→ {e.payload.result}</div>
+                        )}
                       </div>
-                      {typeof e.payload.result === "string" && <div className="ret">→ {e.payload.result}</div>}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <h2 style={{ marginTop: 20 }}>Levers</h2>
