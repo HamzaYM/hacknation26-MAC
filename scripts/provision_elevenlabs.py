@@ -164,6 +164,20 @@ NEGOTIATOR_TOOLS = [
             },
         },
     },
+    # ElevenLabs native system tool — lets the agent actually hang up. Called AFTER the
+    # closing recap (end_call_summary) + the sign-off, so "have a good one" is followed by
+    # a real disconnect instead of dead air. TODO(Hamza): verify this system-tool shape
+    # against the ElevenLabs API version in use on next provision sync; if the PATCH
+    # rejects it, the negotiator prompt's hang-up step no-ops harmlessly until fixed.
+    {
+        "type": "system",
+        "name": "end_call",
+        "description": (
+            "End the phone call / hang up. Call this ONLY after you've given the closing "
+            "recap and end_call_summary, and said a warm sign-off like 'have a good one.' "
+            "Do not use it to escape a hard moment mid-negotiation."
+        ),
+    },
 ]
 
 
