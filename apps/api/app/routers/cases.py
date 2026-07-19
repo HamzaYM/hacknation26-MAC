@@ -103,8 +103,15 @@ def get_case_report(case_id: str) -> dict:
                          for e in events]
         path = o.pop("recording_path", None)
         o["recording_url"] = storage.sign_url(path) if path else None
+    # The per-CPT lines table describes the FACILITY's bill, so only a
+    # settlement with the facility may fill its "achieved" column. Accuracy
+    # audit finding: the first monetary outcome used to leak in regardless of
+    # entity, spreading a collections settlement across the hospital's lines.
+    facility = spec.bill.facility_name
     best_final = next(
-        (float(o["final_amount"]) for o in ranked if o.get("final_amount") is not None), None
+        (float(o["final_amount"]) for o in ranked
+         if o.get("final_amount") is not None and o.get("entity") == facility),
+        None,
     )
     return {
         "case_id": case_id,
