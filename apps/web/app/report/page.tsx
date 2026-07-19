@@ -59,10 +59,7 @@ export default function Report() {
 
   if (state === "error") {
     return (
-      <p className="todo">
-        Couldn&apos;t reach the API. Run <code>uvicorn app.main:app --reload --port 8000</code> in
-        apps/api, then reload this page.
-      </p>
+      <p className="todo">We could not load your case right now. Refresh in a moment.</p>
     );
   }
 

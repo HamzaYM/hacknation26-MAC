@@ -79,13 +79,6 @@ export default function Profile() {
           mono
         />
       </ProfileSection>
-
-      <p className="todo">
-        This page only shows onboarding data today. Answers you give through Action Items during a
-        negotiation (e.g. confirming a date of service, authorizing a specific call) aren&apos;t written
-        back to a persistent profile yet. TODO(Hamza): once those are persisted, surface them here
-        too, grouped by which bill they came from.
-      </p>
     </div>
   );
 }

@@ -111,10 +111,7 @@ export default function BillList() {
       </div>
 
       {error && (
-        <p className="todo">
-          Couldn&apos;t reach the API at :8000. Run <code>uvicorn app.main:app --reload --port 8000</code> in
-          apps/api. Showing nothing until it&apos;s up.
-        </p>
+        <p className="todo">We could not load your bills right now. Refresh in a moment.</p>
       )}
 
       {SECTION_ORDER.map((status) => {
@@ -266,8 +263,7 @@ function BillDocSlot({
     return (
       <div>
         <p className="todo" style={{ marginBottom: 8 }}>
-          Couldn&apos;t parse <strong>{state.fileName}</strong>. The API at :8000 didn&apos;t answer.
-          Your file is still here; nothing was lost.
+          We could not read <strong>{state.fileName}</strong> right now. Your file is still here, nothing was lost. Refresh in a moment and try again.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn btn-secondary" onClick={() => onFile(state.file)}>Try again</button>

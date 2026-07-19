@@ -30,19 +30,21 @@ export function subscribeToCall(callId: string, onChange: (call: Call) => void) 
   return () => supabase.removeChannel(channel);
 }
 
-// A non-terminal call that has produced ZERO events and has been dialing for
+// A non-terminal call that has produced ZERO events and has been sitting for
 // more than ~10 minutes is a stale orphan (a launch that never streamed, the
 // old ca11 fallback row), not a live negotiation — drop it from the overview
 // so it doesn't linger as a dead "connecting…" card. A call with even one
-// event, or one not yet dialed (no started_at — just launched, about to dial),
-// is always kept, so the fresh confirm→launch flow shows its cards instantly.
+// event is always kept. Age is measured from started_at once it dialed, or
+// created_at before then, so a just-launched call still shows instantly (its
+// created_at is seconds old) while a launch that never dialed ages out too.
 const STALE_ZERO_EVENT_MS = 10 * 60 * 1000;
-type CallWithEventCount = ActiveCall & { call_events?: { count: number }[] };
+type CallWithEventCount = ActiveCall & { created_at?: string | null; call_events?: { count: number }[] };
 function isStaleZeroEventOrphan(call: CallWithEventCount): boolean {
   if (call.status === "ended" || call.status === "failed") return false;
   if ((call.call_events?.[0]?.count ?? 0) > 0) return false;
-  if (!call.started_at) return false;
-  return Date.now() - new Date(call.started_at).getTime() > STALE_ZERO_EVENT_MS;
+  const ageFrom = call.started_at ?? call.created_at;
+  if (!ageFrom) return false;
+  return Date.now() - new Date(ageFrom).getTime() > STALE_ZERO_EVENT_MS;
 }
 
 /**
