@@ -14,6 +14,14 @@
 5c. Negotiator brain LLM = **gpt-5.4** (Hamza, 07-18 evening: quality over latency — reps deserve a thinking counterpart; supersedes the earlier gemini-2.5-flash cost call). Pinned via `voice.negotiator_llm` in config; provisioning pushes it (and pacing) on every sync, voice still preserved unless pinned.
 6. **Design source of truth = Susy.** She is producing the design + a design guide with Claude and will add both to the repo (needs a bit of time). Until then, `apps/web` styling is throwaway scaffold CSS — do NOT invest in visual design; when her guide lands, wire her designs and follow the guide exactly (Hamza, 2026-07-18).
 
+## Demo production assets (pinned)
+Live pitch deck: `apps/web/presentation/pitch.html` → route `/pitch-sf-2026` (`apps/web/app/pitch-sf-2026/route.ts`); 11 slides, self-contained, zero external requests.
+- **Tech deck** (HTML, served): `apps/web/presentation/tech-video.html` → route `apps/web/app/tech-video/route.ts`. NOTE: route + script will need updating when demo production starts.
+- **Tech script**: `docs/tech-video-script.md`
+- **UI/UX video script**: `docs/video-a-uiux-script.md` · storyboard: `docs/video-a-storyboard.html` · assets: `docs/video-assets/`
+- **Shot lists + judge Q&A**: `docs/demo-shot-lists.md` · findings/bug log: `docs/e2e-findings.md`
+- **Sequencing (Hamza)**: all features land first, then video production; scripts may change, re-read before shooting.
+
 ## Current state (update me!)
 - ✅ PRD.md (adversarially + web-verified) · scaffold on main (`689e858`) · README (`998c2bd`) · large-file policy (`b426539`)
 - ✅ PR #1 ORCHESTRATION.md · PR #2 `docs/setup-checklist.html` · **PR #3 engine core** · **PR #11 MGH retune** · **PR #12 fixture-derived PDFs** · **PR #13 product UI** · **PR #14 Supabase provisioning**

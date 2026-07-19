@@ -84,7 +84,7 @@ body{font-family:var(--font-b); color:var(--ink); -webkit-font-smoothing:antiali
   font-family:var(--font-m); font-size:13px; letter-spacing:.06em; color:var(--text-3);}
 .counter b{color:var(--ink); font-weight:500;}
 .rail{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(26,20,16,.08); z-index:4;}
-.rail-fill{height:100%; width:10%; background:var(--accent); transition:width .5s cubic-bezier(.16,1,.3,1);}
+.rail-fill{height:100%; width:9.1%; background:var(--accent); transition:width .5s cubic-bezier(.16,1,.3,1);}
 #stage.dark{background:var(--dark);}
 #stage.dark .chrome-brand{color:var(--cream);}
 #stage.dark .counter{color:rgba(245,241,236,.55);}
@@ -255,6 +255,28 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 .honesty-foot b{font-weight:600;}
 .honesty-foot .tag{font-family:var(--font-m); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-hover);}
 
+/* ===== S8 craft (negotiation science) ===== */
+.s8-head h1{font-size:46px; line-height:1.05;}
+.s8-head .sub{font-size:16px; color:var(--text-2); max-width:760px; margin-top:12px;}
+.craft-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:28px;}
+.craft-col{background:var(--bg-surface); border:1px solid var(--border); border-radius:16px;
+  box-shadow:var(--shadow-card); padding:22px 22px 18px; display:flex; flex-direction:column;}
+.craft-col .cn{font-family:var(--font-m); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent);}
+.craft-col h3{font-family:var(--font-d); font-weight:600; font-size:18.5px; line-height:1.15; margin:9px 0 14px;
+  color:var(--ink); letter-spacing:-.01em;}
+.craft-list{display:flex; flex-direction:column; gap:11px; flex:1;}
+.craft-list li{list-style:none; font-size:13px; line-height:1.4; color:var(--ink);}
+.craft-list li b{font-weight:600;}
+.craft-list li span{display:block; color:var(--text-2); margin-top:2px;}
+.craft-list li .q{color:var(--accent-hover);}
+.craft-col .tok{font-family:var(--font-m); font-size:11px; color:var(--text-3); margin-top:16px;
+  padding-top:13px; border-top:1px solid var(--border); letter-spacing:.01em;}
+.craft-strip{margin-top:24px; display:flex; align-items:center; justify-content:space-between; gap:26px;
+  background:var(--accent-tint); border:1px solid #f5d2c3; border-radius:14px; padding:16px 26px;}
+.craft-strip .cs-txt{font-size:15px; line-height:1.45; color:var(--ink);}
+.craft-strip .cs-txt b{font-weight:600;}
+.craft-strip .cs-tok{font-family:var(--font-m); font-size:11.5px; color:var(--accent-hover); white-space:nowrap;}
+
 /* ===== S7 stack ===== */
 .s7-head h1{font-size:52px; line-height:1.04; margin-bottom:12px;}
 .stack-list{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; max-width:520px;}
@@ -344,7 +366,7 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
     <div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 
     <div class="chrome-brand"><span class="lh">H</span>aggl</div>
-    <div class="counter"><b id="cnum">01</b> / 10</div>
+    <div class="counter"><b id="cnum">01</b> / 11</div>
     <div class="rail"><div class="rail-fill" id="rail"></div></div>
 
     <!-- ============ S1 ============ -->
@@ -525,8 +547,58 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       <div class="honesty-foot r"><span class="tag">Real end to end</span><span>ElevenLabs, Twilio PSTN, Supabase, OpenAI vision. <b>Nothing on this slide is simulated.</b></span></div>
     </section>
 
-    <!-- ============ S8 stack ============ -->
-    <section class="slide" data-i="8" data-hook="frame">
+    <!-- ============ S8 craft (negotiation science) ============ -->
+    <section class="slide" data-i="8">
+      <div class="s8-head">
+        <div class="mask"><span class="riseline eyebrow">The craft</span></div>
+        <h1 class="head" style="margin-top:16px">
+          <span class="mask"><span class="riseline">It negotiates the way trained humans do.</span></span>
+        </h1>
+        <div class="sub r" style="margin-top:12px">Every tactic is researched, written down, and enforced in code.</div>
+      </div>
+      <div class="craft-grid">
+        <div class="craft-col r">
+          <div class="cn">The literature</div>
+          <h3>Tactics trained humans use</h3>
+          <ul class="craft-list">
+            <li><b>Calibrated questions.</b><span class="q">"What date can I write down for that adjustment?"</span></li>
+            <li><b>Pressure on the document, never the person.</b><span class="q">"the file is showing this twice."</span></li>
+            <li><b>Face-saving lines</b><span>a rep can carry up to their supervisor.</span></li>
+            <li><b>Park a stalemate</b><span>and call back for a different rep.</span></li>
+          </ul>
+          <div class="tok">negotiator_system.md</div>
+        </div>
+        <div class="craft-col r">
+          <div class="cn">In the voice</div>
+          <h3>Conversation science</h3>
+          <ul class="craft-list">
+            <li><b>A disfluency ceiling.</b><span>6 to 10 fillers per 100 words, no more.</span></li>
+            <li><b>"uh" before short pauses,</b><span>"um" before the longer ones.</span></li>
+            <li><b>Backchannels</b><span>roughly every 20 seconds.</span></li>
+            <li><b>Falling pitch</b><span>to hand the turn back over.</span></li>
+            <li><b>Read-backs on every number,</b><span>like a nurse confirming a lab.</span></li>
+          </ul>
+          <div class="tok">imperfection_style.md · verbalization_guide.md</div>
+        </div>
+        <div class="craft-col r">
+          <div class="cn">The economics</div>
+          <h3>Why reps say yes</h3>
+          <ul class="craft-list">
+            <li><b>Collections nets about 20 cents on the dollar,</b><span>and only after months of waiting.</span></li>
+            <li><b>A same-day settlement at 38.5 cents</b><span>is the hospital's rational move.</span></li>
+            <li><b>We cite their own posted cash price,</b><span>a number they filed with the government.</span></li>
+          </ul>
+          <div class="tok">docs/why-hospitals-settle.md</div>
+        </div>
+      </div>
+      <div class="craft-strip r">
+        <div class="cs-txt">None of this is vibes. <b>The ladder, the caps, and the question checklist are deterministic code; the model only chooses the words.</b></div>
+        <div class="cs-tok">state_machine.py · required_questions</div>
+      </div>
+    </section>
+
+    <!-- ============ S9 stack ============ -->
+    <section class="slide" data-i="9" data-hook="frame">
       <div class="two-col">
         <div class="s7-head">
           <div class="mask"><span class="riseline eyebrow">Stack + workflow</span></div>
@@ -565,8 +637,8 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       </div>
     </section>
 
-    <!-- ============ S9 pricing ============ -->
-    <section class="slide" data-i="9">
+    <!-- ============ S10 pricing ============ -->
+    <section class="slide" data-i="10">
       <div class="mask"><span class="riseline eyebrow">Pricing</span></div>
       <div class="price-grid">
         <div>
@@ -591,8 +663,8 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       </div>
     </section>
 
-    <!-- ============ S10 close ============ -->
-    <section class="slide s-close" data-i="10" data-hook="rain">
+    <!-- ============ S11 close ============ -->
+    <section class="slide s-close" data-i="11" data-hook="rain">
       <div class="rain" id="rain"></div>
       <div class="mask" style="position:relative;z-index:1"><span class="riseline eyebrow">The team</span></div>
       <div class="team-grid" style="position:relative;z-index:1">
@@ -620,7 +692,7 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 <script src="/pitch-assets/anime.min.js"></script>
 <script>
 (function(){
-  var TOTAL = 10;
+  var TOTAL = 11;
   var stage = document.getElementById('stage');
   var rail = document.getElementById('rail');
   var cnum = document.getElementById('cnum');
