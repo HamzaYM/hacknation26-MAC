@@ -149,7 +149,7 @@ NEGOTIATOR_TOOLS = [
             "Report what just happened with the current negotiation step and receive the "
             "REQUIRED next move from the strategy engine. Call after every meaningful "
             "exchange (an ask made, a response heard, a stonewall, an offer). Follow the "
-            "returned next_move; never invent your own escalation. Report which required "
+            "returned next_move; never invent your own escalation. For payment plans always pass plan_monthly and plan_months (the engine checks the total). Report which required "
             "questions you covered via questions_asked — the engine will not let you leave "
             "a rung until its questions are in, and returns already_asked when you re-ask "
             "something already answered."

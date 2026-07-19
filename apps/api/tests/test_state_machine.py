@@ -187,3 +187,16 @@ def test_repetition_signal_ignores_accepted_results(machine, call):
     machine.advance(call, "open_and_hold_account", "accepted")
     resp = machine.advance(call, "open_and_hold_account", "accepted")
     assert "parked" not in resp
+
+
+def test_plan_total_above_floor_is_rejected(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=150, plan_months=55)
+    assert resp["move_allowed"] is False
+    assert "8,250" in resp["notes"]
+
+
+def test_plan_total_within_floor_is_allowed(machine, call):
+    resp = machine.advance(call, "payment_plan_fallback", "accepted",
+                           plan_monthly=150, plan_months=10)
+    assert resp["move_allowed"] is True

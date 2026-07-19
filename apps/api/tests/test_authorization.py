@@ -61,7 +61,12 @@ class TestEndpoint:
         assert got.json()["on_file"] is True
         assert got.json()["statement_text"] == STATEMENT
 
-    def test_get_before_any_recording_is_off_file(self, client):
+    def test_get_before_any_recording_is_off_file(self, client, monkeypatch):
+        # Hermetic: the live DB (found via dotenv parent-dir discovery) now has
+        # Maya's seeded authorization; stub the lookup to the empty state.
+        from app import db
+        monkeypatch.setattr(db, "get_case_authorization", lambda cid: None)
+        monkeypatch.setattr(db, "_authorization_fallback", {}, raising=False)
         resp = client.get("/cases/demo/authorization")
         assert resp.status_code == 200
         body = resp.json()
@@ -96,9 +101,12 @@ class TestEndpoint:
 
 # ── mid-call tool: get_authorization ──────────────────────────────────────
 class TestTool:
-    def test_tool_off_file_returns_no_statement(self, client):
+    def test_tool_off_file_returns_no_statement(self, client, monkeypatch):
         """Honesty: nothing recorded → on_file false, NO statement text, and an
         instruction not to invent one."""
+        from app import db
+        monkeypatch.setattr(db, "get_case_authorization", lambda cid: None)
+        monkeypatch.setattr(db, "_authorization_fallback", {}, raising=False)
         resp = client.post("/tools/get_authorization", json={})
         assert resp.status_code == 200
         body = resp.json()

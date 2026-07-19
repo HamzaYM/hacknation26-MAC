@@ -113,6 +113,8 @@ class LeverResult(BaseModel):
     lever: str
     result: str  # accepted | rejected | partial | stonewalled | escalated | hangup
     offer_amount: float | None = None  # what the agent is about to offer/settle at
+    plan_monthly: float | None = None  # payment-plan terms under discussion, if any
+    plan_months: int | None = None
     quote: str | None = None           # counterparty's words (stonewall phrase detection)
     questions_asked: list[str] = []    # coverage tags the agent covered this exchange
 
@@ -173,6 +175,7 @@ def report_lever_result(body: LeverResult) -> dict:
     resp = state_machine.advance(
         call_id, body.lever, body.result,
         offer_amount=body.offer_amount, quote=body.quote,
+        plan_monthly=body.plan_monthly, plan_months=body.plan_months,
         questions_asked=body.questions_asked,
     )
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
