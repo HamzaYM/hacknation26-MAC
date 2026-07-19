@@ -25,10 +25,10 @@ const QUEUE = [
     unlocks: "Could add charity-care eligibility to your Mercy General bill: potentially 50–100% off the remaining $3,875 (~$1,938–$3,875).",
   },
   {
-    entity: "Carolina Emergency Physicians",
+    entity: "Bay State Emergency Physicians",
     question: "Authorize us to dispute the ER physician charge",
     why: "This is a separate bill from a separate entity; we need your go-ahead per entity before we call.",
-    unlocks: "Unlocks the call to Carolina Emergency Physicians: typical range is 15–35% off their $640 balance (~$96–$224).",
+    unlocks: "Unlocks the call to Bay State Emergency Physicians: typical range is 15–35% off their $640 balance (~$96–$224).",
   },
   {
     entity: "Meridian Recovery Services",

@@ -245,7 +245,7 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
                 {state === "active" && (
                   <div className="step-detail">
                     Agent is arguing Medicare pays $438 for these codes and the facility&apos;s own posted
-                    cash price is $1,890. Is this negotiable?
+                    cash price is $2,633. Is this negotiable?
                   </div>
                 )}
               </div>
@@ -280,7 +280,7 @@ function HistoryTab({ spec }: { spec: JobSpec }) {
       <div className="call-row">
         <div className="call-row-head">
           <div>
-            <strong>Carolina Emergency Physicians</strong>
+            <strong>Bay State Emergency Physicians</strong>
             <div className="call-row-meta">Mar 16, 2026 · 2m 03s</div>
           </div>
           <span className="pill pill-muted">Callback scheduled</span>
