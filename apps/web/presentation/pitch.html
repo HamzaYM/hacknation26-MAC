@@ -84,7 +84,7 @@ body{font-family:var(--font-b); color:var(--ink); -webkit-font-smoothing:antiali
   font-family:var(--font-m); font-size:13px; letter-spacing:.06em; color:var(--text-3);}
 .counter b{color:var(--ink); font-weight:500;}
 .rail{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(26,20,16,.08); z-index:4;}
-.rail-fill{height:100%; width:12.5%; background:var(--accent); transition:width .5s cubic-bezier(.16,1,.3,1);}
+.rail-fill{height:100%; width:10%; background:var(--accent); transition:width .5s cubic-bezier(.16,1,.3,1);}
 #stage.dark{background:var(--dark);}
 #stage.dark .chrome-brand{color:var(--cream);}
 #stage.dark .counter{color:rgba(245,241,236,.55);}
@@ -122,14 +122,23 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 
 /* ===== S2 problem ===== */
 .problem-head{max-width:1040px;}
-.problem-head h1{font-size:60px; line-height:1.04;}
-.stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:30px; margin-top:auto;}
-.stat .num{font-family:var(--font-m); font-weight:500; font-size:66px; line-height:1; color:var(--ink); letter-spacing:-.03em;}
-.stat .num .pre{font-size:26px; color:var(--text-3); letter-spacing:0; margin-right:4px; vertical-align:top; position:relative; top:8px;}
+.problem-head h1{font-size:56px; line-height:1.05;}
+.stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:28px; margin-top:38px;}
+.stat .num{font-family:var(--font-m); font-weight:500; font-size:52px; line-height:1; color:var(--ink); letter-spacing:-.03em; white-space:nowrap;}
 .stat.hot .num{color:var(--accent);}
-.stat .cap{font-size:14.5px; line-height:1.4; color:var(--ink); margin-top:14px; max-width:230px;}
-.stat .src{font-size:11px; line-height:1.4; color:var(--text-3); margin-top:10px; max-width:230px; font-family:var(--font-m);}
-.stat .divi{height:2px; width:36px; background:var(--accent); border-radius:2px; margin-top:16px; opacity:.55;}
+.stat .cap{font-size:14px; line-height:1.4; color:var(--ink); margin-top:12px; max-width:238px;}
+.stat .src{font-size:10.5px; line-height:1.4; color:var(--text-3); margin-top:8px; max-width:238px; font-family:var(--font-m);}
+.stat .divi{height:2px; width:36px; background:var(--accent); border-radius:2px; margin-top:14px; opacity:.55;}
+/* outcome callout · the part that should make you mad */
+.mad-band{margin-top:auto; background:var(--accent-tint); border:1px solid #f5d2c3;
+  border-radius:18px; padding:22px 30px; display:grid; grid-template-columns:.92fr 1.08fr; gap:36px; align-items:center;}
+.mad-band .mb-head h2{font-family:var(--font-d); font-weight:700; font-size:23px; line-height:1.12;
+  color:var(--ink); margin-top:9px; letter-spacing:-.01em;}
+.mad-band .mb-head p{font-size:14.5px; color:var(--text-2); margin-top:7px; line-height:1.4;}
+.mad-band .mb-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.mad-stat .num{font-family:var(--font-m); font-weight:500; font-size:37px; line-height:1; color:var(--accent); letter-spacing:-.02em;}
+.mad-stat .cap{font-size:12px; line-height:1.35; color:var(--ink); margin-top:8px;}
+.mad-stat .src{font-size:10px; line-height:1.35; color:var(--text-3); margin-top:6px; font-family:var(--font-m);}
 
 /* ===== S3 what it does ===== */
 .two-col{display:grid; grid-template-columns:1fr 1fr; gap:64px; flex:1; align-items:center;}
@@ -161,6 +170,33 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 .brackets .tl{left:0; top:0;} .brackets .tr{right:0; top:0; transform:rotate(90deg);}
 .brackets .br{right:0; bottom:0; transform:rotate(180deg);} .brackets .bl{left:0; bottom:0; transform:rotate(270deg);}
 .brackets path{fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round;}
+
+/* ===== S4 flow (end to end) ===== */
+.s-flow .flow-head h1{font-size:44px; line-height:1.05;}
+.s-flow .flow-head .sub{font-size:16px; color:var(--text-2); max-width:660px; margin-top:8px;}
+.flow-stage{position:relative; width:1088px; height:470px; margin-top:16px;}
+.flow-stage svg.wires{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none;}
+.flow-stage .connector{fill:none; stroke-width:2.5; stroke-linecap:round;}
+.flow-stage .connector.you{stroke:var(--sky-line);}
+.flow-stage .connector.haggl{stroke:var(--sage-line);}
+.flow-stage .sync{fill:none; stroke:var(--text-3); stroke-width:1.5; stroke-linecap:round; stroke-dasharray:2 7; opacity:0;}
+.lane-pill{position:absolute; left:0; display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--font-m); font-weight:500; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  border-radius:9999px; padding:6px 12px; opacity:0;}
+.lane-pill.you{background:var(--sky); border:1px solid var(--sky-line); color:#3a5675;}
+.lane-pill.haggl{background:var(--sage); border:1px solid var(--sage-line); color:#3c6249;}
+.flow-node{position:absolute; border-radius:14px; padding:0 16px; border:1px solid transparent;
+  display:flex; flex-direction:column; justify-content:center; opacity:0;}
+.flow-node.sky{background:var(--sky); border-color:var(--sky-line);}
+.flow-node.sage{background:var(--sage); border-color:var(--sage-line);}
+.flow-node .fnt{font-family:var(--font-d); font-weight:600; font-size:16.5px; color:var(--ink); letter-spacing:-.01em;}
+.flow-node .fnk{font-family:var(--font-m); font-size:11px; color:var(--text-2); margin-top:5px;}
+.thumb{position:absolute; top:0; width:168px; opacity:0;}
+.thumb .tf{border:1px solid var(--border); border-radius:9px; overflow:hidden; box-shadow:var(--shadow-card); background:var(--bg-surface);}
+.thumb .tf .tbar{display:flex; align-items:center; gap:4px; padding:5px 8px; background:#f3ede4; border-bottom:1px solid var(--border);}
+.thumb .tf .tbar i{width:5px; height:5px; border-radius:50%; background:#d9ccbc; display:block;}
+.thumb .tf img{display:block; width:100%; height:78px; object-fit:cover; object-position:top center;}
+.thumb .tcap{font-family:var(--font-m); font-size:10.5px; color:var(--text-3); margin-top:8px; letter-spacing:.02em;}
 
 /* ===== S4 money (dark) ===== */
 .s-money{color:var(--cream);}
@@ -232,6 +268,32 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 .config-note p b{color:var(--accent-hover);}
 .config-note .files{font-family:var(--font-m); font-size:12px; color:var(--text-3); margin-top:8px;}
 
+/* ===== S9 pricing ===== */
+.price-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:60px; flex:1; align-items:center; margin-top:8px;}
+.price-fig{font-family:var(--font-m); font-weight:500; font-size:128px; line-height:.9; letter-spacing:-.04em; color:var(--accent); margin:2px 0 6px;}
+.price-detail{font-size:18px; line-height:1.5; color:var(--ink); max-width:440px;}
+.price-detail strong{font-weight:600;}
+.price-list{margin-top:22px; display:flex; flex-direction:column; gap:13px;}
+.price-list .pl{display:flex; gap:12px; align-items:flex-start; font-size:15.5px; color:var(--ink); line-height:1.4;}
+.price-list .pl .ck{flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--accent-tint); color:var(--accent-hover);
+  display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;}
+.price-foot{margin-top:24px; font-size:13px; line-height:1.55; color:var(--text-2); max-width:470px;}
+.math-card{background:var(--bg-surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-card); padding:26px 30px;}
+.math-card .mc-h{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:8px;}
+.math-card .mc-h .t{font-family:var(--font-d); font-weight:700; font-size:20px; color:var(--ink);}
+.math-card .mc-h .s{font-family:var(--font-m); font-size:12px; color:var(--text-3);}
+.math-row{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-top:1px solid var(--border); font-size:15px;}
+.math-row .lbl{color:var(--text-2);}
+.math-row .val{font-family:var(--font-m); font-weight:500; font-size:15px; color:var(--ink);}
+.math-row.cut .lbl{color:var(--ink); font-weight:600;}
+.math-row.cut .val{color:var(--accent-hover); font-weight:600;}
+.math-row.note{border-top:none; padding:6px 0 0; font-size:12.5px;}
+.math-row.note .lbl{font-family:var(--font-m); color:var(--text-3);}
+.math-keep{margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:var(--accent-tint); border-radius:12px; padding:16px 20px;}
+.math-keep .lbl{font-weight:600; font-size:15.5px; color:var(--ink);}
+.math-keep .val{font-family:var(--font-m); font-weight:500; font-size:24px; color:var(--accent-hover); letter-spacing:-.02em;}
+
 /* ===== S8 team + close ===== */
 .s-close{align-items:flex-start; justify-content:center; overflow:hidden;}
 .team-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin:20px 0 auto; max-width:920px;}
@@ -282,7 +344,7 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
     <div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 
     <div class="chrome-brand"><span class="lh">H</span>aggl</div>
-    <div class="counter"><b id="cnum">01</b> / 08</div>
+    <div class="counter"><b id="cnum">01</b> / 10</div>
     <div class="rail"><div class="rail-fill" id="rail"></div></div>
 
     <!-- ============ S1 ============ -->
@@ -298,20 +360,31 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       <div class="problem-head">
         <div class="mask"><span class="riseline eyebrow">The problem</span></div>
         <h1 class="head" style="margin-top:18px">
-          <span class="mask"><span class="riseline">The bill is inflated, error-prone,</span></span>
-          <span class="mask"><span class="riseline">and almost no one pushes back.</span></span>
+          <span class="mask"><span class="riseline">The prices aren't fixed.</span></span>
+          <span class="mask"><span class="riseline">Almost nobody asks.</span></span>
         </h1>
       </div>
       <div class="stat-grid">
-        <div class="stat r"><div class="num"><span class="pre">up to</span>80<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of medical bills carry at least one error.</div><div class="src">Est. 49% to 80%. Medical Billing Advocates of America; CFPB.</div></div>
-        <div class="stat r"><div class="num">254<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of Medicare is what private insurers pay for the same care, at the same hospital.</div><div class="src">RAND Hospital Price Transparency Study, 2024.</div></div>
-        <div class="stat r"><div class="num">85<span style="font-size:40px">M</span></div><div class="divi"></div><div class="cap">in-network claims denied in 2024. About 1 in 5.</div><div class="src">KFF, 2026.</div></div>
-        <div class="stat hot r"><div class="num">62<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of people who negotiate get a lower price. Most never try.</div><div class="src">Duffy et al., JAMA Health Forum, 2024.</div></div>
+        <div class="stat r"><div class="num">$220B</div><div class="divi"></div><div class="cap">in medical debt held by Americans today</div><div class="src">KFF, 2025</div></div>
+        <div class="stat r"><div class="num">3.4×</div><div class="divi"></div><div class="cap">average hospital markup over Medicare cost, up to 12.6× at outliers</div><div class="src">Bai &amp; Anderson, Health Affairs 2015</div></div>
+        <div class="stat r"><div class="num">254%</div><div class="divi"></div><div class="cap">of Medicare rates, on average, paid by private insurers for the same care</div><div class="src">RAND Hospital Price Transparency Study, 2024</div></div>
+        <div class="stat hot r"><div class="num">49–80%</div><div class="divi"></div><div class="cap">of medical bills are estimated to contain errors</div><div class="src">advocacy-industry estimate, directional</div></div>
+      </div>
+      <div class="mad-band r">
+        <div class="mb-head">
+          <h2>Here's the part that should make you mad</h2>
+          <p>Asking almost always works. Almost nobody asks.</p>
+        </div>
+        <div class="mb-stats">
+          <div class="mad-stat"><div class="num">93%</div><div class="cap">of people who negotiate their bill get it reduced</div><div class="src">LendingTree, 2021</div></div>
+          <div class="mad-stat"><div class="num">78%</div><div class="cap">who dispute a charge get it reduced or removed</div><div class="src">AKASA/YouGov, 2022</div></div>
+          <div class="mad-stat"><div class="num">64%</div><div class="cap">of Americans never even challenge a bill they suspect is wrong</div><div class="src">AKASA/YouGov, 2022</div></div>
+        </div>
       </div>
     </section>
 
     <!-- ============ S3 what it does ============ -->
-    <section class="slide" data-i="3">
+    <section class="slide" data-i="3" data-hook="frame">
       <div class="two-col">
         <div class="s3-head">
           <div class="mask"><span class="riseline eyebrow">What Haggl does</span></div>
@@ -342,8 +415,50 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       </div>
     </section>
 
-    <!-- ============ S4 money (dark) ============ -->
-    <section class="slide s-money" data-i="4">
+    <!-- ============ S4 flow (end to end) ============ -->
+    <section class="slide s-flow" data-i="4" data-hook="flow">
+      <div class="flow-head">
+        <div class="mask"><span class="riseline eyebrow">End to end</span></div>
+        <h1 class="head" style="margin-top:14px">
+          <span class="mask"><span class="riseline">What happens after you hit upload.</span></span>
+        </h1>
+        <div class="sub r">You take four steps. Haggl runs the case in between, and reports back at every handoff.</div>
+      </div>
+      <div class="flow-stage">
+        <svg class="wires" viewBox="0 0 1088 470" preserveAspectRatio="none">
+          <path class="connector you"   d="M323,178 L359,178"/>
+          <path class="connector you"   d="M578,178 L614,178"/>
+          <path class="connector you"   d="M833,178 L869,178"/>
+          <path class="connector haggl" d="M323,336 L359,336"/>
+          <path class="connector haggl" d="M578,336 L614,336"/>
+          <path class="connector haggl" d="M833,336 L869,336"/>
+          <path class="sync" d="M214,206 L214,300"/>
+          <path class="sync" d="M469,206 L469,300"/>
+          <path class="sync" d="M724,206 L724,300"/>
+          <path class="sync" d="M979,206 L979,300"/>
+        </svg>
+
+        <div class="thumb" style="left:130px"><div class="tf"><div class="tbar"><i></i><i></i><i></i></div><img src="/pitch-assets/shots/intake.png" alt="intake screen"></div><div class="tcap">hagglfor.me/intake</div></div>
+        <div class="thumb" style="left:640px"><div class="tf"><div class="tbar"><i></i><i></i><i></i></div><img src="/pitch-assets/shots/warroom.png" alt="live war room"></div><div class="tcap">hagglfor.me/warroom</div></div>
+        <div class="thumb" style="left:895px"><div class="tf"><div class="tbar"><i></i><i></i><i></i></div><img src="/pitch-assets/shots/report.png" alt="report"></div><div class="tcap">hagglfor.me/report</div></div>
+
+        <span class="lane-pill you"   style="top:167px">You</span>
+        <span class="lane-pill haggl" style="top:325px">Haggl</span>
+
+        <div class="flow-node sky" style="left:104px; top:150px; width:219px; height:56px;"><div class="fnt">Upload</div></div>
+        <div class="flow-node sky" style="left:359px; top:150px; width:219px; height:56px;"><div class="fnt">Confirm the plan</div></div>
+        <div class="flow-node sky" style="left:614px; top:150px; width:219px; height:56px;"><div class="fnt">Watch live</div></div>
+        <div class="flow-node sky" style="left:869px; top:150px; width:219px; height:56px;"><div class="fnt">Get the report</div></div>
+
+        <div class="flow-node sage" style="left:104px; top:300px; width:219px; height:72px;"><div class="fnt">Parse + flag</div><div class="fnk">gpt-5.6-terra</div></div>
+        <div class="flow-node sage" style="left:359px; top:300px; width:219px; height:72px;"><div class="fnt">Dossier + ladder</div><div class="fnk">state_machine.py</div></div>
+        <div class="flow-node sage" style="left:614px; top:300px; width:219px; height:72px;"><div class="fnt">Live calls</div><div class="fnk">ElevenLabs + Twilio</div></div>
+        <div class="flow-node sage" style="left:869px; top:300px; width:219px; height:72px;"><div class="fnt">Audit + archive</div><div class="fnk">honesty_audit</div></div>
+      </div>
+    </section>
+
+    <!-- ============ S5 money (dark) ============ -->
+    <section class="slide s-money" data-i="5" data-hook="money">
       <div class="mask"><span class="riseline eyebrow">Maya Chen · Mercy General, Boston · live call</span></div>
       <div class="money-grid">
         <div>
@@ -363,8 +478,8 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       </div>
     </section>
 
-    <!-- ============ S5 architecture ============ -->
-    <section class="slide" data-i="5">
+    <!-- ============ S6 architecture ============ -->
+    <section class="slide" data-i="6" data-hook="nodes">
       <div class="s5-head">
         <div class="mask"><span class="riseline eyebrow">How it works</span></div>
         <h1 class="head" style="margin-top:14px">
@@ -393,8 +508,8 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       <div class="arch-foot r">The benchmark tool cites the hospital's own file. Mercy's posted cash price is <b>$2,633</b>. Insurers there pay <b>$999</b>. Both public.</div>
     </section>
 
-    <!-- ============ S6 honesty ============ -->
-    <section class="slide" data-i="6">
+    <!-- ============ S7 honesty ============ -->
+    <section class="slide" data-i="7">
       <div class="s6-head">
         <div class="mask"><span class="riseline eyebrow">Nothing synthetic</span></div>
         <h1 class="head" style="margin-top:16px">
@@ -410,8 +525,8 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       <div class="honesty-foot r"><span class="tag">Real end to end</span><span>ElevenLabs, Twilio PSTN, Supabase, OpenAI vision. <b>Nothing on this slide is simulated.</b></span></div>
     </section>
 
-    <!-- ============ S7 stack ============ -->
-    <section class="slide" data-i="7">
+    <!-- ============ S8 stack ============ -->
+    <section class="slide" data-i="8" data-hook="frame">
       <div class="two-col">
         <div class="s7-head">
           <div class="mask"><span class="riseline eyebrow">Stack + workflow</span></div>
@@ -450,8 +565,34 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
       </div>
     </section>
 
-    <!-- ============ S8 close ============ -->
-    <section class="slide s-close" data-i="8">
+    <!-- ============ S9 pricing ============ -->
+    <section class="slide" data-i="9">
+      <div class="mask"><span class="riseline eyebrow">Pricing</span></div>
+      <div class="price-grid">
+        <div>
+          <div class="price-fig r">25%</div>
+          <p class="price-detail r">of what we save you, capped at <strong>$2,000</strong> per bill. Nothing upfront, nothing if we don't save you anything.</p>
+          <div class="price-list">
+            <div class="pl r"><span class="ck">✓</span>No savings, no fee, ever</div>
+            <div class="pl r"><span class="ck">✓</span>You see the exact math before you pay anything</div>
+            <div class="pl r"><span class="ck">✓</span>Cash in partial savings anytime; we only charge on what's actually confirmed</div>
+          </div>
+          <p class="price-foot r">Higher than a document-only bill-review service, because we're doing more: real phone calls, not just a negotiation letter. Still well under what a human medical-bill advocate charges.</p>
+        </div>
+        <div class="math-card r">
+          <div class="mc-h"><span class="t">The exact math</span><span class="s">Maya's bill</span></div>
+          <div class="math-row"><span class="lbl">Billed</span><span class="val">$4,287</span></div>
+          <div class="math-row"><span class="lbl">Settled on the call</span><span class="val">$1,650</span></div>
+          <div class="math-row cut"><span class="lbl">Saved</span><span class="val">$2,637</span></div>
+          <div class="math-row"><span class="lbl">Our fee · 25% of savings</span><span class="val">$659.25</span></div>
+          <div class="math-row note"><span class="lbl">$2,000 cap · not hit</span></div>
+          <div class="math-keep"><span class="lbl">Maya keeps</span><span class="val">$1,977.75</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ S10 close ============ -->
+    <section class="slide s-close" data-i="10" data-hook="rain">
       <div class="rain" id="rain"></div>
       <div class="mask" style="position:relative;z-index:1"><span class="riseline eyebrow">The team</span></div>
       <div class="team-grid" style="position:relative;z-index:1">
@@ -479,13 +620,13 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 <script src="/pitch-assets/anime.min.js"></script>
 <script>
 (function(){
-  var TOTAL = 8;
+  var TOTAL = 10;
   var stage = document.getElementById('stage');
   var rail = document.getElementById('rail');
   var cnum = document.getElementById('cnum');
   var cover = document.getElementById('cover');
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
-  var DARK = {4:true};
+  var DARK = {5:true};
   var idx = 0, locked = false, started = false, unlockT = null;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches || !window.anime;
 
@@ -503,16 +644,18 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
 
   // instant end-state (reduced motion / no anime)
   function settle(s){
-    s.querySelectorAll('.riseline,.r,.node,.frame-wrap').forEach(function(el){
+    s.querySelectorAll('.riseline,.r,.node,.flow-node,.frame-wrap,.thumb,.lane-pill').forEach(function(el){
       el.style.opacity = 1; el.style.transform = 'none';
     });
     s.querySelectorAll('.connector').forEach(function(p){ p.style.strokeDasharray='none'; p.style.strokeDashoffset=0; });
+    s.querySelectorAll('.sync').forEach(function(p){ p.style.opacity=0.7; });
     s.querySelectorAll('.brackets path').forEach(function(p){ p.style.strokeDasharray='none'; p.style.strokeDashoffset=0; });
-    if(s.getAttribute('data-i')==='4'){
+    var hook = s.getAttribute('data-hook');
+    if(hook==='money'){
       var f=document.getElementById('countFig'); if(f) f.textContent='$1,650';
       var p=document.getElementById('pctPill'); if(p){ p.style.opacity=1; p.style.transform='none'; }
     }
-    if(s.getAttribute('data-i')==='8') buildRain();
+    if(hook==='rain') buildRain();
   }
 
   function buildRain(){
@@ -532,7 +675,7 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
     var s = slides[i];
     s.classList.add('active');
     chrome();
-    if(reduce){ settle(s); locked=false; if(i+1===8) buildRain(); return; }
+    if(reduce){ settle(s); locked=false; return; }
 
     var tl = anime.timeline({ complete:function(){ locked=false; } });
     var lines = s.querySelectorAll('.riseline');
@@ -542,10 +685,12 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
     if(rs.length) tl.add({ targets:rs, translateY:[18,0], opacity:[0,1],
       duration:600, easing:'easeOutCubic', delay:anime.stagger(55) }, lines.length ? '-=430' : 0);
 
-    if(i+1===3 || i+1===7) frame(tl, s);
-    if(i+1===4) money(tl, s);
-    if(i+1===5) nodes(tl, s);
-    if(i+1===8) buildRain();
+    var hook = s.getAttribute('data-hook');
+    if(hook==='frame') frame(tl, s);
+    else if(hook==='money') money(tl, s);
+    else if(hook==='nodes') nodes(tl, s);
+    else if(hook==='flow') flow(tl, s);
+    if(hook==='rain') buildRain();
 
     // safety unlock in case a timeline never fires complete
     clearTimeout(unlockT); unlockT = setTimeout(function(){ locked=false; }, 2400);
@@ -581,6 +726,31 @@ h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color
     });
     var chips = s.querySelectorAll('.arch-chip');
     tl.add({ targets:chips, opacity:[0,1], translateY:[10,0], duration:380, easing:'easeOutCubic', delay:anime.stagger(70) }, '-=160');
+  }
+
+  function flow(tl, s){
+    var pills  = s.querySelectorAll('.lane-pill');
+    var youN   = Array.prototype.slice.call(s.querySelectorAll('.flow-node.sky'));
+    var hagN   = Array.prototype.slice.call(s.querySelectorAll('.flow-node.sage'));
+    var youC   = Array.prototype.slice.call(s.querySelectorAll('.connector.you'));
+    var hagC   = Array.prototype.slice.call(s.querySelectorAll('.connector.haggl'));
+    var sync   = s.querySelectorAll('.sync');
+    var thumbs = s.querySelectorAll('.thumb');
+    youC.concat(hagC).forEach(function(p){ var L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; });
+
+    tl.add({ targets:pills, opacity:[0,1], scale:[0.9,1], duration:340, easing:'easeOutCubic', delay:anime.stagger(80) }, '-=200');
+    tl.add({ targets:youN[0], opacity:[0,1], scale:[0.94,1], duration:360, easing:'easeOutCubic' }, '-=140');
+    youC.forEach(function(p,k){
+      tl.add({ targets:p, strokeDashoffset:[anime.setDashoffset,0], duration:420, easing:'easeInOutSine' }, k===0?'-=120':'-=210');
+      if(youN[k+1]) tl.add({ targets:youN[k+1], opacity:[0,1], scale:[0.94,1], duration:340, easing:'easeOutCubic' }, '-=250');
+    });
+    tl.add({ targets:thumbs, opacity:[0,1], translateY:[12,0], duration:360, easing:'easeOutCubic', delay:anime.stagger(60) }, '-=260');
+    tl.add({ targets:hagN[0], opacity:[0,1], scale:[0.94,1], duration:360, easing:'easeOutCubic' }, '-=200');
+    hagC.forEach(function(p,k){
+      tl.add({ targets:p, strokeDashoffset:[anime.setDashoffset,0], duration:420, easing:'easeInOutSine' }, k===0?'-=120':'-=210');
+      if(hagN[k+1]) tl.add({ targets:hagN[k+1], opacity:[0,1], scale:[0.94,1], duration:340, easing:'easeOutCubic' }, '-=250');
+    });
+    tl.add({ targets:sync, opacity:[0,0.7], duration:420, easing:'easeOutCubic', delay:anime.stagger(50) }, '-=200');
   }
 
   function go(n){
