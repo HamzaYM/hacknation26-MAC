@@ -55,6 +55,17 @@ ladder:
     - settle                                 # accept 25–50% with written paid-in-full
     - exit_with_written_confirmation
 
+# ── Question-coverage gate (deterministic engine, apps/api) ──────────────
+# The agent reports which questions it covered (questions_asked tags on
+# report_lever_result); the state machine won't let it walk OFF a rung below
+# until the required tags are covered — one block max per rung, so a live
+# call is never hard-deadlocked. Tag vocabulary is mirrored into the
+# report_lever_result tool description in scripts/provision_elevenlabs.py.
+required_questions:
+  open_and_hold_account: [account_hold_requested, itemized_bill_status, rep_name_captured]
+  financial_assistance_screen: [fap_exists, pauses_collections_while_pending]
+  diagnostic_questions: [interest_accruing, will_sue, credit_bureau_reported, debt_owned_or_bought, predetermined_settlement_floor]
+
 escalation_triggers:                         # stonewall phrases → reach_authority move
   - "that's our policy"
   - "we don't negotiate"
