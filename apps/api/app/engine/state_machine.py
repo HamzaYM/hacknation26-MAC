@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..models import StrategyDossier
+from .dossier import CHARITY_APPLICATION_WINDOW_DAYS, COLLECTIONS_WINDOW_DAYS
 
 
 @dataclass
@@ -55,6 +56,8 @@ class CallState:
     # the ONLY per-call signal (besides ladder exhaustion) that arms reach_authority
     # under escalation_policy: last_resort.
     authority_requested: bool = False
+    # 501(r) pre-collections window: the compact fact is surfaced only ONCE (early).
+    notified_501r: bool = False
 
 
 class LadderStateMachine:
@@ -65,6 +68,7 @@ class LadderStateMachine:
         self._hedge_markers = [t.casefold() for t in config.get("hedge_markers", [])]
         self._last_resort = config.get("escalation_policy") == "last_resort"
         self._required_questions: dict[str, list[str]] = config.get("required_questions", {})
+        self._collections_threats = [t.casefold() for t in config.get("collections_threat_phrases", [])]
         self._states: dict[str, CallState] = {}  # in-memory; Supabase later
 
     def parked_topics(self, call_id: str) -> list[dict]:
@@ -104,6 +108,45 @@ class LadderStateMachine:
         return not pending
 
     def advance(
+        self,
+        call_id: str,
+        lever: str,
+        result: str,
+        offer_amount: float | None = None,
+        quote: str | None = None,
+        questions_asked: list[str] | None = None,
+    ) -> dict:
+        resp = self._advance_core(call_id, lever, result, offer_amount, quote, questions_asked)
+        self._augment_501r_notes(call_id, quote, resp)
+        return resp
+
+    def _augment_501r_notes(self, call_id: str, quote: str | None, resp: dict) -> None:
+        """When the call's account is still inside the 501(r) pre-collections window
+        (26 CFR 1.501(r)-6), fold two facts into the response notes: (a) a compact
+        window fact surfaced ONCE early, and (b) a flat, factual pushback whenever the
+        rep voices a collections threat. Notes only, no menace (assertive-never-ominous)."""
+        state = self._states.get(call_id)
+        if not state or not getattr(state.dossier, "inside_501r_window", None):
+            return
+        parts: list[str] = []
+        day = state.dossier.days_since_first_statement
+        if not state.notified_501r and day is not None:
+            parts.append(
+                f"501(r) window: day {day} of {COLLECTIONS_WINDOW_DAYS} — no collections "
+                f"actions allowed yet; charity application window open "
+                f"({CHARITY_APPLICATION_WINDOW_DAYS} days)")
+            state.notified_501r = True
+        text = (quote or "").casefold()
+        if text and any(t in text for t in self._collections_threats):
+            parts.append(
+                "collections threat while inside the 501(r) window — push back flat and "
+                "factual, no menace: this account is still inside the 120-day window before "
+                "any collections step under 26 CFR 1.501(r)-6, so let's get it resolved here first")
+        if parts:
+            existing = resp.get("notes")
+            resp["notes"] = " · ".join([existing, *parts]) if existing else " · ".join(parts)
+
+    def _advance_core(
         self,
         call_id: str,
         lever: str,

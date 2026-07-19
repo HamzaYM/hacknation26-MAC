@@ -28,6 +28,8 @@
     "target": { "type": "number", "description": "Good outcome (e.g. <= MRF cash price)" },
     "floor": { "type": "number", "description": "Never offer to pay MORE than this without human approval / never settle above" },
     "citations": { "type": "array", "items": { "type": "string" } },
-    "notes": { "type": "string", "description": "LLM-written prose briefing (no numbers that aren't in levers/citations)" }
+    "notes": { "type": "string", "description": "LLM-written prose briefing (no numbers that aren't in levers/citations)" },
+    "days_since_first_statement": { "type": ["integer", "null"], "description": "ADDITIVE (optional): days from bill.statement_date to today — the 501(r) account-age clock (26 CFR 1.501(r)-6). Null when no statement date." },
+    "inside_501r_window": { "type": ["boolean", "null"], "description": "ADDITIVE (optional): true while a NONPROFIT account is still inside the 120-day 501(r)(6) pre-collections window. Null for for-profit facilities or when unknown." }
   }
 }
