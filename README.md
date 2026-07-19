@@ -33,6 +33,8 @@ The demo in one line: Maya's **$4,287** ER balance becomes **$1,650** on a live 
 
 - Pitch deck: **[hagglfor.me/pitch-sf-2026](https://hagglfor.me/pitch-sf-2026)**
 - Tech tour: **[hagglfor.me/tech-video](https://hagglfor.me/tech-video)**
+- Technical architecture: **[hagglfor.me/technical-architecture](https://hagglfor.me/technical-architecture)**
+- Judge guide (logins and walkthrough): **[hagglfor.me/judge-guide](https://hagglfor.me/judge-guide)**
 
 Demo accounts (all passwords `HagglDemo2026!`). Logged in, `/bills` routes to that user's case; logged out you get Maya's.
 
@@ -57,7 +59,7 @@ The data underneath is real, not mocked:
 
 - **881,668 real per-payer rows** from 3 Boston hospitals' published price files (MGH, Brigham & Women's, Newton-Wellesley), plus real **CMS Medicare rates** computed for the Boston locality (`scripts/fetch_medicare.py`).
 - **9 generated scenarios** (`data/scenarios/sc01`–`sc09`), each with a code-computed answer key.
-- **349 passing tests** (`cd apps/api && pytest`).
+- **351 passing tests** (`cd apps/api && pytest`).
 
 ## Architecture
 
@@ -95,7 +97,7 @@ uvicorn app.main:app --reload --port 8000          # → http://127.0.0.1:8000/h
 curl http://127.0.0.1:8000/cases/demo              # Maya's fixture JobSpec
 
 # Tests
-cd apps/api && pytest                              # 349 passing
+cd apps/api && pytest                              # 351 passing
 
 # Data check (benchmarks reconcile against the demo answer key)
 cd data/pipeline && python3 transform.py --check
