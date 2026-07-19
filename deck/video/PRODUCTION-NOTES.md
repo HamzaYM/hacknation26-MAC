@@ -1,4 +1,6 @@
-# Submission Videos — v1 Production Notes
+# Submission Videos — Production Notes
+
+> **The shipped submission cut is v3.** See the **"v3 (FINAL, submission cut)"** section at the bottom of this file for the final offsets, segment table, hero-call provenance, and one-command re-run steps. The v1 and v2 notes below are kept for history.
 
 Two 60-second submission videos, v1. Built from live captures of `127.0.0.1:3000`
 (the stable local build) + ElevenLabs VO (voice **Jason**, `eleven_flash_v2`).
@@ -147,3 +149,80 @@ Per shot:
 **Assembly:** trim each clip to its slot, `concat`, burn the Shot-5 caption with `drawtext`
 (font `/System/Library/Fonts/Supplemental/Arial.ttf`), overlay VO with `adelay`+`amix`
 (`normalize=0`), encode `libx264 -crf 20 -pix_fmt yuv420p` + `aac`, `-t 60`. See `assemble_uiux.py`.
+
+---
+
+## v3 (FINAL, submission cut): supersedes v1 and v2
+
+v2 was rejected for wrong voices, crammed pacing, and a stitched call block. v3 fixes all three: **Jason narrates the entire tech video**, **Sarah narrates the entire demo video**, pacing returns to v1-style long holds, and the call block is **one continuous real exchange** with no fragments.
+
+| File | What | Duration | Audio | Loudness |
+|---|---|---|---|---|
+| `tech-video-v3.mp4` | Deliverable 1, tech | 60.00s | Jason VO x6 | -16.1 LUFS int, TP -1.5 dBFS |
+| `uiux-video-v3.mp4` | Deliverable 2, demo | 60.00s | Sarah VO x5 plus real call | -16.5 LUFS int, TP -1.5 dBFS |
+
+Both are 1280x800, H.264 plus AAC, 25fps, built with the bundled `imageio_ffmpeg` ffmpeg.
+
+**Voices (final):**
+- Tech: **Jason** `8duqbsrxNeN6j4yugadv`, all 6 beats, no other narrator.
+- Demo: **Sarah** `EXAVITQu4vr4xnSDxMaL`, all 5 lines. The call block has no VO; the real call audio carries it.
+
+### Deliverable 1: tech-video-v3.mp4
+
+Recorded the live `/tech-video` deck fresh (it changed the night before: slide 1 now has six service cards including OpenAI, slides 2 and 4 carry the architecture-page diagrams). The deck is 6 slides auto-advancing at beats 0 / 9 / 22 / 35 / 45 / 55s; the on-screen `#clock` counts from the Space press.
+
+**Lead-in measurement:** frames at raw 5 / 32 / 52s showed the clock reading 03.8 / 30.8 / 50.8s, so the Space press sits 1.20s into the recording. Trim raw `[1.20, 61.20]` so Space equals t0.
+
+**VO offsets** (measured durations in parentheses), placed by `adelay` plus `amix`:
+`b0@0.3 (7.97)`, `b1@9.0 (11.23)`, `b2@22.0 (8.67)`, `b3@34.5 (11.47)`, `b4@46.1 (8.99)`, `b5@55.3 (3.32)`. No overlap; the tightest gap is b3 to b4 at 0.13s. loudnorm `I=-16 TP=-1.5`, 120ms tail fades, alimiter 0.89.
+
+**QA:** deck frames 5=S0 (six cards including OpenAI), 15=S1 (one negotiation turn), 30=S2 (the code holds the line), 40=S3 (runtime topology diagram), 50=S4 (new market, one file, 9 scenarios), 58=S5 (closer). Exactly 60.00s, integrated -16.1 LUFS, true peak -1.5 dBFS, no overflow on any beat.
+
+### Deliverable 2: uiux-video-v3.mp4 (v1 pacing)
+
+Segment table (global seconds):
+
+| Seg | Content | Source | Trim | Global |
+|---|---|---|---|---|
+| A | cold open, 3-beat stat card | `a-segA-coldopen-v3.webm` | 0.10 to 9.10 | 0.0 to 9.0 |
+| B | landing hero | `a-shot1-landing.webm` | 1.0 to 6.0 | 9.0 to 14.0 |
+| C | intake upload and parse | `a-shot2-intake.webm` | 12.5 to 22.0 | 14.0 to 23.5 |
+| D | diagnosis findings, slow scroll | `a-shot3-diagnosis.webm` | 3.2 to 11.2 | 23.5 to 31.5 |
+| E | confirm, then War Room goes live | `a-shot4-approve-warroom.webm` | 6.0 to 10.5 | 31.5 to 36.0 |
+| F | the call (one continuous exchange) | `segF_call_v3.mp4` | 0.0 to 13.5 | 36.0 to 49.5 |
+| G | case file report | `a-shot6-report.webm` | 3.74 to 12.04 | 49.5 to 57.8 |
+| H | end card | `endcard.png` | 0.0 to 2.2 | 57.8 to 60.0 |
+
+Total 60.00s.
+
+**Sarah VO offsets** (measured durations), collision-checked against each other and against the call audio:
+`vo1@0.40 (15.73)` spans A into B on purpose. `vo2@16.18 (7.47)` over C. `vo3@23.70 (7.89)` over D. `vo4@31.64 (4.36)` over E, ends 36.00 which clears the call start at 36.10. `vo6@49.45 (10.53)` over G, starts after the call ends at 49.40 and ends at 59.98.
+
+Deviation from the brief's suggested offsets: `vo2@14.4` would have overlapped `vo1` (which ends at 16.13 at the measured 15.73s length), so vo2 was nudged to 16.18. vo3 and vo4 landed within 0.3s of the brief. This is the "adjust" the brief anticipated.
+
+**Cold open (rebuilt):** `coldopen_build_v3.py` renders three beats over about eight seconds in the dark Haggl aesthetic with embedded Bricolage Grotesque and General Sans fonts: "Up to 4 in 5 hospital bills contain errors", then "93% who negotiate get a reduction, 64% never even ask", then "Maya, our demo patient: a $4,287 ER bill". Recorded 10s headless, trimmed to 9s.
+
+**Seg F, the call, one continuous window, no stitching:**
+- Audio: `hero-call.mp3` trimmed `[76.65, 89.95]` (13.30s). This is Morgan's single turn (transcript turn at 77s: "Let me pull that up. Yeah, okay. I've got two of the seven one and four six on the same date. I'll put an adjustment in for the one. That brings you to three thousand eight hundred seventy-five."), bounded by the next agent turn at 91s. silencedetect confirms a 3.39s pause ending 76.89s (Morgan's first word) and a 6.3s pause starting 89.69s (last word), so both cut points fall inside silence. 150ms fades at the edges only; nothing is clipped mid-word.
+- Video: `hero2-warroom.webm` trimmed `[79.15, 92.65]` (13.5s). The live balance shows "negotiating", then reveals **$3,875** at about webm 88.7s with the milestone "quote to $3,875", aligned to Morgan speaking the figure (about seg-local 9.55s, global 45.55s). $3,875 stays stable through 117s. There is no large $4,287 numeral in this recording; the reduction reads as the reveal, and $4,287 is established by the cold open, the diagnosis, the report, and the end card.
+- Caption bottom-left: "real call, two AI agents, unscripted". Call audio loudnorm `I=-16`, never ducked (it is the only audio in Seg F).
+
+**QA:** every segment boundary frame verified on the correct beat; the $3,875 reveal is visible in F at about 45.5s with the caption; the cold open text is legible; the call audio plays continuously with only the transcript's natural intra-turn pauses (no mid-word cut); total 60.00s, integrated -16.5 LUFS, true peak -1.5 dBFS.
+
+### Hero-call provenance
+
+`conv_8701kxwv7yj8e8zvs9w7s8s0k3qv` is a **212s real PSTN agent-to-agent call**: our negotiator agent "Alex" against the **persona-supervisor agent "Morgan"** (a billing supervisor persona), placed over a real phone line. This is the genuine continuous exchange that the v1 notes' Shot 5 gap was waiting on: no human role-play, no `simulate` flag, no stitching. Full audio is `hero-call.mp3` (212s). Pull the transcript with per-turn `time_in_call_secs` via:
+`GET https://api.elevenlabs.io/v1/convai/conversations/conv_8701kxwv7yj8e8zvs9w7s8s0k3qv` with header `xi-api-key: <ELEVENLABS_API_KEY from root .env>`.
+The full arc is $4,287 to $3,875 (duplicate 71046 removed) to $2,400 to $1,650 paid in full, reference MG-ADJ-2247. v3 uses the $4,287 to $3,875 duplicate-removal exchange because it is the single cleanest continuous concession.
+
+### One-command re-run per artifact
+
+`PY = apps/api/.venv/bin/python`; ffmpeg path is `$(PY -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())")`. All scripts are archived in `/Users/hamza/.claude/jobs/bb773a14/tmp/`. The web server on `127.0.0.1:3000` must be up; recording is read-only.
+
+1. Tech deck capture: `cd apps/web && $PY tech_rec_v3.py` produces `tech-live-v3.webm` (drives `127.0.0.1:3000/tech-video`, presses Space, records about 64s).
+2. Tech assemble: `$PY tech_assemble_v3.py` produces `deck/video/tech-video-v3.mp4`.
+3. Cold open: `$PY coldopen_build_v3.py && $PY coldopen_rec_v3.py` produces `a-segA-coldopen-v3.webm`.
+4. Seg F call: `$PY segf_build_v3.py` produces `segF_call_v3.mp4` from `hero2-warroom.webm` and `hero-call.mp3`.
+5. Demo assemble: `$PY master_uiux_v3.py` produces `deck/video/uiux-video-v3.mp4`.
+
+The UI shots `a-shot1` through `a-shot6` are the fresh post-cleanup captures in `video-raw` (note: `a-shot5-warroom-replay.webm` is the OLD clip and is not used in v3).
