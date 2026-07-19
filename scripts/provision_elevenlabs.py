@@ -262,7 +262,14 @@ END_CALL_TOOL = {
 # timer counts silence from the counterparty's last speech and can't know about holds
 # or lookups, so it must only catch a truly abandoned line; the model's end_call tool
 # owns the normal goodbye hangup.
-NEGOTIATOR_TURN = {"silence_end_call_timeout": 180}
+NEGOTIATOR_TURN = {
+    "silence_end_call_timeout": 180,
+    # Default turn_timeout is 7s: the agent re-engages 7 seconds into any pause,
+    # which read as RUSHING when a rep said "one second" (live call: "still with
+    # me?" 9s after "yeah, one second"). 15s gives thinking room; the prompt
+    # handles explicit wait requests on top.
+    "turn_timeout": 15,
+}
 
 
 def env() -> dict[str, str]:
