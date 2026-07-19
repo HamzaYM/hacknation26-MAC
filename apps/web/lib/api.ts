@@ -10,6 +10,15 @@ export async function getDemoCase(): Promise<JobSpec> {
   return res.json();
 }
 
+// The logged-in user's case, resolved by email (cases.owner_email). Without
+// an email — or for an unknown one — the API falls back to Maya's demo case.
+export async function getMyCase(email?: string): Promise<JobSpec> {
+  const qs = email ? `?email=${encodeURIComponent(email)}` : "";
+  const res = await fetch(`${API_BASE}/cases/mine${qs}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /cases/mine failed: ${res.status}`);
+  return res.json();
+}
+
 // apps/api/app/routers/calls.py's GET /calls/{id} is still a stub
 // ({"call_id":..., "status":"stub"}) — this will start returning the real
 // `calls` row (status/counterparty/started_at/…) once Hamza wires Supabase.

@@ -15,10 +15,9 @@ import json
 import logging
 import os
 
-import httpx
 from fastapi import APIRouter, Request
 
-from .. import db
+from .. import db, storage
 from ..engine.honesty import audit_call
 from ..fixtures import demo_benchmarks, demo_dossier
 
@@ -39,29 +38,6 @@ def _signature_ok(raw: bytes, header: str | None) -> bool:
         return False
     expected = hmac.new(secret.encode(), f"{ts}.{raw.decode()}".encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(sig, expected)
-
-
-def _store_recording(call_id: str, audio: bytes) -> str | None:
-    """Upload to the recordings bucket via the Storage REST API (service key)."""
-    url = os.environ.get("SUPABASE_URL", "")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
-    if not (url and key):
-        return None
-    path = f"{call_id}.mp3"
-    try:
-        resp = httpx.post(
-            f"{url}/storage/v1/object/recordings/{path}",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "audio/mpeg",
-                     "x-upsert": "true"},
-            content=audio,
-            timeout=60,
-        )
-        if resp.status_code in (200, 201):
-            return f"recordings/{path}"
-        log.warning("recording upload failed: %s %s", resp.status_code, resp.text[:200])
-    except httpx.HTTPError as err:
-        log.warning("recording upload failed: %s", err)
-    return None
 
 
 @router.post("/elevenlabs")
@@ -101,7 +77,9 @@ async def elevenlabs_post_call(request: Request) -> dict:
         audio_b64 = data.get("full_audio")
         if audio_b64:
             try:
-                path = _store_recording(call_id, base64.b64decode(audio_b64))
+                # storage.store_recording normalizes the /rest/v1-suffixed
+                # SUPABASE_URL — the old local uploader didn't, so audio 404'd
+                path = storage.store_recording(call_id, base64.b64decode(audio_b64))
             except (ValueError, TypeError):
                 path = None
             if path:

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDemoCase } from "../../lib/api";
+import { getMyCase } from "../../lib/api";
+import { useSession } from "../../lib/auth";
 import { entitySavings, facilitySavings, money } from "../../lib/savings";
 import { procedureLabel } from "../../lib/procedures";
 import { billStatus, sortByStatus, STATUS_META, type BillStatus } from "../../lib/billStatus";
@@ -106,14 +107,18 @@ function nextLine(entity: Entity, spec: JobSpec): string {
 }
 
 export default function BillList() {
+  const session = useSession();
+  const email = session?.user?.email;
   const [spec, setSpec] = useState<JobSpec | null>(null);
   const [error, setError] = useState(false);
   const [pendingBills, setPendingBills] = useState<PendingBill[]>([]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    getDemoCase().then(setSpec).catch(() => setError(true));
-  }, []);
+    // Logged in → their case via cases.owner_email; logged out → Maya's demo
+    // case (the session hydrates async, so refetch when the email appears).
+    getMyCase(email ?? undefined).then(setSpec).catch(() => setError(true));
+  }, [email]);
 
   const patientName = (spec?.patient?.legal_name as string) ?? "–";
 
