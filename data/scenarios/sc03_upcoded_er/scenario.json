@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "upcoded_er",
+  "coverage": {
+    "member_id": "AET-88102",
+    "network_status": "in_network",
+    "payer_name": "AETNA [1001]",
+    "plan_name": "HB AMC AETNA HMO",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220071",
+    "city": "Boston",
+    "ein": "04-2697983",
+    "name": "Massachusetts General Hospital",
+    "state": "MA"
+  },
+  "narrative": "Marcus was billed a level-5 emergency visit (CPT 99285) for an acute upper-respiratory infection (J06.9). The records support a level-3 visit (99283); the difference is an upcode.",
+  "patient": {
+    "account_number": "MGH-2026-0405",
+    "dob": "1979-01-30",
+    "name": "Marcus Webb"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Massachusetts General Hospital"
+    }
+  ],
+  "scenario_id": "sc03_upcoded_er",
+  "service_date": "2026-04-05",
+  "title": "Marcus Webb — level-5 ER visit on a low-acuity diagnosis"
+}

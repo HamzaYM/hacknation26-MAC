@@ -19,7 +19,7 @@ import uuid
 
 from fastapi import APIRouter, Request
 
-from .. import db, storage
+from .. import case_store, db, storage
 from ..config import load_vertical
 from ..engine.honesty import audit_call
 from ..fixtures import DEMO_CASE_ID, demo_benchmarks, demo_dossier
@@ -138,18 +138,27 @@ async def elevenlabs_post_call(request: Request) -> dict:
 
 
 def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
-    """Build the set of numbers the agent is allowed to speak.
+    """Build the set of numbers the agent is allowed to speak, case-scoped.
 
-    Sources: benchmarks (Medicare/cash/negotiated for each CPT), dossier
-    (anchor/target/floor), case data (balance, EOB, FPL%), and CPT codes
-    themselves (agent must cite codes by number).
+    Two layers:
+      1. Case-level numbers resolved from the call's actual case (bill/EOB/
+         financial_profile) — the fixture registry first (Maya/Dan/Nina,
+         unchanged), then case_store (POST /cases or a scenario load).
+      2. case_store's allowed_numbers slot for that case — the scenario
+         answer key's/benchmark report's numbers + CPT codes, precomputed at
+         scenario-load time (contracts/anchor_set.schema.json anchors,
+         fair_band, per-line dollar impacts) so the agent's citable set
+         matches the report it was actually served mid-call.
+
+    The CURRENT GLOBAL FIXTURE SET (5-CPT demo benchmarks + Maya's dossier +
+    flags) is the fallback — used whenever the case is DEMO_CASE_ID, or has
+    no call row / no stored allowed_numbers (offline dev, no DB, a case
+    that never went through scenario-load) — this is exactly the prior
+    behavior, unchanged for the demo path.
     """
     nums: list[float] = []
-    # Case-level numbers, resolved from the call's actual case (audit finding:
-    # this was hardcoded to Maya's figures, so any other case's legitimate
-    # numbers would flag as uncited). Maya's stay as the no-DB fallback.
+    case_id: str | None = DEMO_CASE_ID
     spec = None
-    case_id = DEMO_CASE_ID
     if call_id:
         try:
             row = db.get_call(call_id)
@@ -157,47 +166,63 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
                 case_id = str(row["case_id"])
                 from ..fixtures_users import spec_for_case
                 spec = spec_for_case(case_id)
+                if spec is None:
+                    spec = case_store.get_job_spec(case_id)
         except Exception:  # noqa: BLE001 — allowed-set building must not raise
-            spec = None
+            case_id, spec = None, None
     if spec:
         bill = spec.get("bill", {})
         fin = spec.get("financial_profile", {})
+        eob = spec.get("eob", {}) or {}
         for v in (bill.get("total_billed"), bill.get("patient_balance"),
-                  spec.get("eob", {}).get("patient_responsibility"),
+                  eob.get("patient_responsibility") or eob.get("patient_responsibility_total"),
                   fin.get("lump_sum_available"), fin.get("fpl_percent")):
             if v is not None:
                 nums.append(float(v))
         for li in bill.get("line_items", []):
             if li.get("billed_amount") is not None:
                 nums.append(float(li["billed_amount"]))
+            try:
+                nums.append(float(li.get("cpt")))
+            except (TypeError, ValueError):
+                pass
     else:
         nums.extend([8432, 4287, 3875, 1700, 250])  # billed, balance, EOB, lump-sum, FPL%
-    # CPT codes (agent cites these as bare numbers)
-    for cpt in demo_benchmarks().keys():
-        try:
-            nums.append(float(cpt))
-        except ValueError:
-            pass
-    # Benchmarks per CPT
-    for row in demo_benchmarks().values():
-        for key in ("medicare", "mrf_cash", "mrf_negotiated_median"):
-            v = row.get(key)
-            if v is not None:
-                nums.append(float(v))
-    # Dossier anchors
-    dossier = demo_dossier()
-    nums.extend([dossier.anchor, dossier.target, dossier.floor])
-    # Flag dollar impacts (the agent cites these)
-    from ..fixtures import demo_flags
-    for f in demo_flags():
-        nums.append(f.dollar_impact)
+    case_numbers = case_store.get(case_id, "allowed_numbers") if case_id else None
+    if case_numbers:
+        nums.extend(float(n) for n in case_numbers)
+
+    if not case_id or case_id == DEMO_CASE_ID or not case_numbers:
+        # Global fixture fallback — Maya's demo path, or any case that hasn't
+        # accumulated a stored allowed_numbers set yet.
+        for cpt in demo_benchmarks().keys():
+            try:
+                nums.append(float(cpt))
+            except ValueError:
+                pass
+        for row in demo_benchmarks().values():
+            # NB: keys match data/seed/benchmarks_v0.json's actual field names
+            # (medicare_rate, not "medicare" — the prior version of this loop
+            # keyed on "medicare" and silently never matched, so no CPT-level
+            # Medicare rate was ever in the allowed set; fixed while
+            # generalizing this function for per-case allowed numbers).
+            for key in ("medicare_rate", "mrf_cash", "mrf_negotiated_median"):
+                v = row.get(key)
+                if v is not None:
+                    nums.append(float(v))
+        dossier = demo_dossier()
+        nums.extend([dossier.anchor, dossier.target, dossier.floor])
+        from ..fixtures import demo_flags
+        for f in demo_flags():
+            nums.append(f.dollar_impact)
+
     # Recorded-authorization tokens: when the case has an authorization on file,
     # the agent reads the patient's recorded statement VERBATIM when challenged
     # (DOB, account-number chunks, years). Those spoken numbers are legitimate quotes
-    # of an on-file record, so add every numeric run from statement_text or the
+    # of an on-file record, so add every numeric run from statement_text, or the
     # honest read-back would trip the D3 number-honesty audit as "uncited".
     try:
-        auth = db.get_case_authorization(case_id)
+        auth = db.get_case_authorization(case_id) if case_id else None
     except Exception:  # noqa: BLE001 — allowed-set building must not raise
         auth = None
     if auth and auth.get("authorization_statement"):

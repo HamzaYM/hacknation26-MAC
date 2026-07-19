@@ -1,0 +1,37 @@
+{
+  "claim_number": "THP-2026-40771",
+  "denial_codes": [],
+  "line_items": [
+    {
+      "allowed_amount": 112.51,
+      "billed_amount": 1475.0,
+      "cpt": "70450",
+      "date_of_service": "2026-05-02",
+      "description": "CT head/brain without contrast",
+      "patient_responsibility": 0.0,
+      "plan_paid": 112.51,
+      "units": 1
+    },
+    {
+      "allowed_amount": 125.01,
+      "billed_amount": 725.0,
+      "cpt": "72110",
+      "date_of_service": "2026-05-02",
+      "description": "X-ray, lumbar spine, 4+ views",
+      "patient_responsibility": 0.0,
+      "plan_paid": 125.01,
+      "units": 1
+    },
+    {
+      "allowed_amount": 294.45,
+      "billed_amount": 581.0,
+      "cpt": "96360",
+      "date_of_service": "2026-05-02",
+      "description": "IV hydration, initial hour",
+      "patient_responsibility": 0.0,
+      "plan_paid": 294.45,
+      "units": 1
+    }
+  ],
+  "patient_responsibility_total": 0.0
+}

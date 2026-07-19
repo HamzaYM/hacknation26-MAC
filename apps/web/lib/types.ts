@@ -1,8 +1,12 @@
 // TS mirrors of contracts/*.schema.json and apps/api/app/models.py — the JSON
 // Schemas are the source of truth. Change contracts FIRST, then models.py, then this file.
 
+// Full taxonomy per docs/generalized-pipeline.md §"Flag taxonomy" — `nsa` is
+// kept alongside `nsa_balance_billing` for backward compat with the fixture
+// case; both render with the same label.
 export type FlagType =
-  | "duplicate" | "upcode" | "unbundle" | "phantom" | "eob_mismatch" | "nsa" | "markup";
+  | "duplicate" | "upcode" | "unbundle" | "phantom" | "eob_mismatch" | "nsa"
+  | "markup" | "nsa_balance_billing" | "denial" | "units_error" | "absent_from_chargemaster";
 
 export interface LineItem {
   cpt: string;
@@ -310,5 +314,127 @@ export const FLAG_LABELS: Record<FlagType, string> = {
   phantom: "Charge for a service not rendered",
   eob_mismatch: "Bill doesn't match insurance EOB",
   nsa: "No Surprises Act protection",
+  nsa_balance_billing: "No Surprises Act protection",
   markup: "Priced above the fair benchmark",
+  denial: "Insurer denial worth appealing",
+  units_error: "Units billed don't match the record",
+  absent_from_chargemaster: "Not found on the hospital's posted standard charges",
 };
+
+// ---- Generalized-pipeline seam contracts (contracts/anchor_set.schema.json,
+// contracts/scenario.schema.json) — TS mirrors, source of truth is the JSON
+// Schema. Consumed by the dossier/case-file multiples table + evidence toggle
+// and the War Room scenario picker (docs/generalized-pipeline.md).
+
+export type AnchorMethod =
+  | "medicare" | "plan_rate" | "cross_payer_band" | "cash_price" | "gross_charge" | "rand_norm_estimate";
+
+export type AnchorConfidence = "high" | "medium" | "estimated";
+
+export interface AnchorBand {
+  p25: number;
+  median: number;
+  p75: number;
+  min: number;
+  max: number;
+  n_payers: number;
+  n_rows?: number;
+}
+
+// Every dollar a user or the voice agent sees traces back to one of these —
+// the provenance the "Show evidence" toggle (decision #15) reveals.
+export interface Anchor {
+  method: AnchorMethod;
+  value: number;
+  band?: AnchorBand | null;
+  component?: "professional" | "facility" | "global" | null;
+  formula?: string | null;
+  source: string;
+  source_url?: string | null;
+  confidence: AnchorConfidence;
+  label: string;
+}
+
+export type CodeType = "CPT" | "HCPCS" | "DRG" | "MS-DRG" | "NDC" | "CDM" | "RC" | "LOCAL";
+
+// Coverage statuses (decision #12) — `thin` and `absent_from_chargemaster` get
+// careful, non-accusatory badges; `professional_excluded` is never flagged.
+export type CoverageStatus = "full" | "thin" | "absent_from_chargemaster" | "professional_excluded" | "no_medicare";
+
+export interface FairBand {
+  low: number;
+  high: number;
+  basis: string;
+  low_multiple: number;
+  high_multiple: number;
+}
+
+export interface LineBenchmark {
+  code: string;
+  code_type: CodeType;
+  description?: string;
+  billing_entity?: "facility" | "professional" | "unknown";
+  units: number;
+  billed: number;
+  anchors: Anchor[];
+  medicare_multiple?: number | null;
+  fair_band?: FairBand | null;
+  rand_flag: boolean;
+  excess_above_band: number;
+  coverage: CoverageStatus;
+}
+
+export interface BenchmarkTotals {
+  billed: number;
+  medicare?: number | null;
+  medicare_multiple?: number | null;
+  fair_band_low: number;
+  fair_band_high: number;
+  excess_above_band: number;
+  ask_anchor: number;
+  ask_target: number;
+  floor: number;
+}
+
+export interface BenchmarkReport {
+  case_id: string;
+  hospital: string;
+  payer_name?: string | null;
+  plan_name?: string | null;
+  lines: LineBenchmark[];
+  totals: BenchmarkTotals;
+  data_version: { chargemaster?: string; medicare?: string; config?: string };
+}
+
+export const COVERAGE_LABELS: Record<CoverageStatus, string> = {
+  full: "Benchmarked",
+  thin: "No benchmark — transparency",
+  absent_from_chargemaster: "Not in hospital's posted standard charges",
+  professional_excluded: "Billed separately by the provider",
+  no_medicare: "No Medicare rate available",
+};
+
+export type ScenarioArchetype =
+  | "maya_baseline" | "duplicate_charge" | "upcoded_er" | "unbundled_panel" | "self_pay_gross"
+  | "eob_mismatch" | "oon_balance_bill" | "clean_overpriced" | "denial_driven";
+
+// GET /scenarios list item — kept defensive/partial since only scenario_id,
+// archetype, title are required by contracts/scenario.schema.json; everything
+// else may be missing depending on how thin a scenario's metadata is.
+export interface ScenarioSummary {
+  scenario_id: string;
+  archetype: ScenarioArchetype | string;
+  title: string;
+  narrative?: string | null;
+  hospital?: { name: string } | null;
+  coverage?: {
+    status?: "insured" | "self_pay";
+    payer_name?: string | null;
+    plan_name?: string | null;
+  } | null;
+}
+
+export interface ScenarioLoadResponse {
+  case_id: string;
+  scenario_id?: string;
+}

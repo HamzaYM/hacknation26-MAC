@@ -1,0 +1,27 @@
+{
+  "account_number": "BWH-2026-0618",
+  "due_date": "2026-07-27",
+  "facility_name": "Brigham and Women's Hospital",
+  "is_itemized": true,
+  "line_items": [
+    {
+      "billed_amount": 3691.0,
+      "billing_entity": "facility",
+      "cpt": "99285",
+      "date_of_service": "2026-06-18",
+      "description": "Emergency department visit, high severity (level 5)",
+      "units": 1
+    },
+    {
+      "billed_amount": 2800.0,
+      "billing_entity": "professional",
+      "cpt": "01922",
+      "date_of_service": "2026-06-18",
+      "description": "Anesthesia services (out-of-network provider)",
+      "units": 1
+    }
+  ],
+  "nonprofit_status": true,
+  "patient_balance": 3254.36,
+  "statement_date": "2026-06-27"
+}

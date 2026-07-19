@@ -1,0 +1,436 @@
+{
+  "ask": {
+    "anchor": 1505.34,
+    "excess_above_band": 2225.12,
+    "floor": 1003.56,
+    "per_line_multiples": [
+      {
+        "code": "99285",
+        "medicare_multiple": 5.54,
+        "rand_flag": true
+      },
+      {
+        "code": "71046",
+        "medicare_multiple": 4.41,
+        "rand_flag": true
+      },
+      {
+        "code": "71046",
+        "medicare_multiple": 4.41,
+        "rand_flag": true
+      },
+      {
+        "code": "96360",
+        "medicare_multiple": 2.67,
+        "rand_flag": true
+      }
+    ],
+    "target": 2007.12,
+    "total_medicare_multiple": 4.72
+  },
+  "benchmark_report": {
+    "case_id": "sc02_duplicate",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96360/facility] cms-opps-2026q3"
+    },
+    "hospital": "Newton-Wellesley Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[99285/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 608.43
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 1545.41
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "CIGNA [1006] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/99285] payer=CIGNA [1006] plan=HB CH CIGNA HMO / PPO",
+            "source_url": null,
+            "value": 1997.82
+          },
+          {
+            "band": {
+              "max": 1997.82,
+              "median": 1964.13,
+              "min": 764.11,
+              "n_payers": 3,
+              "n_rows": 3,
+              "p25": 1364.12,
+              "p75": 1980.97
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (3 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/99285] commercial rows",
+            "source_url": null,
+            "value": 1964.13
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/99285] cash",
+            "source_url": null,
+            "value": 2526.75
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/99285] gross",
+            "source_url": null,
+            "value": 3369.0
+          }
+        ],
+        "billed": 3369.0,
+        "billing_entity": "facility",
+        "code": "99285",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Emergency department visit, high severity",
+        "excess_above_band": 1847.93,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 1521.07,
+          "high_multiple": 2.5,
+          "low": 912.64,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 5.54,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[71046/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 88.91
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 225.83
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "CIGNA [1006] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] payer=CIGNA [1006] plan=HB CH CIGNA HMO / PPO",
+            "source_url": null,
+            "value": 232.46
+          },
+          {
+            "band": {
+              "max": 232.46,
+              "median": 166.54,
+              "min": 104.55,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 104.55,
+              "p75": 229.52
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] commercial rows",
+            "source_url": null,
+            "value": 166.54
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] cash",
+            "source_url": null,
+            "value": 294.0
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] gross",
+            "source_url": null,
+            "value": 392.0
+          }
+        ],
+        "billed": 392.0,
+        "billing_entity": "facility",
+        "code": "71046",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Radiologic exam, chest, 2 views",
+        "excess_above_band": 169.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 222.27,
+          "high_multiple": 2.5,
+          "low": 133.37,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 4.41,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[71046/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 88.91
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 225.83
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "CIGNA [1006] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] payer=CIGNA [1006] plan=HB CH CIGNA HMO / PPO",
+            "source_url": null,
+            "value": 232.46
+          },
+          {
+            "band": {
+              "max": 232.46,
+              "median": 166.54,
+              "min": 104.55,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 104.55,
+              "p75": 229.52
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] commercial rows",
+            "source_url": null,
+            "value": 166.54
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] cash",
+            "source_url": null,
+            "value": 294.0
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/71046] gross",
+            "source_url": null,
+            "value": 392.0
+          }
+        ],
+        "billed": 392.0,
+        "billing_entity": "facility",
+        "code": "71046",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Radiologic exam, chest, 2 views",
+        "excess_above_band": 169.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 222.27,
+          "high_multiple": 2.5,
+          "low": 133.37,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 4.41,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[96360/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 217.31
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 551.97
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "CIGNA [1006] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] payer=CIGNA [1006] plan=HB CH CIGNA HMO / PPO",
+            "source_url": null,
+            "value": 344.53
+          },
+          {
+            "band": {
+              "max": 344.53,
+              "median": 294.45,
+              "min": 245.18,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 248.93,
+              "p75": 340.17
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] commercial rows",
+            "source_url": null,
+            "value": 294.45
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] cash",
+            "source_url": null,
+            "value": 435.75
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Newton-Wellesley Hospital/96360] gross",
+            "source_url": null,
+            "value": 581.0
+          }
+        ],
+        "billed": 581.0,
+        "billing_entity": "facility",
+        "code": "96360",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "IV hydration, initial hour",
+        "excess_above_band": 37.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 543.27,
+          "high_multiple": 2.5,
+          "low": 325.97,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 2.67,
+        "rand_flag": true,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "CIGNA [1006]",
+    "plan_name": "HB CH CIGNA HMO / PPO",
+    "totals": {
+      "ask_anchor": 1505.34,
+      "ask_target": 2007.12,
+      "billed": 4734.0,
+      "excess_above_band": 2225.12,
+      "fair_band_high": 2508.88,
+      "fair_band_low": 1505.35,
+      "floor": 1003.56,
+      "medicare": 1003.56,
+      "medicare_multiple": 4.72
+    }
+  },
+  "call_talking_points": [
+    "duplicate on 71046: $392.00 (derived flag)",
+    "Billed total $4,734.00 is 4.72x the Medicare rate of $1,003.56 (benchmark anchor).",
+    "Lines 99285, 71046, 71046, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "71046",
+      "detail": "71046 billed 2x on the same date",
+      "dollar_impact": 392.0,
+      "type": "duplicate"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc02_duplicate"
+}

@@ -1,0 +1,58 @@
+{
+  "authorizations": {},
+  "bill": {
+    "account_number": "BWH-2026-0520",
+    "due_date": "2026-06-28",
+    "facility_name": "Brigham and Women's Hospital",
+    "is_itemized": true,
+    "line_items": [
+      {
+        "billed_amount": 178.0,
+        "billing_entity": "facility",
+        "cpt": "80053",
+        "date_of_service": "2026-05-20",
+        "description": "Comprehensive metabolic panel",
+        "units": 1
+      },
+      {
+        "billed_amount": 147.0,
+        "billing_entity": "facility",
+        "cpt": "80048",
+        "date_of_service": "2026-05-20",
+        "description": "Basic metabolic panel",
+        "units": 1
+      },
+      {
+        "billed_amount": 826.0,
+        "billing_entity": "facility",
+        "cpt": "96360",
+        "date_of_service": "2026-05-20",
+        "description": "IV hydration, initial hour",
+        "units": 1
+      }
+    ],
+    "nonprofit_status": true,
+    "patient_balance": 1151.0,
+    "statement_date": "2026-05-29"
+  },
+  "case_id": "sc04_unbundled_panel",
+  "derived_flags": [],
+  "entities": [
+    {
+      "balance": 1151.0,
+      "kind": "facility",
+      "name": "Brigham and Women's Hospital"
+    }
+  ],
+  "eob": {},
+  "financial_profile": {},
+  "insurance": {
+    "member_id": "BCB-55031",
+    "payer_name": "BLUE CROSS BLUE SHIELD [110001]",
+    "plan_type": "HB AMC BLUE CROSS HMO"
+  },
+  "patient": {
+    "dob": "1990-11-08",
+    "legal_name": "Elena Sorto"
+  }
+}

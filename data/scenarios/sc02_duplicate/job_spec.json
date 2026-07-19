@@ -1,0 +1,66 @@
+{
+  "authorizations": {},
+  "bill": {
+    "account_number": "NWH-2026-0311",
+    "due_date": "2026-04-19",
+    "facility_name": "Newton-Wellesley Hospital",
+    "is_itemized": true,
+    "line_items": [
+      {
+        "billed_amount": 3369.0,
+        "billing_entity": "facility",
+        "cpt": "99285",
+        "date_of_service": "2026-03-11",
+        "description": "Emergency department visit, high severity",
+        "units": 1
+      },
+      {
+        "billed_amount": 392.0,
+        "billing_entity": "facility",
+        "cpt": "71046",
+        "date_of_service": "2026-03-11",
+        "description": "Radiologic exam, chest, 2 views",
+        "units": 1
+      },
+      {
+        "billed_amount": 392.0,
+        "billing_entity": "facility",
+        "cpt": "71046",
+        "date_of_service": "2026-03-11",
+        "description": "Radiologic exam, chest, 2 views",
+        "units": 1
+      },
+      {
+        "billed_amount": 581.0,
+        "billing_entity": "facility",
+        "cpt": "96360",
+        "date_of_service": "2026-03-11",
+        "description": "IV hydration, initial hour",
+        "units": 1
+      }
+    ],
+    "nonprofit_status": true,
+    "patient_balance": 4153.0,
+    "statement_date": "2026-03-20"
+  },
+  "case_id": "sc02_duplicate",
+  "derived_flags": [],
+  "entities": [
+    {
+      "balance": 4153.0,
+      "kind": "facility",
+      "name": "Newton-Wellesley Hospital"
+    }
+  ],
+  "eob": {},
+  "financial_profile": {},
+  "insurance": {
+    "member_id": "CIG-2210",
+    "payer_name": "CIGNA [1006]",
+    "plan_type": "HB CH CIGNA HMO / PPO"
+  },
+  "patient": {
+    "dob": "1988-07-22",
+    "legal_name": "Priya Nair"
+  }
+}

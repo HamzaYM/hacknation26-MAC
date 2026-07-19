@@ -23,9 +23,11 @@ import uuid
 import openai
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from .. import db, storage
+from .. import case_store, db, storage
 from ..config import load_vertical
 from ..engine.flags import detect_flags
+from ..engine.lookup import get_lookup
+from ..engine.reconcile import reconcile
 from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, DEMO_LINE_ITEMS, demo_benchmarks
 from ..models import DerivedFlag, JobSpec
 
@@ -51,10 +53,42 @@ You are parsing a health-insurance Explanation of Benefits (EOB) PDF. Extract ea
 - cpt: the CPT/HCPCS code
 - description: the printed description
 - date_of_service: ISO format YYYY-MM-DD (use the header Date of Service if lines lack dates)
-- billed_amount: the "Billed" column as a number
+- units: the quantity/units column as an integer (default 1 if not printed)
+- billed_amount: the "Billed"/"Charges" column as a number
+- allowed_amount: the "Allowed"/"Plan Allowance" column (the negotiated rate) as a number
+- plan_paid: the "Plan Paid"/"Insurance Paid" column as a number (use 0 for denied lines)
+- patient_responsibility: the "Patient Responsibility"/"You Owe" column as a number
 - dx_codes: always an empty array
 total_billed = the billed TOTALS amount. patient_responsibility_total = the
-"YOUR TOTAL RESPONSIBILITY" amount. Numbers only, exactly as printed."""
+"YOUR TOTAL RESPONSIBILITY" amount. Numbers only, exactly as printed; use 0 (not null)
+where a column is present but the amount is zero."""
+
+
+def _line_item_schema(kind: str) -> dict:
+    """Per-line schema. EOB lines additionally carry the adjudication columns
+    (units/allowed/plan_paid/patient_responsibility) the reconciler needs — the
+    frozen contract (contracts/job_spec.schema.json $defs/line_item) already
+    supports them; this is where extraction finally populates them."""
+    props: dict = {
+        "cpt": {"type": "string"},
+        "description": {"type": "string"},
+        "date_of_service": {"type": "string"},
+        "billed_amount": {"type": "number"},
+        "dx_codes": {"type": "array", "items": {"type": "string"}},
+    }
+    required = ["cpt", "description", "date_of_service", "billed_amount", "dx_codes"]
+    if kind == "eob":
+        props.update({
+            "units": {"type": "integer"},
+            "allowed_amount": {"type": "number"},
+            "plan_paid": {"type": "number"},
+            "patient_responsibility": {"type": "number"},
+        })
+        required += ["units", "allowed_amount", "plan_paid", "patient_responsibility"]
+    return {
+        "type": "object", "properties": props,
+        "required": required, "additionalProperties": False,
+    }
 
 
 def _schema(kind: str) -> dict:
@@ -65,22 +99,7 @@ def _schema(kind: str) -> dict:
         "schema": {
             "type": "object",
             "properties": {
-                "line_items": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "cpt": {"type": "string"},
-                            "description": {"type": "string"},
-                            "date_of_service": {"type": "string"},
-                            "billed_amount": {"type": "number"},
-                            "dx_codes": {"type": "array", "items": {"type": "string"}},
-                        },
-                        "required": ["cpt", "description", "date_of_service",
-                                     "billed_amount", "dx_codes"],
-                        "additionalProperties": False,
-                    },
-                },
+                "line_items": {"type": "array", "items": _line_item_schema(kind)},
                 "total_billed": {"type": "number"},
                 balance_key: {"type": "number"},
             },
@@ -201,9 +220,31 @@ def reconcile_eob(parsed: dict) -> dict:
                             "parsed": got, "expected": expected}]}
 
 
-def parsed_flags(parsed: dict, kind: str) -> list[DerivedFlag]:
-    """Run the real engine over the parsed data (merged into the demo JobSpec)."""
-    raw = copy.deepcopy(DEMO_JOB_SPEC)
+def _empty_case_spec(case_id: str) -> dict:
+    """Skeleton JobSpec for a brand-new case (no fixture) — bill+EOB filled in as
+    documents are uploaded. Kills the deepcopy(DEMO_JOB_SPEC) merge for real cases;
+    the Maya demo case still gets the fixture via case_store's DEMO_CASE_ID fallback."""
+    return {
+        "case_id": case_id,
+        "patient": {},
+        "insurance": {},
+        "financial_profile": {},
+        "authorizations": {},
+        "bill": {"facility_name": "", "account_number": "", "line_items": []},
+        "eob": {"line_items": []},
+        "entities": [{"name": "the provider", "kind": "facility"}],
+    }
+
+
+def _base_job_spec(case_id: str) -> dict:
+    """The case's accumulated JobSpec dict: the stored one, else the Maya fixture
+    for DEMO_CASE_ID (via case_store), else a fresh skeleton."""
+    spec = case_store.get_job_spec(case_id)
+    return spec if spec is not None else _empty_case_spec(case_id)
+
+
+def _splice(raw: dict, parsed: dict, kind: str) -> dict:
+    """Merge a freshly parsed bill or EOB into a case JobSpec dict (in place)."""
     if kind == "bill":
         raw["bill"]["line_items"] = parsed.get("line_items") or []
         raw["bill"]["total_billed"] = parsed.get("total_billed")
@@ -211,8 +252,33 @@ def parsed_flags(parsed: dict, kind: str) -> list[DerivedFlag]:
     else:
         raw["eob"]["line_items"] = parsed.get("line_items") or []
         raw["eob"]["patient_responsibility_total"] = parsed.get("patient_responsibility_total")
+    return raw
+
+
+def parsed_flags(parsed: dict, kind: str, case_id: str = DEMO_CASE_ID, lookup=None) -> list[DerivedFlag]:
+    """Run the real engine over the case's accumulated data. The base spec comes
+    from case_store (Maya's fixture for DEMO_CASE_ID; the real accumulated spec for
+    any other case) — never a hardcoded deepcopy of the demo fixture."""
+    raw = _splice(copy.deepcopy(_base_job_spec(case_id)), parsed, kind)
     spec = JobSpec.model_validate(raw)
-    return detect_flags(spec, load_vertical(), demo_benchmarks())
+    return detect_flags(spec, load_vertical(), demo_benchmarks(), lookup=lookup)
+
+
+def case_reconciliation(case_id: str, parsed: dict, kind: str) -> dict:
+    """Real bill<->EOB reconciliation (engine/reconcile.py) once both documents
+    exist for a case; otherwise a 'pending counterpart' status. Shape carries a
+    `verdict` so the response contract stays stable across the demo and real paths."""
+    raw = _splice(copy.deepcopy(_base_job_spec(case_id)), parsed, kind)
+    spec = JobSpec.model_validate(raw)
+    has_bill = bool(spec.bill.line_items)
+    has_eob = bool(spec.eob.line_items) or spec.eob.patient_responsibility_total is not None
+    if has_bill and has_eob:
+        result = reconcile(spec.bill, spec.eob)
+        result["verdict"] = "reconciled"
+        return result
+    missing = "eob" if kind == "bill" else "bill"
+    return {"verdict": "pending_counterpart", "detail": f"no {missing} uploaded for this case yet",
+            "matched": [], "bill_only": [], "eob_only": [], "totals": {}, "self_pay": False}
 
 
 @router.post("/parse")
@@ -225,15 +291,32 @@ async def parse_document(file: UploadFile = File(...), kind: str = Form(...),
         raise HTTPException(422, "empty file")
 
     parsed, model = extract_pdf(pdf_bytes, kind)
+    resolved_case = DEMO_CASE_ID if case_id in ("demo", DEMO_CASE_ID) else case_id
+    is_demo = resolved_case == DEMO_CASE_ID
+
     try:
-        flags = parsed_flags(parsed, kind)
+        flags = parsed_flags(parsed, kind, resolved_case, lookup=get_lookup())
     except ValueError as err:  # pydantic rejected the extraction shape
         log.warning("parsed %s failed JobSpec validation: %s", kind, type(err).__name__)
         flags = []
-    reconciliation = reconcile_bill(parsed) if kind == "bill" else reconcile_eob(parsed)
+
+    # Accumulate the parsed doc into the case (real cases only — the Maya demo
+    # case stays backed by the pristine fixture so existing demo consumers hold).
+    if not is_demo:
+        try:
+            case_store.put(resolved_case, "job_spec",
+                           _splice(copy.deepcopy(_base_job_spec(resolved_case)), parsed, kind))
+        except Exception as err:  # never let case bookkeeping break the parse response
+            log.warning("case_store update skipped: %s", type(err).__name__)
+
+    # Reconciliation: the demo keeps the fixture QA diff (grades the extraction);
+    # real cases get true bill<->EOB reconciliation once both docs are present.
+    if is_demo:
+        reconciliation = reconcile_bill(parsed) if kind == "bill" else reconcile_eob(parsed)
+    else:
+        reconciliation = case_reconciliation(resolved_case, parsed, kind)
 
     document_id = str(uuid.uuid4())
-    resolved_case = DEMO_CASE_ID if case_id in ("demo", DEMO_CASE_ID) else case_id
     path = f"{resolved_case}/{document_id}.pdf"
     stored = storage.store_document(path, pdf_bytes)  # best-effort, like recordings
     storage_path = stored or f"documents/{path}"

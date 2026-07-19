@@ -1,0 +1,62 @@
+{
+  "authorizations": {},
+  "bill": {
+    "account_number": "BWH-2026-0618",
+    "due_date": "2026-07-27",
+    "facility_name": "Brigham and Women's Hospital",
+    "is_itemized": true,
+    "line_items": [
+      {
+        "billed_amount": 3691.0,
+        "billing_entity": "facility",
+        "cpt": "99285",
+        "date_of_service": "2026-06-18",
+        "description": "Emergency department visit, high severity (level 5)",
+        "units": 1
+      },
+      {
+        "billed_amount": 2800.0,
+        "billing_entity": "professional",
+        "cpt": "01922",
+        "date_of_service": "2026-06-18",
+        "description": "Anesthesia services (out-of-network provider)",
+        "units": 1
+      }
+    ],
+    "nonprofit_status": true,
+    "patient_balance": 3254.36,
+    "statement_date": "2026-06-27"
+  },
+  "case_id": "sc07_oon_balance_bill",
+  "derived_flags": [],
+  "entities": [
+    {
+      "balance": 454.36,
+      "kind": "facility",
+      "name": "Brigham and Women's Hospital"
+    },
+    {
+      "balance": 2800.0,
+      "kind": "anesthesia",
+      "name": "Bay State Anesthesia Associates"
+    }
+  ],
+  "eob": {
+    "claim_number": "CIG-2026-99120",
+    "denial_codes": [],
+    "line_items": [],
+    "patient_responsibility_total": 454.36
+  },
+  "financial_profile": {},
+  "insurance": {
+    "emergency_services": true,
+    "member_id": "CIA-70045",
+    "network_status": "in_network",
+    "payer_name": "CIGNA ALTERNATE [1018]",
+    "plan_type": "HB AMC CIGNA NEW BUSINESS DISCOUNT"
+  },
+  "patient": {
+    "dob": "1983-12-11",
+    "legal_name": "Tomas Vega"
+  }
+}

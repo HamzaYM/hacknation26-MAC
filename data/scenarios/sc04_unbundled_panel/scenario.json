@@ -1,0 +1,33 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "unbundled_panel",
+  "coverage": {
+    "member_id": "BCB-55031",
+    "network_status": "in_network",
+    "payer_name": "BLUE CROSS BLUE SHIELD [110001]",
+    "plan_name": "HB AMC BLUE CROSS HMO",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": "220110",
+    "city": "Boston",
+    "ein": "04-2312909",
+    "name": "Brigham and Women's Hospital",
+    "state": "MA"
+  },
+  "narrative": "Elena's Brigham lab bill lists both a comprehensive metabolic panel (80053) and a basic metabolic panel (80048) on the same day. The comprehensive panel already includes the basic — an NCCI procedure-to-procedure unbundle.",
+  "patient": {
+    "account_number": "BWH-2026-0520",
+    "dob": "1990-11-08",
+    "name": "Elena Sorto"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Brigham and Women's Hospital"
+    }
+  ],
+  "scenario_id": "sc04_unbundled_panel",
+  "service_date": "2026-05-20",
+  "title": "Elena Sorto — metabolic panel unbundled (80053 + 80048)"
+}

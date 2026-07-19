@@ -1,0 +1,236 @@
+{
+  "ask": {
+    "anchor": 486.18,
+    "excess_above_band": 1843.71,
+    "floor": 324.12,
+    "per_line_multiples": [
+      {
+        "code": "70450",
+        "medicare_multiple": 17.11,
+        "rand_flag": true
+      },
+      {
+        "code": "96360",
+        "medicare_multiple": 3.8,
+        "rand_flag": true
+      }
+    ],
+    "target": 648.24,
+    "total_medicare_multiple": 8.19
+  },
+  "benchmark_report": {
+    "case_id": "sc09_denial_driven",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96360/facility] cms-opps-2026q3"
+    },
+    "hospital": "Massachusetts General Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[70450/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 106.81
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 271.3
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "COMMONWEALTH CARE ALLIANCE [1007] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Massachusetts General Hospital/70450] payer=COMMONWEALTH CARE ALLIANCE [1007] plan=HB MGH COMMONWEALTH CARE ALLIANCE",
+            "source_url": null,
+            "value": 126.27
+          },
+          {
+            "band": {
+              "max": 1279.6,
+              "median": 974.32,
+              "min": 471.67,
+              "n_payers": 3,
+              "n_rows": 3,
+              "p25": 723.0,
+              "p75": 1126.96
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (3 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Massachusetts General Hospital/70450] commercial rows",
+            "source_url": null,
+            "value": 974.32
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Massachusetts General Hospital/70450] cash",
+            "source_url": null,
+            "value": 1371.0
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Massachusetts General Hospital/70450] gross",
+            "source_url": null,
+            "value": 1828.0
+          }
+        ],
+        "billed": 1828.0,
+        "billing_entity": "facility",
+        "code": "70450",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "CT head/brain without contrast",
+        "excess_above_band": 1560.98,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 267.02,
+          "high_multiple": 2.5,
+          "low": 160.22,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 17.11,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[96360/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 217.31
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 551.97
+          },
+          {
+            "band": {
+              "max": 593.07,
+              "median": 508.4,
+              "min": 250.18,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 392.74,
+              "p75": 580.68
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] commercial rows",
+            "source_url": null,
+            "value": 508.4
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] cash",
+            "source_url": null,
+            "value": 619.5
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Massachusetts General Hospital/96360] gross",
+            "source_url": null,
+            "value": 826.0
+          }
+        ],
+        "billed": 826.0,
+        "billing_entity": "facility",
+        "code": "96360",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "IV hydration, initial hour",
+        "excess_above_band": 282.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 543.27,
+          "high_multiple": 2.5,
+          "low": 325.97,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.8,
+        "rand_flag": true,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "COMMONWEALTH CARE ALLIANCE [1007]",
+    "plan_name": "HB MGH COMMONWEALTH CARE ALLIANCE",
+    "totals": {
+      "ask_anchor": 486.18,
+      "ask_target": 648.24,
+      "billed": 2654.0,
+      "excess_above_band": 1843.71,
+      "fair_band_high": 810.29,
+      "fair_band_low": 486.19,
+      "floor": 324.12,
+      "medicare": 324.12,
+      "medicare_multiple": 8.19
+    }
+  },
+  "call_talking_points": [
+    "denial on 70450: $1,828.00 (derived flag)",
+    "Billed total $2,654.00 is 8.19x the Medicare rate of $324.12 (benchmark anchor).",
+    "Lines 70450, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "70450",
+      "detail": "plan paid $0 with denial code(s) ['197']",
+      "dollar_impact": 1828.0,
+      "type": "denial"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc09_denial_driven"
+}

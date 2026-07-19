@@ -1,0 +1,346 @@
+{
+  "ask": {
+    "anchor": 354.5,
+    "excess_above_band": 560.18,
+    "floor": 236.33,
+    "per_line_multiples": [
+      {
+        "code": "80053",
+        "medicare_multiple": 16.86,
+        "rand_flag": true
+      },
+      {
+        "code": "80048",
+        "medicare_multiple": 17.38,
+        "rand_flag": true
+      },
+      {
+        "code": "96360",
+        "medicare_multiple": 3.8,
+        "rand_flag": true
+      }
+    ],
+    "target": 472.66,
+    "total_medicare_multiple": 4.87
+  },
+  "benchmark_report": {
+    "case_id": "sc04_unbundled_panel",
+    "data_version": {
+      "chargemaster": "sqlite:scenario_chargemaster.db",
+      "config": "medical_bills",
+      "medicare": "medicare_rates[96360/facility] cms-opps-2026q3"
+    },
+    "hospital": "Brigham and Women's Hospital",
+    "lines": [
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "flat CLFS national rate (no geographic adjustment)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[80053/global] cms-clfs-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules/clinical-laboratory-fee-schedule-clfs/files",
+            "value": 10.56
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 26.82
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "BLUE CROSS BLUE SHIELD [110001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80053] payer=BLUE CROSS BLUE SHIELD [110001] plan=HB AMC BLUE CROSS HMO",
+            "source_url": null,
+            "value": 93.02
+          },
+          {
+            "band": {
+              "max": 169.1,
+              "median": 126.02,
+              "min": 93.02,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 116.44,
+              "p75": 138.12
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80053] commercial rows",
+            "source_url": null,
+            "value": 126.02
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80053] cash",
+            "source_url": null,
+            "value": 133.5
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80053] gross",
+            "source_url": null,
+            "value": 178.0
+          }
+        ],
+        "billed": 178.0,
+        "billing_entity": "facility",
+        "code": "80053",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Comprehensive metabolic panel",
+        "excess_above_band": 151.6,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 26.4,
+          "high_multiple": 2.5,
+          "low": 15.84,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 16.86,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "global",
+            "confidence": "high",
+            "formula": "flat CLFS national rate (no geographic adjustment)",
+            "label": "Medicare global rate",
+            "method": "medicare",
+            "source": "medicare_rates[80048/global] cms-clfs-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/fee-schedules/clinical-laboratory-fee-schedule-clfs/files",
+            "value": 8.46
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare global x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 21.49
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "BLUE CROSS BLUE SHIELD [110001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80048] payer=BLUE CROSS BLUE SHIELD [110001] plan=HB AMC BLUE CROSS HMO",
+            "source_url": null,
+            "value": 76.82
+          },
+          {
+            "band": {
+              "max": 139.65,
+              "median": 104.08,
+              "min": 76.82,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 96.16,
+              "p75": 114.08
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80048] commercial rows",
+            "source_url": null,
+            "value": 104.08
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80048] cash",
+            "source_url": null,
+            "value": 110.25
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/80048] gross",
+            "source_url": null,
+            "value": 147.0
+          }
+        ],
+        "billed": 147.0,
+        "billing_entity": "facility",
+        "code": "80048",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "Basic metabolic panel",
+        "excess_above_band": 125.85,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 21.15,
+          "high_multiple": 2.5,
+          "low": 12.69,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 17.38,
+        "rand_flag": true,
+        "units": 1.0
+      },
+      {
+        "anchors": [
+          {
+            "component": "facility",
+            "confidence": "high",
+            "formula": "OPPS Addendum B national unadjusted payment rate (relative weight x OPPS conversion factor, published directly)",
+            "label": "Medicare facility rate",
+            "method": "medicare",
+            "source": "medicare_rates[96360/facility] cms-opps-2026q3",
+            "source_url": "https://www.cms.gov/medicare/payment/prospective-payment-systems/hospital-outpatient-pps/quarterly-addenda-updates",
+            "value": 217.31
+          },
+          {
+            "component": null,
+            "confidence": "estimated",
+            "formula": "Medicare x 2.54 (RAND commercial norm)",
+            "label": "estimated (RAND norm)",
+            "method": "rand_norm_estimate",
+            "source": "derived: medicare facility x 2.54",
+            "source_url": "https://www.rand.org/pubs/research_reports/RRA1144-1.html",
+            "value": 551.97
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "BLUE CROSS BLUE SHIELD [110001] negotiated rate",
+            "method": "plan_rate",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/96360] payer=BLUE CROSS BLUE SHIELD [110001] plan=HB AMC BLUE CROSS HMO",
+            "source_url": null,
+            "value": 431.67
+          },
+          {
+            "band": {
+              "max": 578.2,
+              "median": 508.4,
+              "min": 431.67,
+              "n_payers": 4,
+              "n_rows": 4,
+              "p25": 438.11,
+              "p75": 576.96
+            },
+            "component": null,
+            "confidence": "high",
+            "formula": "p25/median/p75 of commercial negotiated_dollar (outlier-trimmed)",
+            "label": "cross-payer median (4 payers)",
+            "method": "cross_payer_band",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/96360] commercial rows",
+            "source_url": null,
+            "value": 508.4
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "hospital cash price",
+            "method": "cash_price",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/96360] cash",
+            "source_url": null,
+            "value": 619.5
+          },
+          {
+            "component": null,
+            "confidence": "high",
+            "formula": null,
+            "label": "chargemaster list price",
+            "method": "gross_charge",
+            "source": "chargemaster_charges[Brigham and Women's Hospital/96360] gross",
+            "source_url": null,
+            "value": 826.0
+          }
+        ],
+        "billed": 826.0,
+        "billing_entity": "facility",
+        "code": "96360",
+        "code_type": "CPT",
+        "coverage": "full",
+        "description": "IV hydration, initial hour",
+        "excess_above_band": 282.73,
+        "fair_band": {
+          "basis": "Medicare x config band multiples",
+          "high": 543.27,
+          "high_multiple": 2.5,
+          "low": 325.97,
+          "low_multiple": 1.5
+        },
+        "medicare_multiple": 3.8,
+        "rand_flag": true,
+        "units": 1.0
+      }
+    ],
+    "payer_name": "BLUE CROSS BLUE SHIELD [110001]",
+    "plan_name": "HB AMC BLUE CROSS HMO",
+    "totals": {
+      "ask_anchor": 354.5,
+      "ask_target": 472.66,
+      "billed": 1151.0,
+      "excess_above_band": 560.18,
+      "fair_band_high": 590.82,
+      "fair_band_low": 354.5,
+      "floor": 236.33,
+      "medicare": 236.33,
+      "medicare_multiple": 4.87
+    }
+  },
+  "call_talking_points": [
+    "unbundle on 80048: $147.00 (derived flag)",
+    "Billed total $1,151.00 is 4.87x the Medicare rate of $236.33 (benchmark anchor).",
+    "Lines 80053, 80048, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
+  ],
+  "expected_flags": [
+    {
+      "code": "80048",
+      "codes": [
+        "80053",
+        "80048"
+      ],
+      "detail": "80048 bundled into 80053 (NCCI PTP)",
+      "dollar_impact": 147.0,
+      "severity": "medium",
+      "type": "unbundle"
+    }
+  ],
+  "provenance": {
+    "chargemaster_version": "chargemaster_test_extract.json (real MGB MRF v3.0.0 extract of chargemasters_demo.db)",
+    "config_version": "medical_bills",
+    "generator": "data/scenarios/generate.py",
+    "lookup_backend": "sqlite",
+    "medicare_version": "medicare_rates.json (CMS PFS/OPPS/CLFS 2026, Boston MA-01)"
+  },
+  "scenario_id": "sc04_unbundled_panel"
+}

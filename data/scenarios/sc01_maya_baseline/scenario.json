@@ -1,0 +1,37 @@
+{
+  "answer_key_ref": "answer_key.json",
+  "archetype": "maya_baseline",
+  "coverage": {
+    "member_id": "XYZ123456",
+    "network_status": "in_network",
+    "payer_name": "Blue Cross Blue Shield of Massachusetts",
+    "plan_name": "PPO",
+    "status": "insured"
+  },
+  "hospital": {
+    "ccn": null,
+    "city": "Boston",
+    "ein": null,
+    "name": "Mercy General Hospital",
+    "state": "MA"
+  },
+  "narrative": "Maya's flagship ER statement: a $8,432 bill with a duplicated chest X-ray, an upcoded level-5 visit, an unbundled metabolic panel, and an EOB that only adjudicated one of the X-rays.",
+  "patient": {
+    "account_number": "MG-4471983",
+    "dob": "1995-03-14",
+    "name": "Maya Chen"
+  },
+  "provider_entities": [
+    {
+      "entity_type": "facility",
+      "name": "Mercy General Hospital"
+    },
+    {
+      "entity_type": "professional",
+      "name": "Bay State Emergency Physicians"
+    }
+  ],
+  "scenario_id": "sc01_maya_baseline",
+  "service_date": "2026-06-02",
+  "title": "Maya Chen — ER overbill (duplicate + upcode + unbundle + EOB mismatch)"
+}

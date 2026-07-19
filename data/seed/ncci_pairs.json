@@ -40,12 +40,18 @@
   ],
   "ptp_edits": [
     {
-      "_comment": "Procedure-to-Procedure column 1/2 pairs — separate from panel bundles. These flag when BOTH codes are billed same date/provider and column 2 should be denied.",
+      "_comment": "Procedure-to-Procedure column 1/2 pairs — separate from panel bundles. These flag when BOTH codes are billed same date/provider and column 2 should be denied. Seed pairs from origin/database-work (J, 2026-07-18); WS2 extension pairs appended below. modifier_indicator 0 = never unbundlable; 1 = a modifier could legitimately separate the pair (lower severity).",
       "pairs": [
         {"column_1": "71046", "column_2": "71045", "modifier_indicator": 0, "note": "Chest 2-view includes single-view; cannot bill both"},
         {"column_1": "85025", "column_2": "85004", "modifier_indicator": 0, "note": "CBC with auto diff includes manual diff add-on"},
         {"column_1": "96374", "column_2": "96360", "modifier_indicator": 1, "note": "IV push subsumes IV hydration initiation (modifier may unbundle)"},
-        {"column_1": "99285", "column_2": "99283", "modifier_indicator": 0, "note": "Cannot bill two E/M levels for same encounter (mutually exclusive)"}
+        {"column_1": "99285", "column_2": "99283", "modifier_indicator": 0, "note": "Cannot bill two E/M levels for same encounter (mutually exclusive)"},
+        {"column_1": "93000", "column_2": "93005", "modifier_indicator": 0, "note": "ECG complete (93000) includes the tracing-only 93005; cannot bill both"},
+        {"column_1": "93000", "column_2": "93010", "modifier_indicator": 0, "note": "ECG complete includes the interpretation-only 93010"},
+        {"column_1": "80053", "column_2": "80048", "modifier_indicator": 0, "note": "Comprehensive metabolic panel (80053) subsumes the basic metabolic panel (80048)"},
+        {"column_1": "96365", "column_2": "96360", "modifier_indicator": 0, "note": "Therapeutic IV infusion initial hour (96365) subsumes hydration initial hour (96360)"},
+        {"column_1": "36415", "column_2": "36416", "modifier_indicator": 1, "note": "Routine venipuncture vs. capillary blood collection; a modifier may separate distinct draws"},
+        {"column_1": "80061", "column_2": "82465", "modifier_indicator": 0, "note": "Lipid panel (80061) includes total cholesterol (82465) as a component"}
       ]
     }
   ]

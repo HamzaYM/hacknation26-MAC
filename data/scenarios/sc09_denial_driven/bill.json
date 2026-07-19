@@ -1,0 +1,27 @@
+{
+  "account_number": "MGH-2026-0327",
+  "due_date": "2026-05-05",
+  "facility_name": "Massachusetts General Hospital",
+  "is_itemized": true,
+  "line_items": [
+    {
+      "billed_amount": 1828.0,
+      "billing_entity": "facility",
+      "cpt": "70450",
+      "date_of_service": "2026-03-27",
+      "description": "CT head/brain without contrast",
+      "units": 1
+    },
+    {
+      "billed_amount": 826.0,
+      "billing_entity": "facility",
+      "cpt": "96360",
+      "date_of_service": "2026-03-27",
+      "description": "IV hydration, initial hour",
+      "units": 1
+    }
+  ],
+  "nonprofit_status": true,
+  "patient_balance": 1828.0,
+  "statement_date": "2026-04-05"
+}

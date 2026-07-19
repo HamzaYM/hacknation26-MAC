@@ -5,10 +5,12 @@ Persistence is best-effort (app/db.py no-ops without a DB); the fixture cases
 parse_documents into the OpenAI vision extraction prompt
 (data/pipeline/extraction_prompt.md).
 """
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+import uuid as uuidlib
 
-from .. import db, storage
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, Field, ValidationError
+
+from .. import case_store, db, storage
 from ..action_plan_copy import generate_action_plan_copy
 from ..config import load_vertical
 from ..engine.action_plan import build_action_plan_input
@@ -22,10 +24,57 @@ router = APIRouter()
 
 
 def _resolve_spec(case_id: str) -> dict:
+    """Fixture cases (Maya/Dan/Nina + email registry) first — unchanged
+    behavior. Any OTHER case_id falls through to case_store: cases created via
+    POST /cases or a scenario load (case_store.SLOTS: job_spec/flags/
+    benchmark_report/dossier/allowed_numbers/scenario_id/answer_key)."""
     spec = spec_for_case(case_id)
     if spec is None:
-        raise HTTPException(404, "case not found (only the fixture cases exist so far)")
+        spec = case_store.get_job_spec(case_id)
+    if spec is None:
+        raise HTTPException(404, "case not found")
     return spec
+
+
+class CreateCaseRequest(BaseModel):
+    """JobSpec-shaped body (contracts/job_spec.schema.json). case_id is
+    optional — generated server-side when absent (the document-parse flow may
+    already have minted one). financial_profile/authorizations/derived_flags/
+    entities default empty, matching the contract's optional-with-defaults shape."""
+    case_id: str | None = None
+    patient: dict
+    insurance: dict = Field(default_factory=dict)
+    financial_profile: dict = Field(default_factory=dict)
+    authorizations: dict = Field(default_factory=dict)
+    bill: dict
+    eob: dict
+    derived_flags: list[dict] = Field(default_factory=list)
+    entities: list[dict] = Field(default_factory=list)
+
+
+@router.post("")
+def create_case(body: CreateCaseRequest) -> dict:
+    """Create a case from a JobSpec-shaped body: validates against the JobSpec
+    contract mirror (models.JobSpec, itself a mirror of
+    contracts/job_spec.schema.json), stores it in case_store (the source of
+    truth every other endpoint in this build reads from), and best-effort
+    upserts a Supabase cases row so calls.case_id FKs resolve later. Returns
+    {"case_id": ...} — GET /cases/{case_id} reads it straight back."""
+    case_id = str(body.case_id or uuidlib.uuid4())
+    patient = body.patient or {}
+    if not patient.get("legal_name") or not patient.get("dob"):
+        raise HTTPException(422, "patient.legal_name and patient.dob are required "
+                                 "(contracts/job_spec.schema.json)")
+
+    spec_dict = {**body.model_dump(), "case_id": case_id}
+    try:
+        JobSpec.model_validate(spec_dict)
+    except ValidationError as err:
+        raise HTTPException(422, f"invalid job spec: {err.errors()}") from err
+
+    case_store.put(case_id, "job_spec", spec_dict)
+    db.ensure_case(case_id, spec_dict, None)  # best-effort; no-op offline
+    return {"case_id": case_id}
 
 
 @router.get("/demo", response_model=JobSpec)
@@ -59,9 +108,29 @@ def get_case(case_id: str) -> dict:
 
 @router.get("/{case_id}/flags")
 def get_case_flags(case_id: str) -> dict:
-    """Red flags computed live by the deterministic engine (PRD §7)."""
+    """Red flags for the case. A scenario-loaded case's flags are the
+    code-generated answer key (case_store "flags" slot) — already computed
+    against the real lookup layer, so we serve those verbatim rather than
+    recomputing against the 5-CPT demo fixture. Everything else keeps the
+    existing live engine computation (PRD §7)."""
     spec = _resolve_spec(case_id)
+    stored_flags = case_store.get(case_id, "flags")
+    if stored_flags:
+        return {"case_id": case_id, "flags": stored_flags}
     return {"case_id": case_id, "flags": [f.model_dump() for f in flags_for_spec(spec)]}
+
+
+@router.get("/{case_id}/benchmark_report")
+def get_case_benchmark_report(case_id: str) -> dict:
+    """The case's BenchmarkReport (contracts/anchor_set.schema.json) — the
+    per-line anchor sets the evidence toggle and multiples table render.
+    Scenario-loaded cases serve their code-generated report verbatim; cases
+    without one get 404 so the frontend keeps its graceful-degradation path."""
+    _resolve_spec(case_id)  # 404s unknown cases first
+    report = case_store.get(case_id, "benchmark_report")
+    if not report:
+        raise HTTPException(status_code=404, detail="no benchmark report for this case")
+    return report
 
 
 class FinancialProfileInput(BaseModel):

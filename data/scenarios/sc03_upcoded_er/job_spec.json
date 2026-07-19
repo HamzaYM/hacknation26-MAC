@@ -1,0 +1,61 @@
+{
+  "authorizations": {},
+  "bill": {
+    "account_number": "MGH-2026-0405",
+    "due_date": "2026-05-14",
+    "facility_name": "Massachusetts General Hospital",
+    "is_itemized": true,
+    "line_items": [
+      {
+        "billed_amount": 3691.0,
+        "billing_entity": "facility",
+        "cpt": "99285",
+        "date_of_service": "2026-04-05",
+        "description": "Emergency department visit, high severity (level 5)",
+        "dx_codes": [
+          "J06.9"
+        ],
+        "units": 1
+      },
+      {
+        "billed_amount": 374.0,
+        "billing_entity": "facility",
+        "cpt": "71045",
+        "date_of_service": "2026-04-05",
+        "description": "Radiologic exam, chest, single view",
+        "units": 1
+      },
+      {
+        "billed_amount": 826.0,
+        "billing_entity": "facility",
+        "cpt": "96360",
+        "date_of_service": "2026-04-05",
+        "description": "IV hydration, initial hour",
+        "units": 1
+      }
+    ],
+    "nonprofit_status": true,
+    "patient_balance": 4891.0,
+    "statement_date": "2026-04-14"
+  },
+  "case_id": "sc03_upcoded_er",
+  "derived_flags": [],
+  "entities": [
+    {
+      "balance": 4891.0,
+      "kind": "facility",
+      "name": "Massachusetts General Hospital"
+    }
+  ],
+  "eob": {},
+  "financial_profile": {},
+  "insurance": {
+    "member_id": "AET-88102",
+    "payer_name": "AETNA [1001]",
+    "plan_type": "HB AMC AETNA HMO"
+  },
+  "patient": {
+    "dob": "1979-01-30",
+    "legal_name": "Marcus Webb"
+  }
+}

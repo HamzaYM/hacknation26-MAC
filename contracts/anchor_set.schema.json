@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "anchor_set.schema.json",
+  "title": "BenchmarkReport",
+  "description": "Per-case benchmark report: every line of a bill with its anchor set. Every number carries provenance. Produced by engine/anchors.py from the lookup layer; consumed by dossier, UI, voice tools, and scenario answer keys.",
+  "type": "object",
+  "required": ["case_id", "hospital", "lines", "totals", "data_version"],
+  "properties": {
+    "case_id": { "type": "string" },
+    "hospital": { "type": "string" },
+    "payer_name": { "type": ["string", "null"], "description": "Patient's payer (real MRF string); null for self-pay" },
+    "plan_name": { "type": ["string", "null"] },
+    "lines": { "type": "array", "items": { "$ref": "#/definitions/line_benchmark" } },
+    "totals": {
+      "type": "object",
+      "required": ["billed", "medicare", "fair_band_low", "fair_band_high", "ask_anchor", "ask_target", "floor"],
+      "properties": {
+        "billed": { "type": "number" },
+        "medicare": { "type": ["number", "null"], "description": "Sum of Medicare global rates for lines that have one" },
+        "medicare_multiple": { "type": ["number", "null"], "description": "billed / medicare, total-level" },
+        "fair_band_low": { "type": "number" },
+        "fair_band_high": { "type": "number" },
+        "excess_above_band": { "type": "number", "description": "max(0, billed - fair_band_high): the quantified negotiation target" },
+        "ask_anchor": { "type": "number", "description": "Opening ask (config self_pay_target_multiple_low x medicare)" },
+        "ask_target": { "type": "number" },
+        "floor": { "type": "number" }
+      }
+    },
+    "data_version": {
+      "type": "object",
+      "description": "Versions of the data the numbers came from — provenance at report level",
+      "properties": {
+        "chargemaster": { "type": "string" },
+        "medicare": { "type": "string" },
+        "config": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "anchor": {
+      "type": "object",
+      "required": ["method", "value", "source", "confidence", "label"],
+      "properties": {
+        "method": { "enum": ["medicare", "plan_rate", "cross_payer_band", "cash_price", "gross_charge", "rand_norm_estimate"] },
+        "value": { "type": "number", "description": "Primary dollar value (median for bands)" },
+        "band": {
+          "type": ["object", "null"],
+          "description": "cross_payer_band only",
+          "properties": {
+            "p25": { "type": "number" }, "median": { "type": "number" }, "p75": { "type": "number" },
+            "min": { "type": "number" }, "max": { "type": "number" },
+            "n_payers": { "type": "integer" }, "n_rows": { "type": "integer" }
+          }
+        },
+        "component": { "enum": ["professional", "facility", "global", null], "description": "medicare only" },
+        "formula": { "type": ["string", "null"], "description": "e.g. (wRVU*wGPCI + peRVU*peGPCI + mpRVU*mpGPCI) * CF" },
+        "source": { "type": "string", "description": "Machine-traceable: table + filter that produced the number" },
+        "source_url": { "type": ["string", "null"] },
+        "confidence": { "enum": ["high", "medium", "estimated"] },
+        "label": { "type": "string", "description": "Display string incl. estimation labeling, e.g. 'estimated (RAND norm)'" }
+      }
+    },
+    "line_benchmark": {
+      "type": "object",
+      "required": ["code", "code_type", "billed", "units", "anchors", "coverage"],
+      "properties": {
+        "code": { "type": "string" },
+        "code_type": { "enum": ["CPT", "HCPCS", "DRG", "MS-DRG", "NDC", "CDM", "RC", "LOCAL"] },
+        "description": { "type": "string" },
+        "billing_entity": { "enum": ["facility", "professional", "unknown"], "description": "Gates absent_from_chargemaster (decision #12)" },
+        "units": { "type": "number" },
+        "billed": { "type": "number" },
+        "anchors": { "type": "array", "items": { "$ref": "#/definitions/anchor" } },
+        "medicare_multiple": { "type": ["number", "null"] },
+        "fair_band": {
+          "type": ["object", "null"],
+          "properties": {
+            "low": { "type": "number" }, "high": { "type": "number" },
+            "basis": { "type": "string" }, "low_multiple": { "type": "number" }, "high_multiple": { "type": "number" }
+          }
+        },
+        "rand_flag": { "type": "boolean", "description": "billed > rand_ceiling_multiple x Medicare (config, default 2.54)" },
+        "excess_above_band": { "type": "number" },
+        "coverage": { "enum": ["full", "thin", "absent_from_chargemaster", "professional_excluded", "no_medicare"] }
+      }
+    }
+  }
+}
