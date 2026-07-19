@@ -3,7 +3,10 @@ import type { Entity, EntityKind } from "./types";
 export type BillStatus = "awaiting_you" | "in_progress" | "queued";
 
 export const STATUS_META: Record<BillStatus, { label: string; pillClass: string; priority: number }> = {
-  awaiting_you: { label: "Awaiting you", pillClass: "pill-danger", priority: 0 },
+  // "Awaiting you" is a needs-attention state, not a destructive one — amber
+  // (--flag), never red. Design-system rule: red is reserved for destructive
+  // actions, never for anything a worried patient is staring at.
+  awaiting_you: { label: "Awaiting you", pillClass: "pill-flag", priority: 0 },
   in_progress: { label: "In progress", pillClass: "pill-warning", priority: 1 },
   queued: { label: "Queued", pillClass: "pill-muted", priority: 2 },
 };
