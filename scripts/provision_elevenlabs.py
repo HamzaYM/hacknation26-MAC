@@ -228,7 +228,13 @@ END_CALL_TOOL = {
     "params": {"system_tool_type": "end_call"},  # required discriminator (docs: SystemToolConfig)
 }
 
-NEGOTIATOR_TURN = {"silence_end_call_timeout": 10}
+# Silence backstop: LONG only (Hamza, 07-18 late). 10s killed a live call mid-lookup
+# (Susy's call: agent said "gimme one sec", ran get_benchmark, platform hung up —
+# termination_reason "Ending conversation after 10 seconds of silence"). The platform
+# timer counts silence from the counterparty's last speech and can't know about holds
+# or lookups, so it must only catch a truly abandoned line; the model's end_call tool
+# owns the normal goodbye hangup.
+NEGOTIATOR_TURN = {"silence_end_call_timeout": 180}
 
 
 def env() -> dict[str, str]:
