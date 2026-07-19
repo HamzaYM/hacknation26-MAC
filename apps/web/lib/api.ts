@@ -51,6 +51,37 @@ export async function getFlags(caseId: string): Promise<FlagsResponse> {
   return res.json();
 }
 
+// ---- POST /cases/{id}/financial-profile (voice intake / manual card) ----
+// The financial answers the documents can't provide. Only the fields the user
+// answered are sent; the API overlays them onto the case's JobSpec (so /confirm
+// reflects them) and returns the dossier `floor` derived from lump_sum_available.
+export interface FinancialProfileInput {
+  lump_sum_available?: number;
+  monthly_max?: number;
+  household_income?: number;
+  household_size?: number;
+}
+
+export interface FinancialProfileResponse {
+  case_id: string;
+  financial_profile: Record<string, number>;
+  floor: number | null;
+  persisted: boolean;
+}
+
+export async function saveFinancialProfile(
+  caseId: string,
+  fields: FinancialProfileInput
+): Promise<FinancialProfileResponse> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/financial-profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) throw new Error(`POST /cases/${caseId}/financial-profile failed: ${res.status}`);
+  return res.json();
+}
+
 // ---- GET /cases/{id}/action_plan (the pre-dial Action Plan for /confirm) ----
 // `input` values are all engine-computed (numbers/dates/statutes); `copy` is the
 // user-facing text — warm `claude -p` prose when honest, deterministic fallback

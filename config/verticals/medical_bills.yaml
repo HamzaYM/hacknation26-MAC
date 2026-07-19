@@ -36,7 +36,16 @@ benchmark:
 # ── Routing thresholds (decision table from Research.md) ─────────────────
 thresholds:
   collections_route: { when: "entity.kind == 'collections'" }
-  charity_lead:      { max_fpl_percent: 400, requires: "bill.nonprofit_status" }
+  # Charity/financial-assistance arms via EITHER the flat FPL gate (fpl <= max_fpl_percent)
+  # OR MA Health Safety Net Medical Hardship. MA HSN Medical Hardship has NO FPL ceiling:
+  # qualifying medical expenses must exceed a rising % of countable income (higher income →
+  # higher bar), and it is retroactive to bills up to 12 months old. Nonprofit-gated in code.
+  charity_lead:
+    max_fpl_percent: 400
+    requires: "bill.nonprofit_status"
+    medical_hardship:
+      enabled: true
+      min_expense_pct_of_income: { 305: 20, 405: 25, 605: 30, above: 40 }
   nsa_do_not_negotiate: { when: "flag.nsa", action: "cite_statute_and_file_complaint" }
   low_priority_usd: 500                      # already off credit reports — deprioritize
 
@@ -99,6 +108,14 @@ hedge_markers:                               # temporary/soft refusals — NOT a
   - "at the moment"
   - "not today"
   - "call back later"
+
+# Collections threats the rep may voice. While a nonprofit account is still inside
+# the 120-day 501(r) window (26 CFR 1.501(r)-6), such a threat is premature — the
+# state machine arms a flat, factual pushback (no menace) in report_lever_result notes.
+collections_threat_phrases:
+  - "send you to collections"
+  - "collection agency"
+  - "report this"
 
 # Parked open items are re-attempted this many hours after the call (caller-side
 # APScheduler; auto-dials only when ELEVENLABS_OUTBOUND_ENABLED is set).

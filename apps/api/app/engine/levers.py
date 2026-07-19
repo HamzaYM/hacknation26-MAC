@@ -21,10 +21,45 @@ import json
 import re
 from functools import lru_cache
 
-from ..config import REPO_ROOT
+from ..config import REPO_ROOT, load_vertical
 
 LEVERS_PATH = REPO_ROOT / "config" / "levers.json"
 _TOKEN_RE = re.compile(r"\$\{(\w+)\}")
+
+
+def hardship_pct_threshold(fpl_percent: float | None, brackets: dict) -> float | None:
+    """MA HSN Medical Hardship: the % of countable income that qualifying medical
+    expenses must exceed, by the case's FPL bracket (higher income → higher bar).
+    `brackets` maps an upper FPL bound to a percent, plus an 'above' catch-all
+    (config: thresholds.charity_lead.medical_hardship.min_expense_pct_of_income)."""
+    if fpl_percent is None:
+        return None
+    for bound, pct in sorted((int(k), v) for k, v in brackets.items() if str(k).isdigit()):
+        if fpl_percent <= bound:
+            return pct
+    return brackets.get("above")
+
+
+def charity_lead_arming(
+    charity_cfg: dict, fpl_percent: float | None, household_income: float | None,
+    bill_amount: float | None,
+) -> tuple[bool, str]:
+    """Does the charity / financial-assistance lever arm? Returns (armed, reason).
+
+    Arms when EITHER the flat FPL gate applies (fpl_percent <= max_fpl_percent) OR
+    MA HSN Medical Hardship applies: no FPL ceiling, but qualifying medical expenses
+    (the patient's bill) must exceed a rising %-of-income threshold for the bracket.
+    Nonprofit gating is the caller's job — this decides income/expense eligibility."""
+    max_fpl = charity_cfg.get("max_fpl_percent")
+    if fpl_percent is not None and max_fpl is not None and fpl_percent <= max_fpl:
+        return True, f"fpl_percent {fpl_percent:.0f} <= {max_fpl}"
+    hardship = charity_cfg.get("medical_hardship") or {}
+    if hardship.get("enabled") and bill_amount and household_income:
+        pct = hardship_pct_threshold(fpl_percent, hardship.get("min_expense_pct_of_income", {}))
+        if pct is not None and bill_amount >= (pct / 100.0) * household_income:
+            return True, (f"MA medical hardship: bill ${bill_amount:,.0f} >= {pct:.0f}% of "
+                          f"income ${household_income:,.0f}")
+    return False, ""
 
 
 @lru_cache
@@ -126,7 +161,8 @@ def citation_for_engine_lever(engine_id: str, ctx: dict) -> tuple[str, str] | No
 
 
 # ── Arming: which levers apply to this case + route ───────────────────────────
-def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: dict) -> list[dict]:
+def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: dict,
+                 config: dict | None = None) -> list[dict]:
     """The armed lever pack for the action plan: verbatim citations + sources +
     dollar asks, all code-derived. Pragmatic per-lever predicates (no DSL) — the
     demo case arms exactly the set documented in docs/demo-shot-lists.md."""
@@ -134,6 +170,9 @@ def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: di
     nonprofit = bool(job_spec.bill.nonprofit_status)
     fpl = job_spec.financial_profile.get("fpl_percent")
     balance = job_spec.bill.patient_balance
+    income = job_spec.financial_profile.get("household_income")
+    bill_amount = balance or job_spec.bill.total_billed
+    charity_cfg = (config or load_vertical())["thresholds"]["charity_lead"]
     flag_types = {f.type for f in flags}
     neg_median_total = totals.get("mrf_negotiated_median_total")
 
@@ -160,9 +199,11 @@ def armed_levers(job_spec, flags: list, benchmarks: dict, route: str, totals: di
         add("credit_bureau_paid_removal", "paid-in-full settlement removes the mark")
         return out
 
-    # provider route — statutory first (charity lead), then benchmark, then errors
-    if nonprofit and fpl is not None and fpl <= 400:
-        add("501r_charity_care", f"nonprofit + {fpl:.0f}% FPL")
+    # provider route — statutory first (charity lead), then benchmark, then errors.
+    # Charity arms via the flat FPL gate OR MA HSN Medical Hardship (no FPL ceiling).
+    charity_armed, charity_reason = charity_lead_arming(charity_cfg, fpl, income, bill_amount)
+    if nonprofit and charity_armed:
+        add("501r_charity_care", f"nonprofit + {charity_reason}")
         if neg_median_total is not None and balance and balance > neg_median_total:
             add("501r_agb_limitation", "balance exceeds amounts generally billed")
     if totals.get("mrf_cash_total") and balance and balance > totals["mrf_cash_total"]:

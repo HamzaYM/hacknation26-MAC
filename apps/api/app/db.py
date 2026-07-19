@@ -30,6 +30,13 @@ _lock = threading.RLock()
 _conn: Any = None
 _warned = False
 
+# In-process fallback for voice/manually-captured financial fields, keyed by
+# case uuid. Mirrors the "best-effort, fixture-only mode" philosophy: when
+# there's no Supabase (offline dev, demo, pytest) the captured value still
+# survives within the running API process, so /intake → /confirm reflects it
+# without a DB. Supabase is the durable store; this is the same-process cache.
+_financial_overrides: dict[str, dict] = {}
+
 
 def _connect():
     url = os.environ.get("SUPABASE_DB_URL", "").strip()
@@ -146,6 +153,49 @@ def set_case_status(case_id: str, status: str):
     if not _is_uuid(case_id):
         return None
     return _run("update cases set status = %s where id = %s", (status, case_id))
+
+
+# ── captured financial profile (voice interview / manual card, migration 0006) ──
+def upsert_case_financial_profile(case_id: str, fields: dict) -> bool:
+    """Merge the answered financial fields into cases.financial_profile_captured
+    (a dedicated jsonb column, migration 0006 — kept separate from the fixture
+    snapshot in financial_profile).
+
+    `fields` uses the JobSpec's internal keys (lump_sum_available,
+    max_monthly_payment, household_income, household_size) so it overlays cleanly
+    onto the fixture profile. Persists to Supabase when available AND records an
+    in-process fallback so the served spec reflects it in fixture-only mode.
+    Returns True only when the DB write actually persisted."""
+    if not _is_uuid(case_id) or not fields:
+        return False
+    with _lock:
+        _financial_overrides[case_id] = {**_financial_overrides.get(case_id, {}), **fields}
+    result = _run(
+        """
+        insert into cases (id, financial_profile_captured, status)
+        values (%s, %s, 'intake')
+        on conflict (id) do update
+          set financial_profile_captured =
+            coalesce(cases.financial_profile_captured, '{}'::jsonb) || excluded.financial_profile_captured
+        """,
+        (case_id, Json(fields)),
+    )
+    return result is True
+
+
+def get_case_financial_profile(case_id: str) -> dict | None:
+    """The CAPTURED financial fields for a case (cases.financial_profile_captured),
+    or the in-process fallback when there's no DB. None when neither has one — the
+    caller then serves the fixture profile untouched (identity preserved). Rows
+    that never went through capture (and DBs without the column yet) read as None,
+    so this never returns the fixture snapshot."""
+    if not _is_uuid(case_id):
+        return None
+    rows = _run("select financial_profile_captured from cases where id = %s", (case_id,), fetch=True)
+    if rows and rows[0].get("financial_profile_captured"):
+        return rows[0]["financial_profile_captured"]
+    with _lock:
+        return _financial_overrides.get(case_id)
 
 
 # ── voice preference (per case) ───────────────────────────────────────────

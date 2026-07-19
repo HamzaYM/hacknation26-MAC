@@ -74,17 +74,36 @@ def _parse_dt(value) -> datetime | None:
         return None
 
 
+# Boot-misfire guard: an item whose next_attempt_at is already this far in the
+# past is NOT re-scheduled — APScheduler's misfire_grace_time (1h) would run it
+# the instant the server starts, so a stale callback could dial on boot. Instead
+# we leave the open_item scheduled (still visible in the case view) and skip it.
+_MISFIRE_GRACE = timedelta(minutes=5)
+
+
 def rehydrate() -> int:
     """Re-schedule one job per case with scheduled open items still due — called on
-    startup so callbacks survive restarts. Returns the number of jobs registered."""
+    startup so callbacks survive restarts. Items whose next_attempt_at is already
+    more than 5 minutes past are skipped (left scheduled, not fired). Returns the
+    number of jobs registered."""
     items = db.list_scheduled_open_items() or []
     earliest: dict[str, datetime] = {}
+    stale = 0
     for it in items:
         cid, when = it.get("case_id"), _parse_dt(it.get("next_attempt_at"))
-        if cid and when and (cid not in earliest or when < earliest[cid]):
+        if not (cid and when):
+            continue
+        now = datetime.now(when.tzinfo) if when.tzinfo else datetime.now()
+        if when < now - _MISFIRE_GRACE:
+            stale += 1
+            continue
+        if cid not in earliest or when < earliest[cid]:
             earliest[cid] = when
     for cid, when in earliest.items():
         _schedule_case(cid, when)
+    if stale:
+        log.info("scheduler skipped %d stale callback item(s) (next_attempt_at >5min past) "
+                 "— left scheduled, not fired on boot", stale)
     if earliest:
         log.info("scheduler re-hydrated %d callback job(s)", len(earliest))
     return len(earliest)

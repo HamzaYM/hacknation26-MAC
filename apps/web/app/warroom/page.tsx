@@ -126,7 +126,7 @@ function OverviewCard({ call }: { call: ActiveCall }) {
   return (
     <a className="wr-call-card" href={`/warroom?call_id=${call.id}`}>
       <div className="wr-call-head">
-        <span className="wr-call-entity">{call.dossier?.target_entity ?? `Call ${call.id.slice(0, 8)}`}</span>
+        <span className="wr-call-entity">{call.dossier?.target_entity ?? "Negotiation call"}</span>
         <span className={`wr-status-pill ${call.status}`}>{call.status === "live" ? "● live" : call.status}</span>
       </div>
       {call.counterparty === "agent" && <span className="wr-sim-badge">simulated persona · replay</span>}

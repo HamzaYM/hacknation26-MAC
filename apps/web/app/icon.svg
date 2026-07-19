@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>Haggl</title>
+  <!-- warm-black H (two stems + flat crossbar reading through) -->
+  <g fill="#1a1410">
+    <rect x="6" y="5" width="5" height="22" rx="1" />
+    <rect x="21" y="5" width="5" height="22" rx="1" />
+    <rect x="6" y="13.5" width="20" height="5" />
+  </g>
+  <!-- coral slash, steep and overshooting both stems -->
+  <rect x="3" y="13.5" width="26" height="5" rx="2.5" fill="#ef6b45" transform="rotate(-24 16 16)" />
+</svg>

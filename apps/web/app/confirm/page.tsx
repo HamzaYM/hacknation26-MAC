@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { confirmCase, getActionPlan, getDemoCase, getFlags } from "../../lib/api";
+import { confirmCase, getActionPlan, getDemoCase, getFlags, launchCalls } from "../../lib/api";
 import type { ActionPlanResponse } from "../../lib/api";
 import { getVoicePref, voiceById } from "../../lib/voice";
 import { facilitySavings, money } from "../../lib/savings";
@@ -41,7 +41,17 @@ export default function Confirm() {
     setConfirmError(false);
     try {
       await confirmCase(spec.case_id);
-      router.push("/bills");
+      // The button's promise: confirming launches the simulated calls, then the
+      // War Room shows them dialing live. A launch failure must not strand the
+      // user on a dead confirm screen — the case is already confirmed, so route
+      // to the War Room either way (it renders whatever calls exist, or its idle
+      // "waiting for the calls" state — nothing looks broken).
+      try {
+        await launchCalls(spec.case_id, { simulate: true });
+      } catch {
+        // swallow — routing to /warroom below is the graceful fallback
+      }
+      router.push("/warroom");
     } catch {
       setConfirming(false);
       setConfirmError(true);
@@ -65,6 +75,14 @@ export default function Confirm() {
   const pctLow = savings.percentSavedSoFar + savings.percentProjectedLow;
   const pctHigh = savings.percentSavedSoFar + savings.percentProjectedHigh;
   const totalFlagged = flags.reduce((sum, f) => sum + f.dollar_impact, 0);
+
+  // What the voice interview / intake card captured — the negotiator's settlement
+  // ceiling (dossier floor = lump_sum_available). Surfacing it here is the visible
+  // proof the interview changed the plan.
+  const putDownToday =
+    typeof spec.financial_profile?.lump_sum_available === "number"
+      ? (spec.financial_profile.lump_sum_available as number)
+      : null;
 
   // Prefer the server's Action Plan copy (numbers guaranteed verbatim from the
   // engine); fall back to the locally computed strings when it's unavailable.
@@ -125,6 +143,21 @@ export default function Confirm() {
           {copy?.savings_line ??
             `Estimated savings if the calls go our way: ${pctLow}–${pctHigh}% off your ${money(savings.originalBalance)} balance.`}
         </div>
+        {putDownToday != null && (
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+              fontSize: 14,
+              color: "var(--text-secondary)",
+            }}
+          >
+            You told us you could put down{" "}
+            <span className="mono-figure" style={{ color: "var(--accent)" }}>{money(putDownToday)}</span> today
+            — that&apos;s the ceiling, we won&apos;t offer a dollar more.
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>

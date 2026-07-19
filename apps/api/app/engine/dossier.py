@@ -21,10 +21,45 @@ rung, one lever per red flag) → benchmark_anchor. Only armed levers are listed
 """
 from __future__ import annotations
 
+from datetime import date
+
 from . import levers
 from ..models import DerivedFlag, Entity, JobSpec, Lever, StrategyDossier
 
 ERROR_FLAG_TYPES = ("duplicate", "upcode", "unbundle", "phantom", "eob_mismatch")
+
+# 26 CFR 1.501(r)-6: a 501(c)(3) nonprofit hospital may not begin extraordinary
+# collection actions until 120 days after the first post-discharge billing
+# statement; the financial-assistance (charity) application period runs 240 days.
+COLLECTIONS_WINDOW_DAYS = 120
+CHARITY_APPLICATION_WINDOW_DAYS = 240
+
+
+def _days_since(statement_date: str | None, today: date | None = None) -> int | None:
+    """Whole days from an ISO statement date to today; None when the date is
+    missing/unparseable, clamped at 0 when the statement is dated in the future."""
+    if not statement_date:
+        return None
+    try:
+        start = date.fromisoformat(statement_date)
+    except ValueError:
+        return None
+    return max(((today or date.today()) - start).days, 0)
+
+
+def compute_501r_window(
+    statement_date: str | None, nonprofit_status: bool, today: date | None = None
+) -> tuple[int | None, bool | None]:
+    """The 501(r) account-age clock: (days_since_first_statement, inside_501r_window).
+
+    The day count is facility-agnostic. The window flag is meaningful ONLY for
+    nonprofit facilities (the 120-day pre-collections rule is a 501(c)(3)
+    obligation), so it is None for for-profit bills or when the date is unknown.
+    """
+    days = _days_since(statement_date, today)
+    if days is None or not nonprofit_status:
+        return days, None
+    return days, days < COLLECTIONS_WINDOW_DAYS
 
 
 def corrected_cpt_set(job_spec: JobSpec, flags: list[DerivedFlag], benchmarks: dict[str, dict]) -> set[str]:
@@ -58,6 +93,7 @@ def build_dossier(
     benchmarks: dict[str, dict],
     config: dict,
     entity: Entity | None = None,
+    today: date | None = None,
 ) -> StrategyDossier:
     entity = entity or job_spec.entities[0]
     route = "collections" if entity.kind == "collections" else "provider"
@@ -107,14 +143,19 @@ def build_dossier(
             dollar_ask=nsa_flag.dollar_impact,
         ))
 
-    # 1) statutory — financial_assistance_screen rung (charity care FIRST)
+    # 1) statutory — financial_assistance_screen rung (charity care FIRST).
+    # Arms via EITHER the flat FPL gate OR MA HSN Medical Hardship (no FPL ceiling
+    # when the bill is large relative to income); nonprofit-gated either way.
     charity = config["thresholds"]["charity_lead"]
     fpl = job_spec.financial_profile.get("fpl_percent")
-    if job_spec.bill.nonprofit_status and fpl is not None and fpl <= charity["max_fpl_percent"]:
+    income = job_spec.financial_profile.get("household_income")
+    bill_amount = job_spec.bill.patient_balance or job_spec.bill.total_billed
+    charity_armed, charity_reason = levers.charity_lead_arming(charity, fpl, income, bill_amount)
+    if job_spec.bill.nonprofit_status and charity_armed:
         levers_list.append(Lever(
             id="statutory_501r",
             armed=True,
-            armed_by=f"nonprofit_status + fpl_percent {fpl:.0f} <= {charity['max_fpl_percent']}",
+            armed_by=f"nonprofit_status + {charity_reason}",
             citation=_pack_cite("statutory_501r"),
             dollar_ask=None,
         ))
@@ -149,6 +190,10 @@ def build_dossier(
             dollar_ask=anchor,
         ))
 
+    days_since, inside_window = compute_501r_window(
+        job_spec.bill.statement_date, job_spec.bill.nonprofit_status, today
+    )
+
     return StrategyDossier(
         case_id=job_spec.case_id,
         target_entity=entity.name,
@@ -158,4 +203,6 @@ def build_dossier(
         target=target,
         floor=floor,
         citations=[_cite(benchmarks[c]) for c in sorted(cpts)],
+        days_since_first_statement=days_since,
+        inside_501r_window=inside_window,
     )

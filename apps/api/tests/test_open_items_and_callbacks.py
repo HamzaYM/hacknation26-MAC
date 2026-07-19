@@ -1,7 +1,7 @@
 """Call-behavior fixes (PART 2): park → open items, self-scheduled callbacks with a
 business-window clamp + flag-off behavior, and the end_call_now hang-up signal."""
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -51,6 +51,26 @@ def test_clamp_pushes_before_hours_to_same_day_midmorning():
     out = clamp_to_business_window(dt)
     assert out.date() == dt.date()
     assert out.hour == 10
+
+
+# ── scheduler: rehydrate boot-misfire guard ───────────────────────────────
+def test_rehydrate_skips_stale_but_schedules_fresh(monkeypatch):
+    """Boot-misfire guard: on rehydrate, an item whose next_attempt_at is already
+    >5min past is left scheduled (not registered to fire — APScheduler would
+    otherwise misfire it the instant the server boots), while a still-future item
+    schedules normally."""
+    now = datetime.now()
+    monkeypatch.setattr(scheduler.db, "list_scheduled_open_items", lambda: [
+        {"case_id": "case-stale", "next_attempt_at": (now - timedelta(hours=1)).isoformat()},
+        {"case_id": "case-fresh", "next_attempt_at": (now + timedelta(hours=2)).isoformat()},
+    ])
+    scheduled: list[str] = []
+    monkeypatch.setattr(scheduler, "_schedule_case", lambda cid, when: scheduled.append(cid))
+
+    registered = scheduler.rehydrate()
+
+    assert scheduled == ["case-fresh"]   # stale one skipped, fresh one registered
+    assert registered == 1
 
 
 # ── scheduler: flag-off callback fires no dial, just a callback_due event ──
