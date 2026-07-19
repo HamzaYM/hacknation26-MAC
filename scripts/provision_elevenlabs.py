@@ -62,6 +62,11 @@ AGENTS: dict[str, dict] = {
         "first_message": "Meridian Recovery Services, this call may be recorded. Who am I speaking with?",
         "voices": ["Adam", "Liam", "Charlie"],      # dominant, fast, transactional
     },
+    "persona-supervisor": {
+        "prompt_file": "prompts/personas/supervisor.md",
+        "first_message": "Mercy General billing office, this is Morgan.",
+        "voices": ["Matilda", "Sarah", "Alice"],    # female supervisor: knowledgeable, confident, professional
+    },
 }
 
 PERSONA_PREFIX = (
