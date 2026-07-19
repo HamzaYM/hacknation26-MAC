@@ -117,9 +117,12 @@ class LadderStateMachine:
         result: str,
         offer_amount: float | None = None,
         quote: str | None = None,
+        plan_monthly: float | None = None,
+        plan_months: int | None = None,
         questions_asked: list[str] | None = None,
     ) -> dict:
-        resp = self._advance_core(call_id, lever, result, offer_amount, quote, questions_asked)
+        resp = self._advance_core(call_id, lever, result, offer_amount, quote, questions_asked,
+                                  plan_monthly=plan_monthly, plan_months=plan_months)
         self._augment_501r_notes(call_id, quote, resp)
         self._augment_authorization_notes(call_id, quote, resp)
         return resp
@@ -180,6 +183,8 @@ class LadderStateMachine:
         offer_amount: float | None = None,
         quote: str | None = None,
         questions_asked: list[str] | None = None,
+        plan_monthly: float | None = None,
+        plan_months: int | None = None,
     ) -> dict:
         state = self._states[call_id]
         qa = list(questions_asked or [])
@@ -218,6 +223,20 @@ class LadderStateMachine:
             return self._respond(state, move_allowed=False,
                                  notes=f"rejected: offer ${offer_amount:.2f} exceeds floor "
                                        f"${dossier.floor:.2f} — never offer above the floor")
+
+        # plan-total guardrail (live-call finding: the agent agreed to 150 x 55
+        # months = $8,250 on a $3,875 balance). Plan terms multiplied out may
+        # never exceed the floor, same rule as a lump sum.
+        if plan_monthly is not None and plan_months is not None:
+            plan_total = float(plan_monthly) * int(plan_months)
+            if plan_total > dossier.floor:
+                return self._respond(
+                    state, move_allowed=False,
+                    notes=f"rejected: plan totals ${plan_total:,.2f} "
+                          f"(${plan_monthly:,.2f} x {plan_months}) which exceeds the "
+                          f"${dossier.floor:,.2f} ceiling — counter with fewer months or "
+                          f"a lower monthly, and never accept interest that pushes the "
+                          f"total above the balance")
 
         # hang-up → documented decline with a scheduled callback (C4)
         if result == "hangup":
