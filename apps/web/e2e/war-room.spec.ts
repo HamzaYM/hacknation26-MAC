@@ -48,7 +48,10 @@ test.describe("war room", () => {
     await expect(firstCard).toBeVisible();
     const scenarioId = await firstCard.getAttribute("data-scenario-id");
     await firstCard.click();
-    await expect(page).toHaveURL(/[?&]case_id=/);
+    // POST /scenarios/{id}/load reads the scenario artifacts and builds the
+    // case before the client navigates — allow real server latency rather
+    // than leaning on the retry to absorb it.
+    await expect(page).toHaveURL(/[?&]case_id=/, { timeout: 15000 });
     if (scenarioId) {
       // Loaded case_id need not equal scenario_id, but the board must have
       // navigated off the demo case and into a real, non-empty board state.
