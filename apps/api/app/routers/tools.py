@@ -113,6 +113,7 @@ class LeverResult(BaseModel):
     lever: str
     result: str  # accepted | rejected | partial | stonewalled | escalated | hangup
     offer_amount: float | None = None  # what the agent is about to offer/settle at
+    amount_on_table: float | None = None  # the number on the table after this exchange (adjusted balance / counter / settle)
     plan_monthly: float | None = None  # payment-plan terms under discussion, if any
     plan_months: int | None = None
     plan_interest_pct: float | None = None  # plan interest rate, if the plan carries one
@@ -243,6 +244,11 @@ def report_lever_result(body: LeverResult) -> dict:
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
     db.insert_event(call_id, "state_change",
                     {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
+    # Price ticker: real calls report the number on the table (adjusted balance,
+    # counterparty counter, approved settle) — same "quote" event the simulator
+    # emits, so the War Room ticker moves on live PSTN calls too.
+    if body.amount_on_table is not None and body.amount_on_table > 0:
+        db.insert_event(call_id, "quote", {"amount": body.amount_on_table})
     # Per-question coverage: one event per tag covered for the first time this
     # exchange — the War Room panel flips each required-question row to green (A1).
     for tag in resp.get("newly_covered", []):

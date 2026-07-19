@@ -169,6 +169,7 @@ NEGOTIATOR_TOOLS = [
                     "lever": {"type": "string", "description": "The step just attempted, e.g. open_and_hold_account, line_item_disputes, benchmark_anchor, lump_sum_settlement"},
                     "result": {"type": "string", "description": "accepted | rejected | partial | stonewalled | escalated | hangup"},
                     "offer_amount": {"type": "number", "description": "Dollar amount you are about to offer or settle at, if any"},
+                    "amount_on_table": {"type": "number", "description": "The number currently on the table after this exchange, in dollars: the adjusted balance after a correction, the counterparty's counter offer, or the approved settlement amount. Include it every time that number changes; omit if unchanged."},
                     "quote": {"type": "string", "description": "The counterparty's own words, verbatim, if notable"},
                     "questions_asked": {
                         "type": "array",
