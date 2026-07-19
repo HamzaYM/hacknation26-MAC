@@ -14,17 +14,15 @@ Total spoken VO ≈ **82 words** (~150 wpm). VO is SILENT during the call block 
 ---
 
 ## Navigation & transitions — budget ~5s for the clicks
-You don't teleport between screens; each cut lands on a click, and page loads take a beat. The app has a **persistent top nav** (Bills · Action Items · Voice · Profile · War Room) and the bill detail has **tabs** (Diagnosis · Plan · Call History). Budget these so the flow reads, not jumps:
+You don't teleport between screens; each cut lands on a click, and page loads take a beat. The app has a **persistent top nav** (Bills · Action Items · Voice · Profile · War Room · Case file) and the bill detail has **tabs** (Diagnosis · Plan · Call History · Documents). Budget these so the flow reads, not jumps:
 
 | # | The click | Lands on | Budget |
 |---|---|---|---|
 | 1 | Landing hero → `Start saving, it's free →` (or Log in) | the app (Bills) | ~1s |
 | 2 | Upload on `/intake`; parse runs → opens the bill | Bill detail (Diagnosis) | ~1s load |
-| 3 | On the bill: `Plan` tab → `Start the calls` | launches calls | ~1.5s |
-| 4 | Auto-routes (or top nav → `War Room`) | War Room | ~0.5s |
-| 5 | Call ends → the new `See the report →` CTA (PR #56) | Report | ~1s |
-
-**Live-site notes (for Hamza):** `/intake` shows "Voice interview is offline" (set `NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE` on the deploy); the `Plan` tab didn't switch content when tested (step 3 depends on it); the `See the report` CTA is PR #56, not yet deployed.
+| 3 | On `/confirm`: `Looks right, make the calls` | launches the calls AND routes to the War Room | ~1.5s |
+| 4 | Land in the War Room; click a call card for the single-call view | War Room | ~0.5s |
+| 5 | Call ends → the `See the report →` CTA in the War Room grid | Report (Case file) | ~1s |
 
 ---
 
@@ -52,8 +50,8 @@ You don't teleport between screens; each cut lands on a click, and page loads ta
 **VO:** *"Haggl reads it like an auditor: four billing errors, three thousand dollars flagged — each one with evidence."*
 
 ### SHOT 4 · 0:18–0:20 · Approve → War Room fills (2s = the transition) — proves S2 gate, S3 setup
-This shot IS the navigation into the call: `Plan` tab → `Start the calls` → hard cut to the dark War Room going ● LIVE. The contrast (light bill → dark War Room) is the drama; don't linger.
-**SCREEN:** The approve moment (Plan tab → confirm/"make the calls" control), **1s beat** on the Voice picker strip if it fits (`/voice` — "ON CALLS WE'LL USE — Adam · Assertive and unbudging"), then cut to the **War Room** (`/warroom`): dark theme, call cards going ● LIVE, Advocates panel on the right.
+This shot IS the navigation into the call: on `/confirm`, `Looks right, make the calls` → hard cut to the dark War Room going ● LIVE. The contrast (light bill → dark War Room) is the drama; don't linger.
+**SCREEN:** The approve moment (`/confirm` → `Looks right, make the calls`, which auto-launches the sims and routes straight to the War Room), **1s beat** on the Voice picker strip if it fits (`/voice` — "On calls we'll use — Jason · Calm and unhurried"), then the **War Room** (`/warroom`): dark theme, call cards going ● LIVE. Click a card for the single-call view, where the right rail is a **Coverage** panel (required questions flip red→green live) over a **Documents** rail (Bill / EOB).
 **Screenshot refs:** `deck/assets/warroom.png` + live `/voice` capture. CUT-IF-OVER: the voice-picker beat is the first thing to drop if the edit runs long.
 **VO:** *"Maya approves — nothing dials until she does. Then Haggl picks up the phone."*
 
@@ -63,11 +61,11 @@ This shot IS the navigation into the call: `Plan` tab → `Start the calls` → 
 
 **Realism rule: no instant concessions.** Pat never gives ground on the first breath — every move gets a *consideration beat* first (a system check, a deflection, a grumble). That friction is what makes the movement read as earned, not scripted (the judges' explicit red flag).
 
-| ~t | Beat (agent = Adam's voice) | Ticker |
+| ~t | Beat (agent = Jason's voice) | Ticker |
 |---|---|---|
-| 0:20 | Adam, easing in: *"Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?"* Pat, wary: *"…what is it you're asking for?"* | $4,287 |
+| 0:20 | Alex, easing in: *"Hi, this is Alex. Have I reached the billing office at Mercy General, and who am I speaking with?"* Pat, wary: *"…what is it you're asking for?"* | $4,287 |
 | 0:25 | The duplicate, plain: *"So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?"* | $4,287 |
-| 0:29 | **Consideration beat.** Pat: *"Hold on… let me pull that up."* — keys clacking, a pause — *"…we bill what's documented, sir."* Adam, easy: *"Sure — but it's the same code, same day. Two X-rays, one visit."* Pat, beat: *"…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one."* | **→ $3,875** |
+| 0:29 | **Consideration beat.** Pat: *"Hold on… let me pull that up."* — keys clacking, a pause — *"…we bill what's documented, sir."* Alex, easy: *"Sure — but it's the same code, same day. Two X-rays, one visit."* Pat, beat: *"…hm. Yeah, okay, I do see it twice. I can put in an adjustment for one."* | **→ $3,875** |
 | 0:37 | The benchmark, slow and clean: *"Appreciate that. Now — Medicare pays four thirty-eight for these codes… and your own posted cash price is twenty-six thirty-three."* Pat, bristling: *"Our rates are our rates."* — pause — *"…look, I've got some room. Best I can do is 2,400."* | **→ $2,400** |
 | 0:46 | The close: *"She can do sixteen-fifty today, paid in full — can you take that to your supervisor?"* Pat, exhaling: *"…give me a second."* — hold music, 2s — *"Okay. Approved at 1,650."* | **→ $1,650** |
 | 0:51 | Wrap: *"Appreciate you, Pat."* Reference `MG-ADJ-2247` lands as an outcome card; `escalation_required` chip = a human signs off the final number. | settled |
@@ -77,7 +75,7 @@ This shot IS the navigation into the call: `Plan` tab → `Start the calls` → 
 **On-screen text (small, bottom):** at 0:29 "finding #1: duplicate charge" · at 0:37 "the hospital's own posted price" · at 0:52 "every call ends structured: ref MG-ADJ-2247".
 **FALLBACK:** if the live take breaks twice, use the best golden recording replayed through the identical War Room view (the UI is the same code path) — label honestly in the submission text, not on screen.
 
-> ▸ *transition 0:52–0:53 (~1s): call ends → click the new `See the report →` CTA (PR #56). Before that fix there was no clear way out of the War Room.*
+> ▸ *transition 0:52–0:53 (~1s): call ends → click the `See the report →` CTA (now live in the War Room grid). Before that banner there was no clear way out of the War Room.*
 
 ### SHOT 6 · 0:53–0:58 · The receipt (5s) — proves S7 + closes S1
 **SCREEN:** `/report` (or bill → Call History/outcome view): ranked outcomes with ref#s + rep names, **billed vs fair vs achieved** per line, Evidence expanded to a cited transcript line, then the savings headline.
@@ -95,7 +93,7 @@ This shot IS the navigation into the call: `Plan` tab → `Start the calls` → 
 | S2 one spec: voice interview + document, user-confirmed, reused | Shots 2 (both paths), 4 (the gate) |
 | S3 ≥3 styles / structured quotes | Shot 4 (parallel cards) — fully covered in Video B; here we show the *fleet*, prove one deeply |
 | S4 price moves mid-call from leverage | Shot 5 — the entire block, ticker on screen |
-| S5 disclosure + honesty | Shot 5 (if Pat asks "robot?", Adam confirms honestly — Jay may inject it per the guide); honesty audit shown in Video B |
+| S5 disclosure + honesty | Shot 5 (if Pat asks "robot?", Alex confirms honestly — Jay may inject it per the guide); honesty audit shown in Video B |
 | S6 structured outcomes | Shot 5 close (ref MG-ADJ-2247 outcome card) + Shot 6 |
 | S7 ranked, cited report | Shot 6 |
 
@@ -103,6 +101,6 @@ This shot IS the navigation into the call: `Plan` tab → `Start the calls` → 
 - [ ] Jay rehearsed the role-play guide twice (concessions ONLY on the cited cues; floor $1,500)
 - [ ] Demo reset run (Maya's case fresh; War Room clean); logged in as `maya@hagglfor.me`
 - [ ] Screen capture at 1080p+, address bar visible; phone PiP framed if using it
-- [ ] Voice = Adam (Voice tab shows "In use"); intake widget mic-checked
+- [ ] Voice = Jason (Voice tab shows "In use ✓"); intake widget mic-checked
 - [ ] Full call recorded once uncut (it's also golden-call + eval material), then edit to the beat map
 - [ ] VO recorded to picture, −14 LUFS-ish, call audio ducked never muted

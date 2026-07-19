@@ -92,20 +92,18 @@
     <div style="flex:5;background:#d9704a">53–58 report</div>
     <div style="flex:2;background:#8a4a2e">end</div>
   </div>
-  <div class="legend"><b>▨ hatched = navigation beats</b> — the clicks/page-loads between screens, now budgeted (~5s total). The app has a persistent top nav (Bills · Action Items · Voice · Profile · War Room); bill detail has tabs (Diagnosis · Plan · Call History). You don't teleport between screens — each cut lands on a click.</div>
+  <div class="legend"><b>▨ hatched = navigation beats</b> — the clicks/page-loads between screens, now budgeted (~5s total). The app has a persistent top nav (Bills · Action Items · Voice · Profile · War Room · Case file); bill detail has tabs (Diagnosis · Plan · Call History · Documents). You don't teleport between screens — each cut lands on a click.</div>
 
   <div class="navmap">
     <h3>The click-path, start to finish (what the cursor actually does)</h3>
     <table>
       <tr><td class="step">1</td><td>Landing hero → click <code>Start saving, it's free →</code> (or Log in)</td><td>→ enters the app</td><td class="budget">~1s</td></tr>
       <tr><td class="step">2</td><td>Upload the bill on <code>/intake</code>; parse runs → it opens the bill</td><td>→ Bill detail (Diagnosis)</td><td class="budget">~1s load</td></tr>
-      <tr><td class="step">3</td><td>On the bill: click the <code>Plan</code> tab → <code>Start the calls</code></td><td>→ launches calls</td><td class="budget">~1.5s</td></tr>
-      <tr><td class="step">4</td><td>Auto-routes (or click <code>War Room</code> in the top nav) to the live call</td><td>→ War Room</td><td class="budget">~0.5s</td></tr>
-      <tr><td class="step">5</td><td>Call ends → the new <code>See the report →</code> CTA (PR #56)</td><td>→ Report</td><td class="budget">~1s</td></tr>
+      <tr><td class="step">3</td><td>On <code>/confirm</code>: click <code>Looks right, make the calls</code></td><td>→ launches calls, routes to War Room</td><td class="budget">~1.5s</td></tr>
+      <tr><td class="step">4</td><td>Land in the War Room; click a call card for the single-call view</td><td>→ War Room</td><td class="budget">~0.5s</td></tr>
+      <tr><td class="step">5</td><td>Call ends → the <code>See the report →</code> CTA in the War Room grid</td><td>→ Report (Case file)</td><td class="budget">~1s</td></tr>
     </table>
   </div>
-
-  <div class="note"><b>Two things for Hamza before the shoot:</b> (1) <code>/intake</code> currently shows “Voice interview is offline” — set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID_INTAKE</code> on the deploy. (2) The <code>Plan</code> tab didn't switch content on the live site when I tested (stayed on Diagnosis) — needs a look, since step 3 depends on it. (3) The <code>See the report</code> CTA is PR #56, not yet deployed — the War Room→Report transition needs it live.</div>
 
   <!-- SHOT 1 -->
   <div class="shot">
@@ -175,16 +173,14 @@
   <!-- TRANSITION 3 -->
   <div class="trans">
     <div class="trans-frame">
-      <img src="video-assets/diagnosis.png" alt="bill detail tabs — click Plan">
-      <div class="click-marker" style="left:15%;top:48%"></div>
-      <div class="click-label" style="left:15%;top:60%">1· Plan tab</div>
-      <div class="click-marker" style="left:91%;top:5%"></div>
-      <div class="click-label" style="left:88%;top:16%">or nav → War Room</div>
+      <img src="video-assets/diagnosis.png" alt="bill review before confirming the plan">
+      <div class="click-marker" style="left:50%;top:78%"></div>
+      <div class="click-label" style="left:50%;top:90%">on /confirm: make the calls</div>
     </div>
     <div class="trans-body">
       <div class="th">▸ Transition · 0:18–0:20 (~2s)</div>
-      <div>Two clicks: the <code>Plan</code> tab, then <code>Start the calls</code> — then it routes to the War Room (or click <code>War Room</code> in the top nav). Hard cut from the light bill screen to the dark War Room; the contrast is the drama.</div>
-      <div class="tb-budget">Budget: 2s (tab + button + route)</div>
+      <div>One click: on <code>/confirm</code>, <code>Looks right, make the calls</code>, which auto-launches the sims and routes straight to the War Room. Hard cut from the light bill screen to the dark War Room; the contrast is the drama.</div>
+      <div class="tb-budget">Budget: 2s (confirm + route)</div>
     </div>
   </div>
 
@@ -196,12 +192,12 @@
       <div class="shot-script">
         <div class="block"><h4>Audio = the call (no VO). No instant concessions — each move earns a consideration beat.</h4>
           <table class="beats">
-            <tr><td class="t">0:20</td><td><b>Adam:</b> “Hi, this is Alex — calling about Maya Chen's account, 4-4-7-1-9-0-2. Got a minute?” <b>Pat, wary:</b> “…what is it you're asking for?”</td><td class="tick">$4,287</td></tr>
-            <tr><td class="t">0:25</td><td><b>Adam:</b> “So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?”</td><td class="tick">$4,287</td></tr>
-            <tr><td class="t">0:29</td><td><b>CONSIDERATION · Pat:</b> “Hold on… let me pull that up.” <i>(keys, pause)</i> “…we bill what's documented, sir.” <b>Adam:</b> “Sure — same code, same day. Two X-rays, one visit.” <b>Pat:</b> “…hm. Yeah, okay, I do see it twice. I can adjust one.”</td><td class="tick">→ $3,875</td></tr>
-            <tr><td class="t">0:37</td><td><b>Adam:</b> “Appreciate that. Now — Medicare pays four thirty-eight… and your own posted cash price is twenty-six thirty-three.” <b>Pat, bristling:</b> “Our rates are our rates.” <i>(pause)</i> “…best I can do is 2,400.”</td><td class="tick">→ $2,400</td></tr>
-            <tr><td class="t">0:46</td><td><b>Adam:</b> “She can do sixteen-fifty today, paid in full — take that to your supervisor?” <b>Pat:</b> “…give me a second.” <i>(hold, 2s)</i> “Okay. Approved at 1,650.”</td><td class="tick">→ $1,650</td></tr>
-            <tr><td class="t">0:51</td><td><b>Adam:</b> “Appreciate you, Pat.” Outcome card: ref <b>MG-ADJ-2247</b>; <code>escalation_required</code> = a human signs off.</td><td class="tick">settled</td></tr>
+            <tr><td class="t">0:20</td><td><b>Alex:</b> “Hi, this is Alex. Have I reached the billing office at Mercy General, and who am I speaking with?” <b>Pat, wary:</b> “…what is it you're asking for?”</td><td class="tick">$4,287</td></tr>
+            <tr><td class="t">0:25</td><td><b>Alex:</b> “So the chest X-ray, June second — code 7-1-0-4-6 — it's on here twice. Can you take one off?”</td><td class="tick">$4,287</td></tr>
+            <tr><td class="t">0:29</td><td><b>CONSIDERATION · Pat:</b> “Hold on… let me pull that up.” <i>(keys, pause)</i> “…we bill what's documented, sir.” <b>Alex:</b> “Sure — same code, same day. Two X-rays, one visit.” <b>Pat:</b> “…hm. Yeah, okay, I do see it twice. I can adjust one.”</td><td class="tick">→ $3,875</td></tr>
+            <tr><td class="t">0:37</td><td><b>Alex:</b> “Appreciate that. Now — Medicare pays four thirty-eight… and your own posted cash price is twenty-six thirty-three.” <b>Pat, bristling:</b> “Our rates are our rates.” <i>(pause)</i> “…best I can do is 2,400.”</td><td class="tick">→ $2,400</td></tr>
+            <tr><td class="t">0:46</td><td><b>Alex:</b> “She can do sixteen-fifty today, paid in full — take that to your supervisor?” <b>Pat:</b> “…give me a second.” <i>(hold, 2s)</i> “Okay. Approved at 1,650.”</td><td class="tick">→ $1,650</td></tr>
+            <tr><td class="t">0:51</td><td><b>Alex:</b> “Appreciate you, Pat.” Outcome card: ref <b>MG-ADJ-2247</b>; <code>escalation_required</code> = a human signs off.</td><td class="tick">settled</td></tr>
           </table>
         </div>
         <div class="block"><h4>Direction</h4><div class="dir">Record the full call once, uncut (doubles as golden-call + eval material). If Pat asks “am I talking to a robot?”, KEEP IT — the honest “I am—” is an S5 gift.</div></div>
@@ -214,11 +210,11 @@
     <div class="trans-frame" style="background:#221d19">
       <img src="../deck/assets/warroom.png" alt="War Room with See the report CTA" style="opacity:.85">
       <div class="click-marker" style="left:80%;top:20%"></div>
-      <div class="click-label" style="left:74%;top:32%">See the report → (new, PR #56)</div>
+      <div class="click-label" style="left:74%;top:32%">See the report → (now live)</div>
     </div>
     <div class="trans-body">
       <div class="th">▸ Transition · 0:52–0:53 (~1s)</div>
-      <div>The call ends → the new <code>See the report →</code> banner appears (the fix from PR #56 — before it, there was no clear way out of the War Room). Click it → the report. <b>Needs PR #56 deployed to film.</b></div>
+      <div>The call ends → the <code>See the report →</code> banner appears in the War Room grid (before it, there was no clear way out of the War Room). Click it → the report.</div>
       <div class="tb-budget">Budget: 1s (click + load)</div>
     </div>
   </div>
@@ -227,7 +223,7 @@
   <div class="shot">
     <div class="shot-head"><span class="time">0:53–0:58</span><span class="shot-title">The receipt</span><span class="proves">proves <b>S7 · closes S1</b></span></div>
     <div class="shot-body">
-      <div class="shot-img"><img src="../deck/assets/report.png" alt="Report — ranked, cited"><div class="imgcap">SCREEN: <code>/report</code> — ranked outcomes with ref#s + rep names, billed vs fair vs achieved, one Evidence row expanded.</div></div>
+      <div class="shot-img"><img src="../deck/assets/report.png" alt="Report — ranked, cited"><div class="imgcap">SCREEN: <code>/report</code> (the “Case file”) — ranked outcomes with ref#s + rep names, billed vs fair vs achieved, one Evidence row expanded; recorded patient authorization on file.</div></div>
       <div class="shot-script">
         <div class="block"><h4>VO</h4><div class="vo">“Ranked, cited, in plain English. $4,287 became $1,650 — sixty-two percent off. Haggl.”</div></div>
         <div class="block"><h4>End card · 0:58–1:00</h4><span class="ost">Haggl · hagglfor.me · −62%</span></div>
