@@ -31,6 +31,14 @@
 - ⏳ hagglfor.me (Cloudflare, Hamza's account) — after deployment; never critical path
 - Known nit parked: duplicate-detection modifier exemption (real bills only, not demo-blocking).
 
+## In-flight (pinned 07-18 ~17:45 for compaction recovery)
+- **Deck (PRIORITY)**: Opus agent building deck/haggl-pitch.pptx on branch feat/pitch-deck — 8-slide/4:45 plan from the research brief; captures own site screenshots; voice-guide enforced; PRs when done.
+- **Multi-user + real-call plumbing**: agent on feat/multi-user-and-realcall — Dan/Nina users+cases, /calls/place-real + conversation_id persistence (A1), UUID default call_id fix (A2), archive_call.py run on both real conversations (J-call conv_9301kxvs…, a2a conv_8001kxvt…), shot-list C3 wording fix.
+- **Visuals**: agent on feat/dashboard-warroom-visuals — /bills deadlines strip, multi-call War Room overview, price-flash, milestone icons. For Susy's review.
+- Orchestrator merges each PR on landing, then Playwright-verifies. Judge scorecard v2 (arch 7.5 / creativity 8 / workflow 6) + fix ranking: in the workflow journal wf_5189005d.
+- Susy's voice IDs (Alex PK6t0r2iXSJEz1l0Gy4k · Morgan IUr28Q1jJWtnKBQJWsGP · Riley urYrjlrwA2jxqHzz2wHT) 400 on assign — likely must be added to the workspace voice library first (dashboard), then assign Alex→negotiator, ask Hamza for Morgan/Riley mapping.
+- Servers on Hamza's machine serve hagglfor.me via cloudflared tunnel "haggl": next dev :3000, uvicorn :8000 — keep alive; use 127.0.0.1 not localhost.
+
 ## Decision log
 | Date | Decision | By |
 |---|---|---|
