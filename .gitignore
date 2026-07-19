@@ -38,3 +38,6 @@ chargemasters*
 /*.png
 /intake-parse-verified.png
 /The Negotiator - Visual Brief (standalone).html
+
+# Hamza's personal voice profile — never commit
+/docs/voice/
