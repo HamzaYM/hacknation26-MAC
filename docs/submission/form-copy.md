@@ -82,6 +82,7 @@ Ship **Candidate A**. It is the most memorable, the math is genuinely funny, and
 - Pitch deck: https://hagglfor.me/pitch-sf-2026
 - Technical architecture: https://hagglfor.me/technical-architecture
 - Tech tour: https://hagglfor.me/tech-video
+- Judge guide (logins + walkthrough): https://hagglfor.me/judge-guide
 - Repo: https://github.com/HamzaYM/hacknation26-MAC
 
 ---
