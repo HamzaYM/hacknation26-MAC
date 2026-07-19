@@ -10,6 +10,15 @@ export async function getDemoCase(): Promise<JobSpec> {
   return res.json();
 }
 
+// The logged-in user's case, resolved by email (cases.owner_email). Without
+// an email — or for an unknown one — the API falls back to Maya's demo case.
+export async function getMyCase(email?: string): Promise<JobSpec> {
+  const qs = email ? `?email=${encodeURIComponent(email)}` : "";
+  const res = await fetch(`${API_BASE}/cases/mine${qs}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /cases/mine failed: ${res.status}`);
+  return res.json();
+}
+
 // apps/api/app/routers/calls.py's GET /calls/{id} is still a stub
 // ({"call_id":..., "status":"stub"}) — this will start returning the real
 // `calls` row (status/counterparty/started_at/…) once Hamza wires Supabase.
@@ -39,6 +48,43 @@ export async function confirmCase(caseId: string): Promise<ConfirmResponse> {
 export async function getFlags(caseId: string): Promise<FlagsResponse> {
   const res = await fetch(`${API_BASE}/cases/${caseId}/flags`, { cache: "no-store" });
   if (!res.ok) throw new Error(`GET /cases/${caseId}/flags failed: ${res.status}`);
+  return res.json();
+}
+
+// ---- GET /cases/{id}/action_plan (the pre-dial Action Plan for /confirm) ----
+// `input` values are all engine-computed (numbers/dates/statutes); `copy` is the
+// user-facing text — warm `claude -p` prose when honest, deterministic fallback
+// otherwise. Every figure in `copy` is verbatim from `input` (server-side guard).
+
+export interface ActionPlanCopy {
+  headline: string;
+  summary: string;
+  flag_chips: { cpt?: string | null; label: string }[];
+  savings_line: string;
+  boost_panel?: { missing: string; copy: string }[];
+  per_call_descriptions?: { entity: string; copy: string }[];
+  timeline_copy: string;
+  call_log_notes?: { call_ref?: string; copy: string }[];
+  next_step_line: string;
+  _source?: string;
+}
+
+export interface ActionPlanResponse {
+  case_id: string;
+  input: {
+    balance: number;
+    savings_estimate: { low: number | null; high: number | null; confidence: string };
+    levers_armed: { id: string; citation: string | null; dollar_ask: number | null; armed_by: string }[];
+    timeline: Record<string, string | null>;
+    [k: string]: unknown;
+  };
+  copy: ActionPlanCopy;
+}
+
+// null = endpoint unavailable (the page falls back to flags-only rendering).
+export async function getActionPlan(caseId: string): Promise<ActionPlanResponse | null> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/action_plan`, { cache: "no-store" });
+  if (!res.ok) return null;
   return res.json();
 }
 

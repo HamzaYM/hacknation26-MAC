@@ -117,18 +117,28 @@ def _jsonable(row: dict) -> dict:
 
 
 # ── cases ─────────────────────────────────────────────────────────────────
-def ensure_demo_case():
-    """Upsert the fixture case row so calls.case_id FK resolves."""
-    spec = DEMO_JOB_SPEC
+def ensure_case(case_id: str, spec: dict, owner_email: str | None = None):
+    """Upsert a fixture case row so calls.case_id FK resolves (0002: owner_email)."""
     return _run(
         """
-        insert into cases (id, patient, insurance, financial_profile, authorizations, status)
-        values (%s, %s, %s, %s, %s, 'intake')
-        on conflict (id) do nothing
+        insert into cases (id, patient, insurance, financial_profile, authorizations, status, owner_email)
+        values (%s, %s, %s, %s, %s, 'intake', %s)
+        on conflict (id) do update set owner_email = coalesce(excluded.owner_email, cases.owner_email)
         """,
-        (DEMO_CASE_ID, Json(spec["patient"]), Json(spec["insurance"]),
-         Json(spec["financial_profile"]), Json(spec["authorizations"])),
+        (case_id, Json(spec["patient"]), Json(spec["insurance"]),
+         Json(spec["financial_profile"]), Json(spec["authorizations"]), owner_email),
     )
+
+
+def ensure_demo_case():
+    """Upsert the fixture case row so calls.case_id FK resolves."""
+    return ensure_case(DEMO_CASE_ID, DEMO_JOB_SPEC)
+
+
+def get_case_by_owner_email(email: str) -> dict | None:
+    rows = _run("select * from cases where owner_email = %s order by created_at limit 1",
+                (email,), fetch=True)
+    return _jsonable(rows[0]) if rows else None
 
 
 def set_case_status(case_id: str, status: str):
@@ -195,6 +205,13 @@ def insert_dossier(case_id: str, dossier) -> str | None:
     return str(rows[0]["id"]) if rows else None
 
 
+def get_dossier(dossier_id: str) -> dict | None:
+    if not _is_uuid(dossier_id):
+        return None
+    rows = _run("select * from strategy_dossiers where id = %s", (dossier_id,), fetch=True)
+    return _jsonable(rows[0]) if rows else None
+
+
 # ── calls ─────────────────────────────────────────────────────────────────
 def insert_call(call_id: str, case_id: str, counterparty: str = "agent",
                 status: str = "queued", dossier_id: str | None = None):
@@ -233,6 +250,25 @@ def get_call_by_conversation(conversation_id: str) -> dict | None:
     rows = _run("select * from calls where elevenlabs_conversation_id = %s",
                 (conversation_id,), fetch=True)
     return _jsonable(rows[0]) if rows else None
+
+
+def get_active_real_call() -> dict | None:
+    """The most recent ringing/live call linked to an ElevenLabs conversation —
+    where tool hits that arrive without our call_id attach (ElevenLabs webhook
+    tools don't know internal ids; see tools._resolve_call_id)."""
+    rows = _run("select * from calls where elevenlabs_conversation_id is not null "
+                "and status in ('ringing', 'live') order by started_at desc nulls last limit 1",
+                fetch=True)
+    return _jsonable(rows[0]) if rows else None
+
+
+def set_call_conversation(call_id: str, conversation_id: str):
+    """Link a dialed call to its ElevenLabs conversation so the post-call
+    webhook (matched by conversation_id) lands transcript + audio on the row."""
+    if not _is_uuid(call_id):
+        return None
+    return _run("update calls set elevenlabs_conversation_id = %s where id = %s",
+                (conversation_id, call_id))
 
 
 def set_call_recording(call_id: str, recording_path: str):

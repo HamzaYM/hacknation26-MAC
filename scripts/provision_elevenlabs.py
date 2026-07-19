@@ -32,7 +32,10 @@ AGENTS: dict[str, dict] = {
         # competence-first opener (team decision 07-18); early → the full disclosure
         # line. Never empty (a2a deadlock, live-verified 07-18).
         "first_message": "FROM_CONFIG",
-        "voices": ["Eric", "Chris", "Brian"],       # smooth-trustworthy advocate
+        "voices": ["Eric", "Chris", "Brian"],       # name fallbacks if no pin_voice
+        # Pin to voice.default_voice_id (Kar Shin's pick) on BOTH create and
+        # update — overrides the name prefs above and any live dashboard voice.
+        "pin_voice": True,
     },
     "intake": {
         "prompt_file": "prompts/intake_agent.md",
@@ -241,8 +244,13 @@ def main() -> None:
     if s != 200:
         sys.exit(f"voice list failed: {s} {voices}")
     voices_by_name = {v["name"]: v["voice_id"] for v in voices["voices"]}
-    fallback_voice = voices["voices"][0]["voice_id"]
+    # Global default: config's default_voice_id is the fallback for any agent
+    # with no name match, and the pinned voice for pin_voice agents. Only if
+    # config omits it do we fall back to an arbitrary library voice.
+    default_voice = vcfg.get("default_voice_id")
+    fallback_voice = default_voice or voices["voices"][0]["voice_id"]
     print(f"voices available: {sorted(voices_by_name)[:12]}{' …' if len(voices_by_name) > 12 else ''}")
+    print(f"default voice (fallback + pins): {default_voice or '(none in config)'}")
 
     s, existing = call("GET", "/v1/convai/agents?page_size=100", key)
     if s != 200:
@@ -284,11 +292,17 @@ def main() -> None:
             if tools is not None:
                 cc["agent"]["prompt"]["tools"] = tools
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
+            # pin_voice agents override the live voice with the config default;
+            # everything else keeps its dashboard voice.
+            if spec.get("pin_voice") and default_voice:
+                cc.setdefault("tts", {})["voice_id"] = default_voice
+                action = f"updated (voice pinned → {default_voice})"
+            else:
+                action = "updated (voice/llm preserved)"
             patch_body: dict = {"conversation_config": cc}
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
                 patch_body["platform_settings"] = allow_voice_override(live.get("platform_settings"))
             s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
-            action = "updated (voice/llm preserved)"
         else:
             conversation_config = {
                 "agent": {
@@ -299,7 +313,8 @@ def main() -> None:
                 "tts": {
                     # English-only agents require flash v2 / turbo v2 (v2_5 is multilingual)
                     "model_id": "eleven_flash_v2" if "v2_5" in vcfg.get("model", "") else vcfg.get("model", "eleven_flash_v2"),
-                    "voice_id": pick_voice(voices_by_name, spec["voices"], fallback_voice),
+                    "voice_id": (default_voice if spec.get("pin_voice") and default_voice
+                                 else pick_voice(voices_by_name, spec["voices"], fallback_voice)),
                     "stability": vcfg.get("stability", 0.55),
                     "speed": vcfg.get("speed", 1.0),
                 },

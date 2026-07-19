@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { confirmCase, getDemoCase, getFlags } from "../../lib/api";
+import { confirmCase, getActionPlan, getDemoCase, getFlags } from "../../lib/api";
+import type { ActionPlanResponse } from "../../lib/api";
 import { getVoicePref, voiceById } from "../../lib/voice";
 import { facilitySavings, money } from "../../lib/savings";
 import { FLAG_LABELS } from "../../lib/types";
@@ -16,6 +17,7 @@ export default function Confirm() {
   const [spec, setSpec] = useState<JobSpec | null>(null);
   const [flags, setFlags] = useState<DerivedFlag[] | null>(null);
   const [voiceId, setVoiceId] = useState<string | null>(null);
+  const [plan, setPlan] = useState<ActionPlanResponse | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
@@ -25,6 +27,9 @@ export default function Confirm() {
       .then((s) => {
         setSpec(s);
         void getVoicePref(s.case_id).then(setVoiceId);
+        // Action Plan copy is best-effort (null on 404/older API) — the flags
+        // view below renders either way, so a missing endpoint never blocks.
+        getActionPlan(s.case_id).then(setPlan).catch(() => setPlan(null));
         return getFlags(s.case_id).then((r) => setFlags(r.flags));
       })
       .catch(() => setLoadError(true));
@@ -61,12 +66,16 @@ export default function Confirm() {
   const pctHigh = savings.percentSavedSoFar + savings.percentProjectedHigh;
   const totalFlagged = flags.reduce((sum, f) => sum + f.dollar_impact, 0);
 
+  // Prefer the server's Action Plan copy (numbers guaranteed verbatim from the
+  // engine); fall back to the locally computed strings when it's unavailable.
+  const copy = plan?.copy;
+
   return (
     <div>
-      <h1 style={{ marginTop: 16 }}>Here&apos;s the plan: confirm before we dial</h1>
+      <h1 style={{ marginTop: 16 }}>{copy?.headline ?? "Here's the plan: confirm before we dial"}</h1>
       <p style={{ color: "var(--text-secondary)", margin: "8px 0 24px" }}>
-        We read your bill and EOB from {spec.bill.facility_name}. Review what we found and what
-        we&apos;ll argue. We don&apos;t dial until you approve.
+        {copy?.summary ??
+          `We read your bill and EOB from ${spec.bill.facility_name}. Review what we found and what we'll argue. We don't dial until you approve.`}
       </p>
 
       <div className="card">
@@ -90,22 +99,31 @@ export default function Confirm() {
           Total flagged: <span className="mono-figure" style={{ color: "var(--flag)" }}>{money(totalFlagged)}</span>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {flags.map((flag, i) => (
-            <span className="pill pill-flag" key={i}>
-              {FLAG_LABELS[flag.type]}
-              <span className="mono-figure">+{money(flag.dollar_impact)}</span>
-            </span>
-          ))}
+          {copy?.flag_chips
+            ? copy.flag_chips.map((chip, i) => (
+                <span className="pill pill-flag" key={i}>
+                  {chip.label}
+                </span>
+              ))
+            : flags.map((flag, i) => (
+                <span className="pill pill-flag" key={i}>
+                  {FLAG_LABELS[flag.type]}
+                  <span className="mono-figure">+{money(flag.dollar_impact)}</span>
+                </span>
+              ))}
         </div>
       </div>
 
       <div className="card">
         <h3 style={{ marginBottom: 4 }}>What that&apos;s worth</h3>
         <div className="mono-figure" style={{ fontSize: 26, color: "var(--accent)", margin: "8px 0 4px" }}>
-          {money(estimateLow)}–{money(estimateHigh)}
+          {plan?.input.savings_estimate.low != null && plan?.input.savings_estimate.high != null
+            ? `${money(plan.input.savings_estimate.low)}–${money(plan.input.savings_estimate.high)}`
+            : `${money(estimateLow)}–${money(estimateHigh)}`}
         </div>
         <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-          Estimated savings if the calls go our way: {pctLow}–{pctHigh}% off your {money(savings.originalBalance)} balance.
+          {copy?.savings_line ??
+            `Estimated savings if the calls go our way: ${pctLow}–${pctHigh}% off your ${money(savings.originalBalance)} balance.`}
         </div>
       </div>
 
@@ -121,6 +139,23 @@ export default function Confirm() {
           Change voice
         </a>
       </div>
+      {copy?.per_call_descriptions && copy.per_call_descriptions.length > 0 && (
+        <div className="card">
+          <h3 style={{ marginBottom: 12 }}>The calls we&apos;ll make</h3>
+          <ul style={{ margin: 0, paddingLeft: 18, color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>
+            {copy.per_call_descriptions.map((c, i) => (
+              <li key={i}>{c.copy}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {copy?.timeline_copy && (
+        <div className="card">
+          <h3 style={{ marginBottom: 8 }}>Is it safe to wait?</h3>
+          <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 14 }}>{copy.timeline_copy}</p>
+        </div>
+      )}
 
       {confirmError && (
         <p className="todo">
@@ -133,7 +168,7 @@ export default function Confirm() {
           {confirming ? "Confirming…" : "Looks right, make the calls"}
         </button>
         <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 8 }}>
-          Nothing gets dialed until you approve this plan.
+          {copy?.next_step_line ?? "Nothing gets dialed until you approve this plan."}
         </div>
       </div>
     </div>

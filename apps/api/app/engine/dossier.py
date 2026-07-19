@@ -20,6 +20,7 @@ one lever per red flag) → benchmark_anchor. Only armed levers are listed.
 """
 from __future__ import annotations
 
+from . import levers
 from ..models import DerivedFlag, Entity, JobSpec, Lever, StrategyDossier
 
 ERROR_FLAG_TYPES = ("duplicate", "upcode", "unbundle", "phantom", "eob_mismatch")
@@ -74,21 +75,28 @@ def build_dossier(
     if floor is None:
         floor = target  # conservative fallback: never offer above target
 
-    levers: list[Lever] = []
+    # Citation wording comes verbatim from J's statute pack (config/levers.json),
+    # interpolated with the code-computed totals + flag impacts (engine/levers.py).
+    # The engine owns the numbers; the pack owns the words (PRD §7).
+    lever_ctx = levers.build_context(
+        flags, {"medicare_total": medicare_total, "mrf_cash_total": mrf_cash_total}, benchmarks
+    )
+
+    def _pack_cite(engine_id: str, fallback: str | None = None) -> str | None:
+        cited = levers.citation_for_engine_lever(engine_id, lever_ctx)
+        return cited[0] if cited else fallback
+
+    levers_list: list[Lever] = []
 
     # 1) statutory — financial_assistance_screen rung (charity care FIRST)
     charity = config["thresholds"]["charity_lead"]
     fpl = job_spec.financial_profile.get("fpl_percent")
     if job_spec.bill.nonprofit_status and fpl is not None and fpl <= charity["max_fpl_percent"]:
-        levers.append(Lever(
+        levers_list.append(Lever(
             id="statutory_501r",
             armed=True,
             armed_by=f"nonprofit_status + fpl_percent {fpl:.0f} <= {charity['max_fpl_percent']}",
-            citation=(
-                "IRC §501(r): as a nonprofit hospital you are required to maintain a "
-                "financial assistance policy and limit charges to amounts generally billed; "
-                f"the patient is at {fpl:.0f}% of the federal poverty level."
-            ),
+            citation=_pack_cite("statutory_501r"),
             dollar_ask=None,
         ))
 
@@ -98,24 +106,27 @@ def build_dossier(
             continue
         lever_id = f"error_{flag.type}" + (f"_{flag.cpt}" if flag.cpt else "")
         row = benchmarks.get(flag.evidence.get("supported") or flag.cpt or "")
-        levers.append(Lever(
+        # eob_mismatch has no statute in the pack → fall back to the per-CPT cite
+        levers_list.append(Lever(
             id=lever_id,
             armed=True,
             armed_by=f"derived_flag:{flag.type}",
-            citation=_cite(row) if row else None,
+            citation=_pack_cite(lever_id, fallback=_cite(row) if row else None),
             dollar_ask=flag.dollar_impact,
         ))
 
-    # 3) benchmark anchor — armed whenever benchmark rows exist for the case
+    # 3) benchmark anchor — Medicare + the hospital's own posted cash price,
+    #    both voiced verbatim from the pack (medicare_benchmark + price_transparency_mrf)
     if cpts:
-        levers.append(Lever(
+        anchor_cite = _pack_cite("benchmark_anchor")
+        cash_cite = None
+        if mrf_cash_total:
+            cash_cite = levers.citation("price_transparency_mrf", lever_ctx)[0]
+        levers_list.append(Lever(
             id="benchmark_anchor",
             armed=True,
             armed_by="benchmarks",
-            citation=(
-                f"Medicare total for the corrected codes is ${medicare_total:.2f}; "
-                f"the hospital's own posted cash price totals ${mrf_cash_total:.2f}."
-            ),
+            citation=" ".join(c for c in (anchor_cite, cash_cite) if c) or None,
             dollar_ask=anchor,
         ))
 
@@ -123,7 +134,7 @@ def build_dossier(
         case_id=job_spec.case_id,
         target_entity=entity.name,
         route=route,
-        levers=levers,
+        levers=levers_list,
         anchor=anchor,
         target=target,
         floor=floor,
