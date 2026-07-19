@@ -1,66 +1,45 @@
-// Decorative falling-cash background for the marketing surface only.
-// Positions are a fixed preset (not Math.random()) so server/client markup matches on hydration.
-// Two-tone outline style + density calibrated against the reference mock (warm
-// gray + dusty pink bills/coins, densely scattered edge-to-edge).
+// Falling-cash background for the marketing surface — geometry, colors, and
+// the animation itself extracted directly from the reference mock's
+// stylesheet ("ui mocks/Haggl Landing (5a + 5b).html", .hg-bill / @keyframes
+// hg-fall): solid filled rounded rectangles with a "$" mark, NOT outlined
+// icons — an earlier draft got the fill style wrong. 33 pieces, 3 color
+// variants, all values (left/rotation/scale/duration/delay) are the mock's
+// own instance data, not re-derived.
+type Piece = { left: string; variant?: "hg-ink" | "hg-cream"; r: number; s: number; duration: number; delay: number };
 
-const BILL = (
-  <svg width="64" height="37" viewBox="0 0 64 37" fill="none">
-    <rect x="1" y="1" width="62" height="35" rx="5" stroke="currentColor" strokeWidth="2" fill="none" />
-    <circle cx="32" cy="18.5" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-    <text x="32" y="23.5" fontSize="12" fontFamily="var(--font-mono)" textAnchor="middle" fill="currentColor">$</text>
-  </svg>
-);
-
-const COIN = (
-  <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-    <rect x="1" y="1" width="32" height="32" rx="16" stroke="currentColor" strokeWidth="2" />
-    <text x="17" y="22.5" fontSize="14" fontFamily="var(--font-mono)" textAnchor="middle" fill="currentColor">$</text>
-  </svg>
-);
-
-const WARM = "var(--money-warm)";
-const PINK = "var(--money-pink)";
-
-type Piece = {
-  left: string;
-  size: "bill" | "coin";
-  color: string;
-  duration: number;
-  delay: number;
-  rotFrom: number;
-  rotTo: number;
-  scale: number;
-};
-
-// left position, color, and delay are hand-staggered so the page reads as
-// densely scattered at any single instant, not a sparse trickle.
 const PIECES: Piece[] = [
-  { left: "1%", size: "coin", color: WARM, duration: 15, delay: -3, rotFrom: -10, rotTo: 14, scale: 0.85 },
-  { left: "6%", size: "bill", color: PINK, duration: 19, delay: -11, rotFrom: 6, rotTo: -12, scale: 1 },
-  { left: "11%", size: "coin", color: WARM, duration: 13, delay: -6, rotFrom: -14, rotTo: 8, scale: 0.9 },
-  { left: "16%", size: "bill", color: WARM, duration: 17, delay: -1, rotFrom: 10, rotTo: -6, scale: 0.8 },
-  { left: "21%", size: "coin", color: PINK, duration: 14, delay: -9, rotFrom: -8, rotTo: 16, scale: 0.95 },
-  { left: "26%", size: "bill", color: WARM, duration: 21, delay: -14, rotFrom: 4, rotTo: -10, scale: 0.9 },
-  { left: "31%", size: "coin", color: WARM, duration: 12, delay: -4, rotFrom: -12, rotTo: 10, scale: 0.85 },
-  { left: "36%", size: "bill", color: PINK, duration: 18, delay: -16, rotFrom: 8, rotTo: -14, scale: 1.05 },
-  { left: "41%", size: "coin", color: WARM, duration: 16, delay: -8, rotFrom: -6, rotTo: 12, scale: 0.8 },
-  { left: "46%", size: "bill", color: WARM, duration: 20, delay: -2, rotFrom: 12, rotTo: -8, scale: 0.95 },
-  { left: "51%", size: "coin", color: PINK, duration: 13, delay: -12, rotFrom: -10, rotTo: 14, scale: 0.9 },
-  { left: "56%", size: "bill", color: WARM, duration: 22, delay: -6, rotFrom: 6, rotTo: -12, scale: 1 },
-  { left: "61%", size: "coin", color: WARM, duration: 15, delay: -17, rotFrom: -14, rotTo: 8, scale: 0.85 },
-  { left: "66%", size: "bill", color: PINK, duration: 19, delay: -3, rotFrom: 10, rotTo: -6, scale: 0.85 },
-  { left: "71%", size: "coin", color: WARM, duration: 14, delay: -10, rotFrom: -8, rotTo: 16, scale: 0.9 },
-  { left: "76%", size: "bill", color: WARM, duration: 23, delay: -5, rotFrom: 4, rotTo: -10, scale: 1.05 },
-  { left: "81%", size: "coin", color: PINK, duration: 12, delay: -15, rotFrom: -12, rotTo: 10, scale: 0.8 },
-  { left: "86%", size: "bill", color: WARM, duration: 18, delay: -7, rotFrom: 8, rotTo: -14, scale: 0.9 },
-  { left: "91%", size: "coin", color: WARM, duration: 16, delay: -13, rotFrom: -6, rotTo: 12, scale: 0.95 },
-  { left: "96%", size: "bill", color: PINK, duration: 21, delay: -1, rotFrom: 12, rotTo: -8, scale: 1 },
-  { left: "4%", size: "bill", color: WARM, duration: 25, delay: -19, rotFrom: -4, rotTo: 10, scale: 0.85 },
-  { left: "24%", size: "coin", color: PINK, duration: 17, delay: -18, rotFrom: 10, rotTo: -6, scale: 0.9 },
-  { left: "44%", size: "bill", color: WARM, duration: 20, delay: -20, rotFrom: -6, rotTo: 12, scale: 0.8 },
-  { left: "64%", size: "coin", color: WARM, duration: 15, delay: -21, rotFrom: 8, rotTo: -14, scale: 0.95 },
-  { left: "84%", size: "bill", color: PINK, duration: 19, delay: -22, rotFrom: -10, rotTo: 14, scale: 0.9 },
-  { left: "94%", size: "coin", color: WARM, duration: 14, delay: -10, rotFrom: 6, rotTo: -12, scale: 0.85 },
+  { left: "2%", r: -38, s: 0.95, duration: 5.5, delay: 0 },
+  { left: "7%", variant: "hg-ink", r: 22, s: 0.7, duration: 7.8, delay: 2.1 },
+  { left: "11%", variant: "hg-cream", r: -14, s: 1.1, duration: 4.6, delay: 0.8 },
+  { left: "16%", r: 48, s: 0.8, duration: 6.9, delay: 3.4 },
+  { left: "20%", variant: "hg-ink", r: -27, s: 1, duration: 5.1, delay: 1.3 },
+  { left: "25%", variant: "hg-cream", r: 12, s: 0.85, duration: 8.3, delay: 0.2 },
+  { left: "29%", r: -52, s: 1.15, duration: 6.2, delay: 2.7 },
+  { left: "34%", variant: "hg-ink", r: 33, s: 0.75, duration: 4.9, delay: 4.2 },
+  { left: "38%", r: -8, s: 0.95, duration: 7.4, delay: 1.6 },
+  { left: "43%", variant: "hg-cream", r: 41, s: 1.05, duration: 5.7, delay: 0.5 },
+  { left: "47%", variant: "hg-ink", r: -19, s: 0.8, duration: 6.6, delay: 3.1 },
+  { left: "51%", r: 26, s: 1.2, duration: 4.4, delay: 2.3 },
+  { left: "55%", variant: "hg-cream", r: -44, s: 0.9, duration: 8, delay: 0.9 },
+  { left: "60%", variant: "hg-ink", r: 16, s: 0.7, duration: 5.9, delay: 4 },
+  { left: "64%", r: -31, s: 1, duration: 6.8, delay: 1.1 },
+  { left: "68%", variant: "hg-cream", r: 54, s: 0.85, duration: 4.7, delay: 2.9 },
+  { left: "72%", variant: "hg-ink", r: -11, s: 1.1, duration: 7.1, delay: 0.4 },
+  { left: "77%", r: 37, s: 0.9, duration: 5.3, delay: 3.7 },
+  { left: "81%", variant: "hg-cream", r: -49, s: 0.75, duration: 8.6, delay: 1.8 },
+  { left: "85%", variant: "hg-ink", r: 9, s: 1.05, duration: 6.1, delay: 0.7 },
+  { left: "89%", r: -24, s: 0.95, duration: 4.8, delay: 2.5 },
+  { left: "93%", variant: "hg-cream", r: 44, s: 0.8, duration: 7.6, delay: 1.4 },
+  { left: "97%", variant: "hg-ink", r: -35, s: 1, duration: 5.6, delay: 3.9 },
+  { left: "4%", r: 29, s: 0.7, duration: 6.4, delay: 4.6 },
+  { left: "22%", variant: "hg-cream", r: -42, s: 1.1, duration: 5, delay: 5.1 },
+  { left: "41%", variant: "hg-ink", r: 18, s: 0.85, duration: 7.9, delay: 5.4 },
+  { left: "58%", r: -6, s: 0.95, duration: 5.4, delay: 4.9 },
+  { left: "75%", variant: "hg-cream", r: 51, s: 0.75, duration: 6.7, delay: 5.8 },
+  { left: "88%", variant: "hg-ink", r: -16, s: 1.15, duration: 4.5, delay: 5.3 },
+  { left: "32%", r: 36, s: 0.9, duration: 8.1, delay: 6.2 },
+  { left: "66%", variant: "hg-cream", r: -47, s: 0.8, duration: 5.2, delay: 6.6 },
+  { left: "14%", variant: "hg-ink", r: 23, s: 1, duration: 6.9, delay: 6.9 },
 ];
 
 export default function MoneyRain() {
@@ -69,20 +48,16 @@ export default function MoneyRain() {
       {PIECES.map((p, i) => (
         <div
           key={i}
-          className="bill"
+          className={`hg-bill ${p.variant ?? ""}`}
           style={{
             left: p.left,
-            color: p.color,
             animationDuration: `${p.duration}s`,
             animationDelay: `${p.delay}s`,
             // @ts-expect-error custom properties
-            "--rot-from": `${p.rotFrom}deg`,
-            "--rot-to": `${p.rotTo}deg`,
+            "--r": `${p.r}deg`,
+            "--s": p.s,
           }}
-        >
-          {/* separate element for the static scale — the fall animation owns `transform` on the parent */}
-          <div style={{ transform: `scale(${p.scale})` }}>{p.size === "bill" ? BILL : COIN}</div>
-        </div>
+        />
       ))}
     </div>
   );

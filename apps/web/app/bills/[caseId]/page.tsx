@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDemoCase, launchCalls } from "../../../lib/api";
+import { subscribeToCallsForCase } from "../../../lib/realtime";
 import { facilitySavings, money } from "../../../lib/savings";
 import { procedureLabel } from "../../../lib/procedures";
 import UploadCard from "../../../components/UploadCard";
+import ActionItemCard from "../../../components/ActionItemCard";
+import { itemsForEntity } from "../../../lib/actionItems";
 import { FLAG_LABELS, LADDER_LABELS, PROVIDER_LADDER } from "../../../lib/types";
-import type { JobSpec, DerivedFlag } from "../../../lib/types";
+import type { JobSpec, DerivedFlag, Call } from "../../../lib/types";
 
 function findLineItem(spec: JobSpec, cpt?: string | null) {
   return spec.bill.line_items.find((li) => li.cpt === cpt);
@@ -18,15 +21,54 @@ function findLineItem(spec: JobSpec, cpt?: string | null) {
 // scripted demo position: duplicate conceded, now arguing the benchmark/NSA rung.
 const DEMO_CURRENT_RUNG = "benchmark_anchor";
 
+// "Cash in" doesn't mean "silently stop." What actually needs to happen:
+// the agent finishes the CURRENT thread (it never leaves a lever half-pulled
+// or a verbal concession unconfirmed), gets the already-won reduction
+// confirmed in writing with a reference number — the same structured-outcome
+// discipline every other call in this product follows — and only then does
+// the bill move to "Settled." This wrap-up state simulates that call; a real
+// implementation would trigger it via POST /calls/launch with a
+// wrap_up_and_confirm objective rather than just flipping a status flag.
+const WRAP_UP_REF = "MG-CONF-8842";
+
 export default function BillDetail() {
   const [spec, setSpec] = useState<JobSpec | null>(null);
-  const [tab, setTab] = useState<"diagnosis" | "plan" | "history" | "documents">("diagnosis");
+  const [tab, setTab] = useState<"diagnosis" | "plan" | "history" | "documents" | "actions">("diagnosis");
   const [cashedIn, setCashedIn] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [wrappingUp, setWrappingUp] = useState(false);
+  // Bill-scoped completion state — separate from the aggregate /action-items
+  // page's own state (no shared store yet; TODO(Hamza) once this persists
+  // server-side, both views should read/write the same source of truth).
+  const [completedActionIds, setCompletedActionIds] = useState<Set<string>>(new Set());
+  // Real state, not a guess — only true when a `calls` row for this case is
+  // actually ringing/live (via the Realtime subscription below), so the
+  // live-call card only shows when a call genuinely is. "Start the calls" on
+  // the Plan tab (POST /calls/launch) is what makes that happen.
+  const [liveCall, setLiveCall] = useState<Call | null>(null);
 
   useEffect(() => {
     getDemoCase().then(setSpec);
   }, []);
+
+  useEffect(() => {
+    if (!spec) return;
+    const unsubscribe = subscribeToCallsForCase(spec.case_id, (call) => {
+      setLiveCall(call.status === "live" || call.status === "ringing" ? call : null);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [spec]);
+
+  useEffect(() => {
+    if (!wrappingUp) return;
+    const t = setTimeout(() => {
+      setWrappingUp(false);
+      setCashedIn(true);
+    }, 2400);
+    return () => clearTimeout(t);
+  }, [wrappingUp]);
 
   if (!spec) return <p className="todo">Loading case…</p>;
 
@@ -49,8 +91,8 @@ export default function BillDetail() {
           <div style={{ color: "var(--text-secondary)", fontSize: 15, marginBottom: 8 }}>
             {procedureLabel(spec.bill.facility_name, "facility")}
           </div>
-          <span className={`pill ${cashedIn ? "pill-muted" : "pill-accent"}`}>
-            {cashedIn ? "Locked in · no further calls" : "In progress"}
+          <span className={`pill ${cashedIn ? "pill-muted" : wrappingUp ? "pill-flag" : "pill-accent"}`}>
+            {cashedIn ? "Settled · confirmed in writing" : wrappingUp ? "Confirming your savings…" : "In progress"}
           </span>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -81,35 +123,78 @@ export default function BillDetail() {
         </div>
       </div>
 
-      {!cashedIn && !confirming && (
+      {!cashedIn && !confirming && !wrappingUp && (
         <button className="btn btn-secondary" onClick={() => setConfirming(true)}>
           I&apos;m done, cash in {money(savings.savedSoFar)} ({savings.percentSavedSoFar}%) now →
         </button>
       )}
       {confirming && (
         <div className="cash-in-confirm">
-          Lock in <strong>{money(savings.savedSoFar)}</strong> saved and stop further calls on this bill? You&apos;ll
+          Lock in <strong>{money(savings.savedSoFar)}</strong> saved and stop pursuing more on this bill? You&apos;ll
           give up the {money(savings.projectedLow)}–{money(savings.projectedHigh)} still possible if we keep going.
+          We&apos;ll place one final call to confirm the reduction already won in writing before closing this out.
           <div className="row">
-            <button className="btn btn-primary" onClick={() => { setCashedIn(true); setConfirming(false); }}>
-              Yes, lock it in
+            <button className="btn btn-primary" onClick={() => { setWrappingUp(true); setConfirming(false); }}>
+              Yes, wrap it up
             </button>
             <button className="btn btn-secondary" onClick={() => setConfirming(false)}>Keep negotiating</button>
           </div>
         </div>
       )}
+      {wrappingUp && (
+        <div className="cash-in-confirm">
+          <span className="live-dot"><span className="dot" />CONFIRMING</span>
+          <div style={{ marginTop: 6 }}>
+            Placing a final call to {spec.bill.facility_name} to confirm your {money(savings.savedSoFar)} reduction
+            in writing and get a reference number…
+          </div>
+        </div>
+      )}
 
-      <div className="tabs">
-        <button className={`tab ${tab === "diagnosis" ? "active" : ""}`} onClick={() => setTab("diagnosis")}>Diagnosis</button>
-        <button className={`tab ${tab === "plan" ? "active" : ""}`} onClick={() => setTab("plan")}>Plan</button>
-        <button className={`tab ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>Call History</button>
-        <button className={`tab ${tab === "documents" ? "active" : ""}`} onClick={() => setTab("documents")}>Documents</button>
-      </div>
+      {(() => {
+        const pendingActions = itemsForEntity(spec.bill.facility_name).filter((i) => !completedActionIds.has(i.id));
+        return (
+          <>
+            <div className="tabs">
+              <button className={`tab ${tab === "diagnosis" ? "active" : ""}`} onClick={() => setTab("diagnosis")}>Diagnosis</button>
+              <button className={`tab ${tab === "plan" ? "active" : ""}`} onClick={() => setTab("plan")}>Plan</button>
+              <button className={`tab ${tab === "history" ? "active" : ""}`} onClick={() => setTab("history")}>Call History</button>
+              <button className={`tab ${tab === "actions" ? "active" : ""}`} onClick={() => setTab("actions")}>
+                Action Items{pendingActions.length > 0 && ` (${pendingActions.length})`}
+              </button>
+              <button className={`tab ${tab === "documents" ? "active" : ""}`} onClick={() => setTab("documents")}>Documents</button>
+            </div>
 
-      {tab === "diagnosis" && <DiagnosisTab spec={spec} />}
-      {tab === "plan" && <PlanTab spec={spec} cashedIn={cashedIn} />}
-      {tab === "history" && <HistoryTab spec={spec} />}
-      {tab === "documents" && <DocumentsTab spec={spec} />}
+            {tab === "diagnosis" && <DiagnosisTab spec={spec} />}
+            {tab === "plan" && <PlanTab spec={spec} cashedIn={cashedIn} wrappingUp={wrappingUp} liveCall={liveCall} />}
+            {tab === "history" && <HistoryTab spec={spec} cashedIn={cashedIn} />}
+            {tab === "actions" && (
+              <ActionsTab
+                items={pendingActions}
+                onComplete={(id) => setCompletedActionIds((prev) => new Set(prev).add(id))}
+              />
+            )}
+            {tab === "documents" && <DocumentsTab spec={spec} cashedIn={cashedIn} />}
+          </>
+        );
+      })()}
+    </div>
+  );
+}
+
+function ActionsTab({ items, onComplete }: { items: ReturnType<typeof itemsForEntity>; onComplete: (id: string) => void }) {
+  if (items.length === 0) {
+    return (
+      <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
+        Nothing outstanding on this bill right now.
+      </p>
+    );
+  }
+  return (
+    <div>
+      {items.map((item) => (
+        <ActionItemCard key={item.id} item={item} onComplete={() => onComplete(item.id)} compact />
+      ))}
     </div>
   );
 }
@@ -172,7 +257,17 @@ function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
   );
 }
 
-function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
+function PlanTab({
+  spec,
+  cashedIn,
+  wrappingUp,
+  liveCall,
+}: {
+  spec: JobSpec;
+  cashedIn: boolean;
+  wrappingUp: boolean;
+  liveCall: Call | null;
+}) {
   const router = useRouter();
   const [launching, setLaunching] = useState(false);
   const [launchedCallId, setLaunchedCallId] = useState<string | null>(null);
@@ -199,34 +294,60 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
   if (cashedIn) {
     return (
       <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
-        You cashed in your savings on this bill, so we&apos;ve stopped calling. Reopen negotiation anytime from
-        the bill header above.
+        Settled. Your {money(facilitySavings(spec).savedSoFar)} reduction was confirmed in writing,
+        reference <span className="mono-figure">{WRAP_UP_REF}</span>. See Call History for the wrap-up call, and
+        Documents for the confirmation letter. Reopen negotiation anytime from the bill header above.
+      </p>
+    );
+  }
+
+  if (wrappingUp) {
+    return (
+      <p className="todo" style={{ borderColor: "var(--border)", background: "var(--bg-surface-muted)", color: "var(--text-secondary)" }}>
+        Wrapping up: placing a final call to get your {money(facilitySavings(spec).savedSoFar)} reduction confirmed
+        in writing before this bill closes out.
       </p>
     );
   }
 
   return (
     <div>
-      <div className="live-strip">
-        <div>
-          <span className="pill pill-muted">Next scheduled call</span>
-          <div style={{ marginTop: 6, fontWeight: 600 }}>
-            Continuing the {LADDER_LABELS[PROVIDER_LADDER[currentIndex]]?.toLowerCase()} step with {spec.bill.facility_name}
+      {liveCall ? (
+        // Honest live-call gating: this strip only appears when a `calls` row
+        // for this case is actually ringing/live (Realtime subscription).
+        <div className="live-strip">
+          <div>
+            <span className="live-dot"><span className="dot" />LIVE CALL</span>
+            <div style={{ marginTop: 6, fontWeight: 600 }}>
+              Continuing the {LADDER_LABELS[PROVIDER_LADDER[currentIndex]]?.toLowerCase()} step with {spec.bill.facility_name}
+            </div>
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button className="btn btn-primary" onClick={startCalls} disabled={launching} style={launching ? { opacity: 0.7 } : undefined}>
-            {launching ? "Dialing…" : "Start the calls"}
-          </button>
-          <a
-            href={launchedCallId ? `/warroom?call_id=${launchedCallId}` : "/warroom"}
-            className="btn btn-secondary"
-            style={{ textDecoration: "none" }}
-          >
-            Open War Room →
+          <a href={`/warroom?call_id=${liveCall.id}`} className="btn btn-secondary" style={{ textDecoration: "none" }}>
+            Watch &amp; listen live →
           </a>
         </div>
-      </div>
+      ) : (
+        <div className="live-strip">
+          <div>
+            <span className="pill pill-muted">Next scheduled call</span>
+            <div style={{ marginTop: 6, fontWeight: 600 }}>
+              Continuing the {LADDER_LABELS[PROVIDER_LADDER[currentIndex]]?.toLowerCase()} step with {spec.bill.facility_name}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn btn-primary" onClick={startCalls} disabled={launching} style={launching ? { opacity: 0.7 } : undefined}>
+              {launching ? "Dialing…" : "Start the calls"}
+            </button>
+            <a
+              href={launchedCallId ? `/warroom?call_id=${launchedCallId}` : "/warroom"}
+              className="btn btn-secondary"
+              style={{ textDecoration: "none" }}
+            >
+              Open War Room →
+            </a>
+          </div>
+        </div>
+      )}
       {launchError && (
         <p className="todo" style={{ marginBottom: 16 }}>{launchError}</p>
       )}
@@ -245,7 +366,7 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
                 {state === "active" && (
                   <div className="step-detail">
                     Agent is arguing Medicare pays $438 for these codes and the facility&apos;s own posted
-                    cash price is $1,890. Is this negotiable?
+                    cash price is $2,633. Is this negotiable?
                   </div>
                 )}
               </div>
@@ -257,11 +378,29 @@ function PlanTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
   );
 }
 
-function HistoryTab({ spec }: { spec: JobSpec }) {
+function HistoryTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
   // Static demo content — call_events/call_outcome persistence is a Hamza TODO
   // (see apps/api/app/routers/tools.py log_quote/log_event/end_call_summary).
+  const savings = facilitySavings(spec);
   return (
     <div>
+      {cashedIn && (
+        <div className="call-row">
+          <div className="call-row-head">
+            <div>
+              <strong>{spec.bill.facility_name} · wrap-up call</strong>
+              <div className="call-row-meta">Just now · confirmation call</div>
+            </div>
+            <span className="pill pill-accent">Settled</span>
+          </div>
+          <div className="call-takeaways">
+            <div><dt>Confirmed</dt><dd>{money(savings.savedSoFar)} reduction, in writing</dd></div>
+            <div><dt>Reference #</dt><dd className="mono-figure">{WRAP_UP_REF}</dd></div>
+            <div><dt>New balance</dt><dd className="mono-figure">{money(savings.currentBalance)}</dd></div>
+            <div><dt>Next action</dt><dd>None · case closed at your request</dd></div>
+          </div>
+        </div>
+      )}
       <div className="call-row">
         <div className="call-row-head">
           <div>
@@ -280,7 +419,7 @@ function HistoryTab({ spec }: { spec: JobSpec }) {
       <div className="call-row">
         <div className="call-row-head">
           <div>
-            <strong>Carolina Emergency Physicians</strong>
+            <strong>Bay State Emergency Physicians</strong>
             <div className="call-row-meta">Mar 16, 2026 · 2m 03s</div>
           </div>
           <span className="pill pill-muted">Callback scheduled</span>
@@ -299,16 +438,31 @@ function HistoryTab({ spec }: { spec: JobSpec }) {
   );
 }
 
-function DocumentsTab({ spec }: { spec: JobSpec }) {
-  // Real files aren't wired to Supabase Storage yet (bucket layout in
-  // negotiator-intake-data-schema.md — `documents/`, TODO(J)/TODO(Hamza)).
-  // What IS real here: every metadata field (account #, claim #, statement/
-  // due dates, line-item count) is pulled straight from the parsed JobSpec,
-  // not invented — this is what the intake step actually extracted.
+function DocumentsTab({ spec, cashedIn }: { spec: JobSpec; cashedIn: boolean }) {
+  // Real files: the actual demo PDFs (data/demo_docs/, mirrored to
+  // apps/web/public/demo-docs/) — this demo case's real uploaded documents,
+  // not placeholders. Everything else (Supabase Storage for a real user's
+  // own uploads) is still TODO(J)/TODO(Hamza) — bucket layout in
+  // negotiator-intake-data-schema.md. Metadata fields (account #, claim #,
+  // statement/due dates, line-item count) come straight from the JobSpec.
+  const savings = facilitySavings(spec);
   const docs = [
+    ...(cashedIn
+      ? [{
+          title: "Confirmation letter",
+          type: "PDF",
+          url: undefined,
+          meta: [
+            ["Reference #", WRAP_UP_REF],
+            ["Confirmed reduction", money(savings.savedSoFar)],
+            ["New balance", money(savings.currentBalance)],
+          ],
+        }]
+      : []),
     {
       title: "Itemized bill",
       type: "PDF",
+      url: "/demo-docs/mercy_general_bill.pdf",
       meta: [
         ["Account #", spec.bill.account_number],
         ["Statement date", spec.bill.statement_date ?? "–"],
@@ -319,6 +473,7 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
     {
       title: "Explanation of Benefits (EOB)",
       type: "PDF",
+      url: "/demo-docs/bcbs_eob.pdf",
       meta: [
         ["Claim #", spec.eob.claim_number ?? "–"],
         ["Patient responsibility", money(spec.eob.patient_responsibility_total)],
@@ -340,9 +495,13 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
               ))}
             </dl>
           </div>
-          <button className="btn btn-secondary" disabled>
-            View {doc.type}
-          </button>
+          {doc.url ? (
+            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+              View {doc.type}
+            </a>
+          ) : (
+            <button className="btn btn-secondary" disabled>Generating…</button>
+          )}
         </div>
       ))}
       <div style={{ marginTop: 16 }}>
@@ -352,8 +511,8 @@ function DocumentsTab({ spec }: { spec: JobSpec }) {
         />
       </div>
       <p className="todo" style={{ marginTop: 16 }}>
-        File preview/download isn&apos;t wired to Supabase Storage yet. This tab shows the real extracted
-        metadata from your intake, but the &quot;View&quot; buttons are placeholders until Storage lands.
+        These are this demo case&apos;s real documents (data/demo_docs/). A real user&apos;s own uploads
+        aren&apos;t wired to Supabase Storage yet (TODO Hamza/J).
       </p>
     </div>
   );
