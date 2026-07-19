@@ -157,6 +157,7 @@ function isCurrent(call: ActiveCall): boolean {
 function CallsOverview() {
   const [allCalls, setAllCalls] = useState<ActiveCall[]>([]);
   const calls = allCalls.filter(isCurrent);
+  const anyEnded = allCalls.some((c) => c.status === "ended" || c.status === "failed");
 
   useEffect(() => subscribeToActiveCalls(DEMO_CASE_UUID, setAllCalls), []);
 
@@ -177,6 +178,16 @@ function CallsOverview() {
 
   return (
     <>
+      {anyEnded && (
+        <div className="wr-report-cta" role="status">
+          <div className="wr-report-cta-text">
+            <strong>Some calls have wrapped up.</strong> See every outcome, reference number, and next step in one place.
+          </div>
+          <a href="/report" className="btn btn-primary" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+            See the report →
+          </a>
+        </div>
+      )}
       <div className="wr-overview-grid">
         {calls.map((c) => (
           <OverviewCard key={c.id} call={c} />
@@ -301,6 +312,7 @@ function WarRoom() {
   const latestRung = stateChanges.at(-1)?.payload as { rung?: string; rung_index?: number } | undefined;
   const disclosed = toolCalls.some((e) => String(e.payload.name ?? "").includes("disclose"));
   const references = extractReferences(events);
+  const ended = call?.status === "ended" || call?.status === "failed";
 
   return (
     <div className="warroom-shell">
@@ -323,6 +335,17 @@ function WarRoom() {
           </>
         ) : callId ? `Call ${callId.slice(0, 8)}` : "War Room · every line for this case, live"}
       </div>
+
+      {ended && (
+        <div className="wr-report-cta" role="status">
+          <div className="wr-report-cta-text">
+            <strong>This call wrapped up.</strong> See how it landed — and what happens next — in the full report.
+          </div>
+          <a href="/report" className="btn btn-primary" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+            See the report →
+          </a>
+        </div>
+      )}
 
       <div className="warroom-layout">
         <div>
