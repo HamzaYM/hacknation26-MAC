@@ -698,33 +698,13 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .wr-report-cta-text strong { color: #f5f1ec; }
 @media (max-width: 640px) { .wr-report-cta { flex-direction: column; align-items: stretch; text-align: center; } }
 .warroom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); }
-.wr-roster { position: sticky; top: var(--space-lg); }
-.wr-roster-toggle {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  color: inherit;
-}
-.wr-roster-chevron { color: rgba(245,241,236,0.4); font-size: 12px; }
-.wr-roster.collapsed { padding-bottom: var(--space-lg); }
-.wr-persona-card { border-top: 1px solid rgba(245,241,236,0.1); padding: var(--space-md) 0; }
-.wr-persona-card:first-of-type { border-top: none; padding-top: 0; }
-.wr-persona-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
-.wr-persona-head strong { font-size: 15px; }
-.wr-persona-style { font-size: 11px; color: var(--accent); }
-.wr-persona-voice { font-size: 11px; color: rgba(245,241,236,0.4); margin-bottom: 6px; }
-.wr-persona-why { font-size: 12.5px; color: rgba(245,241,236,0.65); line-height: 1.5; margin: 0 0 6px; }
-.wr-persona-for { font-size: 11px; color: rgba(245,241,236,0.45); }
 
 @media (max-width: 900px) {
   .warroom-layout { grid-template-columns: 1fr; }
-  .wr-roster { position: static; }
+  .wr-rail { position: static; }
 }
+/* Right rail: Coverage panel over the embedded Bill/EOB documents. */
+.wr-rail { position: sticky; top: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-lg); }
 .wr-panel { background: rgba(255,255,255,0.04); border: 1px solid rgba(245,241,236,0.12); border-radius: var(--radius-card); padding: var(--space-lg); }
 .wr-panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(245,241,236,0.5); margin-bottom: var(--space-md); }
 .wr-ticker { font-family: var(--font-display); font-weight: 800; font-size: 40px; color: var(--accent); text-align: center; margin: var(--space-sm) 0; }
@@ -751,6 +731,36 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .wr-idle h2 { color: #f5f1ec; font-size: 20px; margin-bottom: var(--space-sm); }
 .wr-idle p { font-size: 14px; line-height: 1.6; }
 .wr-idle code { font-family: var(--font-mono); background: rgba(245,241,236,0.08); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+/* ---- Coverage panel: required questions flip red→green as they're asked ---- */
+.wr-cov-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-sm); }
+.wr-cov-count { font-size: 11px; color: rgba(245,241,236,0.5); white-space: nowrap; }
+.wr-cov-rung { font-size: 12px; color: var(--accent); margin: 4px 0 12px; }
+.wr-cov-empty { font-size: 12.5px; color: rgba(245,241,236,0.45); margin: 6px 0 0; line-height: 1.5; }
+.wr-cov-list { display: flex; flex-direction: column; }
+.wr-cov-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid rgba(245,241,236,0.08); }
+.wr-cov-row:first-child { border-top: none; }
+.wr-cov-dot {
+  flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid transparent; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.wr-cov-dot.pending { border-color: var(--flag); background: transparent; }        /* amber, hollow */
+.wr-cov-dot.covered { background: #3fae74; border-color: #3fae74; color: #08130d; }  /* green + check */
+.wr-cov-dot.flagged { background: var(--accent); border-color: var(--accent); color: #fff; }  /* coral, missed */
+.wr-cov-tag { font-size: 12px; color: rgba(245,241,236,0.8); }
+.wr-cov-caption { font-size: 11px; font-style: italic; color: rgba(245,241,236,0.45); margin: 12px 0 0; line-height: 1.5; }
+
+/* ---- Documents panel: Bill / EOB embedded beside the live call ---- */
+.wr-docs-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.wr-docs-tab {
+  font-family: var(--font-mono); font-size: 11px; padding: 4px 12px;
+  border-radius: var(--radius-pill); border: 1px solid rgba(245,241,236,0.15);
+  background: transparent; color: rgba(245,241,236,0.6); cursor: pointer;
+}
+.wr-docs-tab.active { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+.wr-docs-caption { font-size: 11px; color: rgba(245,241,236,0.45); margin: 0 0 10px; line-height: 1.4; }
+.wr-doc-frame { width: 100%; height: 360px; border: 1px solid rgba(245,241,236,0.18); border-radius: var(--radius-input); background: #fff; }
 
 /* ---- voice picker (/voice) ---- */
 .voice-current {
@@ -844,7 +854,8 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 }
 .wr-call-quote { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--accent); margin: 6px 0 2px; }
 .wr-call-delta { font-size: 12px; color: var(--accent); }
-.wr-call-rung { font-size: 12px; color: rgba(245,241,236,0.55); margin-top: var(--space-sm); min-height: 16px; }
+.wr-call-rung { font-size: 12px; color: rgba(245,241,236,0.55); margin-top: var(--space-sm); min-height: 16px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.wr-cov-chip { flex-shrink: 0; font-size: 10px; padding: 1px 8px; border-radius: var(--radius-pill); background: rgba(245,241,236,0.08); color: rgba(245,241,236,0.6); }
 .wr-overview-note { font-size: 12.5px; color: rgba(245,241,236,0.45); line-height: 1.6; margin: var(--space-md) 0 0; }
 .wr-overview-note code { font-family: var(--font-mono); background: rgba(245,241,236,0.08); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
 

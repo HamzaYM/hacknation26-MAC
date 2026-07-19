@@ -6,7 +6,7 @@ import { getCall } from "../../lib/api";
 import { fetchCallEvents, subscribeToActiveCalls, subscribeToCall, subscribeToCallEvents } from "../../lib/realtime";
 import Logo from "../../components/Logo";
 import ReferenceChip from "../../components/ReferenceChip";
-import { LADDER_LABELS } from "../../lib/types";
+import { LADDER_LABELS, QUESTION_LABELS, REQUIRED_QUESTIONS } from "../../lib/types";
 import type { ActiveCall, Call, CallEvent } from "../../lib/types";
 
 // This is a real live-call viewer, not a scripted before/after demo — it
@@ -24,31 +24,21 @@ const KNOWN_LEVERS = [
   { id: "charity_care", label: "§501(r) charity care" },
 ];
 
-// The advocate roster — three ElevenLabs personas the negotiator can be
-// voiced as. Not counterparty personas (those live in prompts/personas/);
-// this is the side placing the call. Static reference, not tied to live
-// call data — which persona a real call used isn't persisted anywhere yet.
-const ADVOCATE_PERSONAS = [
+// The two source documents this negotiation is built on, embedded in the right
+// rail so the patient can watch the bill/EOB while the call runs. Served from
+// apps/web/public/demo-docs/ (byte-identical to data/demo_docs/).
+const CASE_DOCUMENTS = [
   {
-    name: "Alex",
-    style: "Warm & Persistent",
-    voice: "Angela",
-    why: "Disarms front-line reps first — positive politeness and mild hardship framing extract more than a purely rational pitch from a low-power position.",
-    pickedFor: "Opening calls, front-line reps, rapport → escalation",
+    id: "bill",
+    label: "Bill",
+    url: "/demo-docs/mercy_general_bill.pdf",
+    caption: "The itemized bill this negotiation is built on",
   },
   {
-    name: "Morgan",
-    style: "Calm & Analytical",
-    voice: "Archer (tuned lower)",
-    why: "Leads with citations, not emotion — competence reads stronger than warmth once a call gets high-severity or a supervisor wants numbers, not a story.",
-    pickedFor: "Supervisors, policy-citers, benchmark-anchor moments",
-  },
-  {
-    name: "Riley",
-    style: "Direct & Assertive",
-    voice: "search: professional + fast",
-    why: "Zero rapport-spend — warmth reads as an opening to be dismissed on a collections call. Firm, never angry (anger backfires for a disclosed AI).",
-    pickedFor: "Collections, settlement pushes, post-stonewall callbacks",
+    id: "eob",
+    label: "EOB",
+    url: "/demo-docs/bcbs_eob.pdf",
+    caption: "The insurer's EOB — what the plan says the patient owes",
   },
 ];
 
@@ -123,6 +113,12 @@ function OverviewCard({ call }: { call: ActiveCall }) {
   const latest = quotes.at(-1)?.payload.amount as number | undefined;
   const rung = events.filter((e) => e.type === "state_change").at(-1)?.payload.rung as string | undefined;
 
+  // Coverage chip: only on cards whose current rung has required questions.
+  const covRequired = rung ? REQUIRED_QUESTIONS[rung] ?? [] : [];
+  const covAsked = covRequired.filter(
+    (t) => events.some((e) => e.type === "question_covered" && e.payload.tag === t),
+  ).length;
+
   return (
     <a className="wr-call-card" href={`/warroom?call_id=${call.id}`}>
       <div className="wr-call-head">
@@ -134,7 +130,12 @@ function OverviewCard({ call }: { call: ActiveCall }) {
       {first != null && latest != null && first > latest && (
         <div className="wr-call-delta">▼ ${(first - latest).toLocaleString()} this call</div>
       )}
-      <div className="wr-call-rung">{rung ? LADDER_LABELS[rung] ?? rung : "waiting for the first event"}</div>
+      <div className="wr-call-rung">
+        <span>{rung ? LADDER_LABELS[rung] ?? rung : "waiting for the first event"}</span>
+        {covRequired.length > 0 && (
+          <span className="wr-cov-chip mono-figure">{covAsked}/{covRequired.length} asked</span>
+        )}
+      </div>
     </a>
   );
 }
@@ -217,37 +218,89 @@ function HonestyAudit({ toolCalls }: { toolCalls: CallEvent[] }) {
   );
 }
 
-function AdvocateRoster() {
-  const [collapsed, setCollapsed] = useState(false);
+// Covered/flagged tags derived from the live event stream. Coverage is global
+// (the engine's questions_covered is not per-rung), so a covered tag counts on
+// whichever rung requires it; coverage_gap flags are scoped to their own rung.
+function coverageState(events: CallEvent[], rung: string | undefined) {
+  const covered = new Set<string>();
+  const flagged = new Set<string>();
+  for (const e of events) {
+    if (e.type === "question_covered" && typeof e.payload.tag === "string") {
+      covered.add(e.payload.tag);
+    } else if (e.type === "coverage_gap" && e.payload.rung === rung && Array.isArray(e.payload.missing)) {
+      (e.payload.missing as unknown[]).forEach((m) => flagged.add(String(m)));
+    }
+  }
+  return { covered, flagged };
+}
+
+/**
+ * The engine FORCES the agent to ask each rung's required questions before the
+ * call can move on. This renders the current rung's list and flips each row
+ * amber(pending) → green(covered) off question_covered events; a coverage_gap
+ * turns an un-asked row coral (the agent tried to advance while still missing it).
+ */
+function CoveragePanel({ events, rung }: { events: CallEvent[]; rung?: string }) {
+  const required = rung ? REQUIRED_QUESTIONS[rung] ?? [] : [];
+  const { covered, flagged } = coverageState(events, rung);
+  const askedCount = required.filter((t) => covered.has(t)).length;
 
   return (
-    <div className={`wr-panel wr-roster ${collapsed ? "collapsed" : ""}`}>
-      <button className="wr-roster-toggle" onClick={() => setCollapsed((c) => !c)}>
-        <h2 style={{ marginBottom: 0 }}>Advocates</h2>
-        <span className="wr-roster-chevron">{collapsed ? "▸" : "▾"}</span>
-      </button>
-      {!collapsed && (
+    <div className="wr-panel">
+      <div className="wr-cov-head">
+        <h2 style={{ marginBottom: 0 }}>Coverage</h2>
+        {required.length > 0 && (
+          <span className="wr-cov-count mono-figure">{askedCount}/{required.length} asked</span>
+        )}
+      </div>
+      {rung && <div className="wr-cov-rung">{LADDER_LABELS[rung] ?? rung}</div>}
+      {!rung ? (
+        <p className="wr-cov-empty">Waiting for the first rung…</p>
+      ) : required.length === 0 ? (
+        <p className="wr-cov-empty">No required questions on this rung.</p>
+      ) : (
         <>
-          <p style={{ fontSize: 12, color: "rgba(245,241,236,0.5)", margin: "12px 0 16px", lineHeight: 1.5 }}>
-            Same negotiator, three personas. Honesty and disclosure rules are structural — identical
-            for all three, not persona-dependent.
-          </p>
-          {ADVOCATE_PERSONAS.map((p) => (
-            <div className="wr-persona-card" key={p.name}>
-              <div className="wr-persona-head">
-                <strong>{p.name}</strong>
-                <span className="wr-persona-style">{p.style}</span>
-              </div>
-              <div className="wr-persona-voice mono-figure">{p.voice}</div>
-              <p className="wr-persona-why">{p.why}</p>
-              <div className="wr-persona-for">Picked for: {p.pickedFor}</div>
-              <div className="wr-persona-for" style={{ marginTop: 6, color: "rgba(245,241,236,0.5)" }}>
-                Always honest about numbers and identity. The persona changes tone, never the rules.
-              </div>
-            </div>
-          ))}
+          <div className="wr-cov-list">
+            {required.map((tag) => {
+              const isCovered = covered.has(tag);
+              const isFlagged = !isCovered && flagged.has(tag);
+              const state = isCovered ? "covered" : isFlagged ? "flagged" : "pending";
+              return (
+                <div className="wr-cov-row" key={tag}>
+                  <span className={`wr-cov-dot ${state}`} aria-hidden>{isCovered ? "✓" : isFlagged ? "!" : ""}</span>
+                  <span className="wr-cov-tag mono-figure">{QUESTION_LABELS[tag] ?? tag.replace(/_/g, " ")}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="wr-cov-caption">The engine will not let the call move on until these are asked.</p>
         </>
       )}
+    </div>
+  );
+}
+
+// Bill + EOB embedded so the patient can watch the source documents while the
+// call runs. PDFs render white; a thin border + rounded corners keeps them calm
+// against the dark War Room. Borrows the intake iframe-preview pattern.
+function DocumentsPanel() {
+  const [active, setActive] = useState(CASE_DOCUMENTS[0]);
+  return (
+    <div className="wr-panel wr-docs">
+      <h2>Documents</h2>
+      <div className="wr-docs-tabs">
+        {CASE_DOCUMENTS.map((d) => (
+          <button
+            key={d.id}
+            className={`wr-docs-tab ${active.id === d.id ? "active" : ""}`}
+            onClick={() => setActive(d)}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+      <p className="wr-docs-caption mono-figure">{active.caption}</p>
+      <iframe className="wr-doc-frame" src={active.url} title={active.label} />
     </div>
   );
 }
@@ -315,6 +368,7 @@ function WarRoom() {
   const disclosed = toolCalls.some((e) => String(e.payload.name ?? "").includes("disclose"));
   const references = extractReferences(events);
   const ended = call?.status === "ended" || call?.status === "failed";
+  const isLive = call?.status === "live" || call?.status === "ringing";
 
   return (
     <div className="warroom-shell">
@@ -356,8 +410,14 @@ function WarRoom() {
           ) : events.length === 0 ? (
             <div className="wr-idle">
               <div className="wr-idle-icon pulse">●</div>
-              <h2>Connected, waiting for the call to start talking</h2>
-              <p>No events yet for call <span className="mono-figure">{callId}</span>. This will populate live the moment the agent dials.</p>
+              <h2>{isLive ? "Connected. The negotiator is on the line." : "Connected, waiting for the call to start"}</h2>
+              <p>
+                {isLive ? (
+                  "Moves appear here the moment the engine drives one — required questions, quotes, and reference numbers land live."
+                ) : (
+                  <>No events yet for call <span className="mono-figure">{callId}</span>. This will populate live the moment the agent dials.</>
+                )}
+              </p>
             </div>
           ) : (
             <div className="warroom-grid">
@@ -389,7 +449,11 @@ function WarRoom() {
 
                 <h2 style={{ marginTop: 24 }}>Transcript</h2>
                 <div className="wr-transcript">
-                  {transcript.length === 0 && <p style={{ color: "rgba(245,241,236,0.4)", fontSize: 13 }}>No transcript lines yet.</p>}
+                  {transcript.length === 0 && (
+                    <p style={{ color: "rgba(245,241,236,0.4)", fontSize: 13 }}>
+                      {isLive ? "Transcript lands here after the call." : "No transcript lines yet."}
+                    </p>
+                  )}
                   {transcript.map((e) => (
                     <div className="wr-line" key={e.id}>
                       <span className="speaker">{String(e.payload.speaker ?? "?")}</span>
@@ -466,7 +530,10 @@ function WarRoom() {
           )}
         </div>
 
-        <AdvocateRoster />
+        <div className="wr-rail">
+          {callId && <CoveragePanel events={events} rung={latestRung?.rung} />}
+          <DocumentsPanel />
+        </div>
       </div>
     </div>
   );

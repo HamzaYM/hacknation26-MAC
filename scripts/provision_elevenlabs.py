@@ -195,7 +195,8 @@ NEGOTIATOR_TOOLS = [
         "description": (
             "Log a structured event to the case record. Use type 'read_back' EVERY time you "
             "read a number, date, name spelling, or reference/confirmation code back to the rep "
-            "as you hear it — put what you read back in payload (e.g. {\"value\": \"M G dash A D J 22 47\"}). "
+            "as you hear it. Put the details INSIDE a payload object — e.g. "
+            "{\"type\": \"read_back\", \"payload\": {\"value\": \"MG-ADJ-2247\", \"heard_as\": \"M G dash A D J 22 47\"}}. "
             "A reference number with no logged read_back comes back flagged "
             "reference_number_unverified. Fire-and-forget; keep talking, don't wait on it."
         ),

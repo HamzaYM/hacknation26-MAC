@@ -167,6 +167,12 @@ class LadderStateMachine:
         already = [t for t in qa if t in state.questions_covered]
         if already:
             q_extra["already_asked"] = already
+        # Tags covered for the FIRST time this exchange — the War Room coverage
+        # panel flips each to green off a question_covered event (tools.py emits
+        # one per tag). Deduped, order-preserving; computed before the union in.
+        newly = [t for t in dict.fromkeys(qa) if t not in state.questions_covered]
+        if newly:
+            q_extra["newly_covered"] = newly
         for t in qa:
             state.questions_covered.setdefault(t, quote or "")
         if qa:

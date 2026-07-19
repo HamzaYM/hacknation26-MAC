@@ -24,7 +24,8 @@ from .fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC
 log = logging.getLogger("negotiator.db")
 
 CALL_EVENT_TYPES = {"transcript", "tool_call", "state_change", "quote", "escalation",
-                    "coverage_gap", "read_back", "topic_parked", "callback_due"}
+                    "coverage_gap", "read_back", "topic_parked", "callback_due",
+                    "question_covered"}
 
 _lock = threading.RLock()
 _conn: Any = None

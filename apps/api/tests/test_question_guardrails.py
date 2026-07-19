@@ -2,14 +2,18 @@
 repeat cap, and the end_call_summary hard gate (soft-fail). No DB — db.* helpers
 are no-ops here, so these exercise the deterministic engine + router logic."""
 import copy
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app import db
 from app.config import load_vertical
 from app.engine.state_machine import LadderStateMachine
 from app.fixtures import demo_dossier
 from app.main import app
+from app.routers import tools
+from app.routers.tools import LeverResult, LogEvent
 
 OPEN_TAGS = {"account_hold_requested", "itemized_bill_status", "rep_name_captured"}
 
@@ -214,3 +218,72 @@ def test_report_lever_result_surfaces_coverage_incomplete(client):
     r2 = client.post("/tools/report_lever_result", json={
         "call_id": "qg-endpoint", "lever": "open_and_hold_account", "result": "accepted"})
     assert set(r2.json()["coverage_incomplete"]) == {"account_hold_requested", "itemized_bill_status"}
+
+
+# ── per-question coverage events (War Room coverage panel) ─────────────────
+def test_question_covered_type_registered():
+    assert "question_covered" in db.CALL_EVENT_TYPES
+
+
+def test_state_machine_returns_newly_covered_once(machine, call):
+    # first exchange: both tags covered for the first time (rung still blocks on
+    # the third, but the covered tags are reported as newly covered regardless)
+    r1 = machine.advance(call, "open_and_hold_account", "accepted",
+                         questions_asked=["rep_name_captured", "itemized_bill_status"])
+    assert set(r1["newly_covered"]) == {"rep_name_captured", "itemized_bill_status"}
+    # second exchange: one repeat + one fresh → only the fresh tag is newly covered
+    r2 = machine.advance(call, "open_and_hold_account", "accepted",
+                         questions_asked=["rep_name_captured", "account_hold_requested"])
+    assert r2["newly_covered"] == ["account_hold_requested"]
+    assert "already_asked" in r2  # the repeat is still surfaced separately
+
+
+def test_report_lever_result_emits_question_covered_events(monkeypatch):
+    events = []
+    monkeypatch.setattr(tools.db, "insert_event",
+                        lambda cid, type_, payload: events.append((type_, payload)))
+    call_id = str(uuid.uuid4())
+    tools.report_lever_result(LeverResult(
+        call_id=call_id, lever="open_and_hold_account", result="accepted",
+        questions_asked=list(OPEN_TAGS)))
+    covered = [p for t, p in events if t == "question_covered"]
+    assert {p["tag"] for p in covered} == OPEN_TAGS
+    assert all(p["rung"] == "open_and_hold_account" for p in covered)
+
+
+def test_question_covered_not_re_emitted_when_already_covered(monkeypatch):
+    events = []
+    monkeypatch.setattr(tools.db, "insert_event",
+                        lambda cid, type_, payload: events.append((type_, payload)))
+    call_id = str(uuid.uuid4())
+    tools.report_lever_result(LeverResult(
+        call_id=call_id, lever="open_and_hold_account", result="accepted",
+        questions_asked=["rep_name_captured"]))
+    events.clear()
+    # ask the same (already-covered) tag again on a later rung → no new event
+    tools.report_lever_result(LeverResult(
+        call_id=call_id, lever="reach_authority", result="accepted",
+        questions_asked=["rep_name_captured"]))
+    assert not [p for t, p in events if t == "question_covered"]
+
+
+# ── log_event tolerant payload (top-level fields folded into payload) ───────
+def test_log_event_folds_top_level_fields_into_payload(client, monkeypatch):
+    captured = {}
+    monkeypatch.setattr(tools.db, "insert_event",
+                        lambda cid, type_, payload: captured.update(type=type_, payload=payload))
+    resp = client.post("/tools/log_event", json={
+        "call_id": str(uuid.uuid4()), "type": "read_back", "value": "MG-2247"})
+    assert resp.json()["logged"] is True
+    assert captured["type"] == "read_back"
+    assert captured["payload"].get("value") == "MG-2247"
+
+
+def test_log_event_nested_payload_wins_on_collision(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(tools.db, "insert_event",
+                        lambda cid, type_, payload: captured.update(payload=payload))
+    # explicit payload value beats a same-named top-level field
+    tools.log_event(LogEvent(call_id=str(uuid.uuid4()), type="read_back",
+                             payload={"value": "nested"}, value="toplevel"))
+    assert captured["payload"]["value"] == "nested"
