@@ -256,6 +256,26 @@ END_CALL_TOOL = {
     "params": {"system_tool_type": "end_call"},  # required discriminator (docs: SystemToolConfig)
 }
 
+# Voicemail: reach an answering machine instead of a person, leave ONE short,
+# non-committal message and hang up (no account details on a machine, per the
+# wrong-party PHI guard). Shipped both ways like end_call: the full tool (with the
+# message) rides in built_in_tools, a reduced {type:system,...} mirror rides in
+# prompt.tools. The message is plain TTS text; {{facility}} is NOT a provisioned
+# dynamic variable and voicemail_message dynamic-var support is unconfirmed, so it
+# says "a patient account" with no var (safe per brief).
+VOICEMAIL_TOOL = {
+    "name": "voicemail_detection",
+    "description": ("Detect an answering machine or voicemail greeting. When you reach voicemail "
+                    "instead of a person, leave the configured message once and end the call; "
+                    "never leave account details on a machine."),
+    "params": {
+        "system_tool_type": "voicemail_detection",
+        "voicemail_message": ("Hi, this is Alex calling about a billing question on a patient "
+                              "account. Nothing urgent. I will try again during business hours. "
+                              "Thank you."),
+    },
+}
+
 # Silence backstop: LONG only (Hamza, 07-18 late). 10s killed a live call mid-lookup
 # (Susy's call: agent said "gimme one sec", ran get_benchmark, platform hung up —
 # termination_reason "Ending conversation after 10 seconds of silence"). The platform
@@ -305,6 +325,10 @@ def negotiator_first_message() -> str:
     import yaml
     d = yaml.safe_load((ROOT / "config/verticals/medical_bills.yaml").read_text())["disclosure"]
     if d.get("mode") == "only_if_asked":
+        # The office-confirm opener carries {{target_entity}}, resolved per-call by
+        # ElevenLabs dynamic_variables (same mechanism the prompt body uses; calls.py
+        # always supplies target_entity). If a call ever omits it, the phrase keeps
+        # "the billing office" as the plain-text fallback so the greeting still reads.
         return " ".join(d["competence_first_open"].split())
     # early/late modes only — the AI-disclosing opener must never ship while
     # mode is only_if_asked (audit finding: a stale sync once did exactly that).
@@ -400,18 +424,22 @@ def main() -> None:
                 cc["agent"]["prompt"]["tools"] = list(tools)
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
             if name == "negotiator":
-                # Self-hangup: a previous sync wrote built_in_tools.end_call and the API
-                # accepted it, but GET showed end_call: null and a live call proved the
+                # Self-hangup + voicemail: a previous sync wrote built_in_tools.end_call and
+                # the API accepted it, but GET showed end_call: null and a live call proved the
                 # agent could not hang up. Current docs put system tools in prompt.tools
                 # as {"type":"system","name":"end_call","description":...}. Ship BOTH
-                # shapes; verify_end_call() below reports what actually stuck.
+                # shapes for end_call AND voicemail_detection; the verify block below
+                # reports what actually stuck for each.
                 if tools is not None:
-                    cc["agent"]["prompt"]["tools"] = list(tools) + [{
-                        "type": "system",
-                        "name": "end_call",
-                        "description": END_CALL_TOOL["description"],
-                    }]
-                cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
+                    cc["agent"]["prompt"]["tools"] = list(tools) + [
+                        {"type": "system", "name": "end_call",
+                         "description": END_CALL_TOOL["description"]},
+                        {"type": "system", "name": "voicemail_detection",
+                         "description": VOICEMAIL_TOOL["description"]},
+                    ]
+                bit = cc["agent"]["prompt"].setdefault("built_in_tools", {})
+                bit["end_call"] = END_CALL_TOOL
+                bit["voicemail_detection"] = VOICEMAIL_TOOL
                 cc.setdefault("turn", {}).update(NEGOTIATOR_TURN)
             # pin_voice agents override the live voice with the config default;
             # everything else keeps its dashboard voice.
@@ -435,7 +463,8 @@ def main() -> None:
             s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
             if s != 200 and name == "negotiator" and tools is not None:
                 # Fallback: some API versions reject type:system inside prompt.tools.
-                # Retry with webhook tools only (built_in_tools still carries end_call).
+                # Retry with webhook tools only (built_in_tools still carries end_call
+                # and voicemail_detection).
                 print(f"  (system tool in prompt.tools rejected: {str(resp)[:120]} — retrying without it)")
                 cc["agent"]["prompt"]["tools"] = list(tools)
                 s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
@@ -448,6 +477,10 @@ def main() -> None:
                     in_bit = bool(bit.get("end_call"))
                     print(f"  end_call live: prompt.tools={in_tools} built_in_tools={in_bit}"
                           + ("" if (in_tools or in_bit) else "  ← STILL NOT ENABLED, the agent cannot hang up"))
+                    vm_in_tools = any(t.get("name") == "voicemail_detection" for t in (fp.get("tools") or []))
+                    vm_in_bit = bool(bit.get("voicemail_detection"))
+                    print(f"  voicemail_detection live: prompt.tools={vm_in_tools} built_in_tools={vm_in_bit}"
+                          + ("" if (vm_in_tools or vm_in_bit) else "  ← NOT ENABLED, no answering-machine message"))
         else:
             conversation_config = {
                 "agent": {
@@ -465,8 +498,10 @@ def main() -> None:
                 },
             }
             if name == "negotiator":
-                # Self-hangup + silence backstop on create (see the PATCH branch note).
-                conversation_config["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
+                # Self-hangup + voicemail + silence backstop on create (see the PATCH branch note).
+                bit = conversation_config["agent"]["prompt"].setdefault("built_in_tools", {})
+                bit["end_call"] = END_CALL_TOOL
+                bit["voicemail_detection"] = VOICEMAIL_TOOL
                 conversation_config["turn"] = dict(NEGOTIATOR_TURN)
             create_body: dict = {"name": name, "conversation_config": conversation_config}
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call

@@ -14,6 +14,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import uuid
 
 from fastapi import APIRouter, Request
@@ -156,7 +157,7 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
     behavior, unchanged for the demo path.
     """
     nums: list[float] = []
-    case_id: str | None = None
+    case_id: str | None = DEMO_CASE_ID
     spec = None
     if call_id:
         try:
@@ -187,7 +188,6 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
                 pass
     else:
         nums.extend([8432, 4287, 3875, 1700, 250])  # billed, balance, EOB, lump-sum, FPL%
-
     case_numbers = case_store.get(case_id, "allowed_numbers") if case_id else None
     if case_numbers:
         nums.extend(float(n) for n in case_numbers)
@@ -215,6 +215,19 @@ def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
         from ..fixtures import demo_flags
         for f in demo_flags():
             nums.append(f.dollar_impact)
+
+    # Recorded-authorization tokens: when the case has an authorization on file,
+    # the agent reads the patient's recorded statement VERBATIM when challenged
+    # (DOB, account-number chunks, years). Those spoken numbers are legitimate quotes
+    # of an on-file record, so add every numeric run from statement_text, or the
+    # honest read-back would trip the D3 number-honesty audit as "uncited".
+    try:
+        auth = db.get_case_authorization(case_id) if case_id else None
+    except Exception:  # noqa: BLE001 — allowed-set building must not raise
+        auth = None
+    if auth and auth.get("authorization_statement"):
+        for tok in re.findall(r"\d+", auth["authorization_statement"]):
+            nums.append(float(tok))
     return nums
 
 

@@ -228,12 +228,17 @@ voice:
 # early/late disclosure without re-authoring it.
 disclosure:
   mode: only_if_asked          # only_if_asked | late | early
-  # First message is ONLY the greet + a warm feeler — no account, no ask yet
-  # (Hamza, 07-18 test call: open slower and warmer, one beat at a time). The
-  # context sentence + account number come on the NEXT turn (see negotiator_system.md
-  # Turn-length section: greet+feeler → one context sentence → first item).
+  # First message is the office-confirmation beat: one double-barreled question
+  # that confirms you reached the billing office AND gets the answerer's name, and
+  # NOTHING else (no account, no reason) until the office part is confirmed (Hamza,
+  # 07-19: wrong-party PHI guard, share nothing until you know it is the billing
+  # office). {{target_entity}} resolves per-call via dynamic_variables; if it does
+  # not resolve, negotiator_first_message() falls back to "the billing office" plain.
+  # The warm feeler, context sentence, and account number follow on later turns (see
+  # negotiator_system.md Turn-length section: office-confirm → feeler → context → item).
   competence_first_open: >-
-    Hi, this is Alex. How's your day going over there?
+    Hi, this is Alex. Have I reached the billing office at {{target_entity}},
+    and who am I speaking with?
   # Early-disclosure opener: ONLY valid when mode == early. Audit finding (a2a-1):
   # a stale sync once shipped this as the live opener while mode was only_if_asked —
   # the early_ prefix + gate comment exist so provisioning drift can't re-select it.

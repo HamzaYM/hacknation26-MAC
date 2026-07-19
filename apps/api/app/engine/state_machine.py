@@ -119,10 +119,12 @@ class LadderStateMachine:
         quote: str | None = None,
         plan_monthly: float | None = None,
         plan_months: int | None = None,
+        plan_interest_pct: float | None = None,
         questions_asked: list[str] | None = None,
     ) -> dict:
         resp = self._advance_core(call_id, lever, result, offer_amount, quote, questions_asked,
-                                  plan_monthly=plan_monthly, plan_months=plan_months)
+                                  plan_monthly=plan_monthly, plan_months=plan_months,
+                                  plan_interest_pct=plan_interest_pct)
         self._augment_501r_notes(call_id, quote, resp)
         self._augment_authorization_notes(call_id, quote, resp)
         return resp
@@ -185,6 +187,7 @@ class LadderStateMachine:
         questions_asked: list[str] | None = None,
         plan_monthly: float | None = None,
         plan_months: int | None = None,
+        plan_interest_pct: float | None = None,
     ) -> dict:
         state = self._states[call_id]
         qa = list(questions_asked or [])
@@ -218,6 +221,26 @@ class LadderStateMachine:
             return self._respond(state, move_allowed=False,
                                  notes=f"call is terminal ({state.terminal_outcome}); no further moves")
 
+        # bounds sanity: nonsensical offer/plan values can't drive a real move
+        # (a garbled report or a rep's absurd "terms"). Reject plainly so the
+        # agent asks for a straight number rather than banking nonsense.
+        if offer_amount is not None and offer_amount <= 0:
+            return self._respond(state, move_allowed=False,
+                                 notes=f"rejected: offer ${offer_amount:,.2f} is not a positive "
+                                       f"amount; get a real number before agreeing to anything")
+        if plan_monthly is not None and plan_monthly <= 0:
+            return self._respond(state, move_allowed=False,
+                                 notes=f"rejected: a monthly payment of ${plan_monthly:,.2f} is not a "
+                                       f"positive amount; get a real monthly figure")
+        if plan_months is not None and (plan_months < 1 or plan_months > 96):
+            return self._respond(state, move_allowed=False,
+                                 notes=f"rejected: {plan_months} months is out of range; a payment "
+                                       f"plan runs 1 to 96 months, so counter with a sane term")
+        if plan_interest_pct is not None and (plan_interest_pct < 0 or plan_interest_pct > 100):
+            return self._respond(state, move_allowed=False,
+                                 notes=f"rejected: {plan_interest_pct:g}% interest is out of range; "
+                                       f"it must be between 0 and 100 percent")
+
         # floor: the agent may never offer more than the patient can pay
         if offer_amount is not None and offer_amount > dossier.floor:
             return self._respond(state, move_allowed=False,
@@ -226,17 +249,29 @@ class LadderStateMachine:
 
         # plan-total guardrail (live-call finding: the agent agreed to 150 x 55
         # months = $8,250 on a $3,875 balance). Plan terms multiplied out may
-        # never exceed the floor, same rule as a lump sum.
+        # never exceed the floor, same rule as a lump sum. Interest is folded in:
+        # the effective total is monthly x months x (1 + pct/100), so a plan that
+        # only clears the ceiling ONCE interest is added is still rejected, and
+        # the note names the interest as the culprit so the agent strips it.
         if plan_monthly is not None and plan_months is not None:
-            plan_total = float(plan_monthly) * int(plan_months)
+            base_total = float(plan_monthly) * int(plan_months)
+            pct = float(plan_interest_pct) if plan_interest_pct is not None else 0.0
+            plan_total = base_total * (1 + pct / 100)
             if plan_total > dossier.floor:
-                return self._respond(
-                    state, move_allowed=False,
-                    notes=f"rejected: plan totals ${plan_total:,.2f} "
-                          f"(${plan_monthly:,.2f} x {plan_months}) which exceeds the "
-                          f"${dossier.floor:,.2f} ceiling — counter with fewer months or "
-                          f"a lower monthly, and never accept interest that pushes the "
-                          f"total above the balance")
+                if pct > 0 and base_total <= dossier.floor:
+                    notes = (f"rejected: ${plan_monthly:,.2f} x {plan_months} is ${base_total:,.2f} "
+                             f"before interest, but {pct:g}% interest brings it to ${plan_total:,.2f}, "
+                             f"over the ${dossier.floor:,.2f} ceiling. The interest is what pushes it "
+                             f"over, so strip the interest or counter with fewer months, and never accept "
+                             f"interest that pushes the total above the balance")
+                else:
+                    interest_note = f" plus {pct:g}% interest" if pct > 0 else ""
+                    notes = (f"rejected: plan totals ${plan_total:,.2f} "
+                             f"(${plan_monthly:,.2f} x {plan_months}{interest_note}) which exceeds the "
+                             f"${dossier.floor:,.2f} ceiling, so counter with fewer months or "
+                             f"a lower monthly, and never accept interest that pushes the "
+                             f"total above the balance")
+                return self._respond(state, move_allowed=False, notes=notes)
 
         # hang-up → documented decline with a scheduled callback (C4)
         if result == "hangup":
