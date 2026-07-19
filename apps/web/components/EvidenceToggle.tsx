@@ -29,6 +29,7 @@ export default function EvidenceToggle({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        data-testid="evidence-toggle"
         style={{
           background: "none",
           border: "none",
@@ -47,6 +48,7 @@ export default function EvidenceToggle({
 
       {open && (
         <div
+          data-testid="evidence-panel"
           style={{
             marginTop: 8,
             padding: "10px 12px",
@@ -58,6 +60,8 @@ export default function EvidenceToggle({
           {anchors.map((a, i) => (
             <div
               key={`${a.method}-${i}`}
+              data-testid="evidence-anchor"
+              data-confidence={a.confidence}
               style={{
                 fontSize: 12.5,
                 lineHeight: 1.6,

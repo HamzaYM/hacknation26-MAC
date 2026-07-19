@@ -101,7 +101,7 @@ export default function BillDetail() {
   const projectedWidth = barTotal > 0 ? (savings.percentProjectedHigh / barTotal) * 100 : 0;
 
   return (
-    <div>
+    <div data-testid="case-file">
       <div className="user-strip">
         <a href="/bills" style={{ textDecoration: "none", color: "inherit" }}>Bills</a>
         <span>›</span>
@@ -270,7 +270,7 @@ function DiagnosisTab({ spec, benchmarkReport }: { spec: JobSpec; benchmarkRepor
 function Finding({ flag, spec }: { flag: DerivedFlag; spec: JobSpec }) {
   const li = findLineItem(spec, flag.cpt);
   return (
-    <div className="finding-card">
+    <div className="finding-card" data-testid="finding-card" data-flag-type={flag.type}>
       <div className="finding-head">
         <div>
           {flag.cpt && <span className="cpt">CPT {flag.cpt} · </span>}
