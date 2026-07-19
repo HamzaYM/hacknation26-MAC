@@ -15,7 +15,7 @@ from app.main import app
 from app.routers import tools
 from app.routers.tools import LeverResult, LogEvent
 
-OPEN_TAGS = {"account_hold_requested", "itemized_bill_status", "rep_name_captured"}
+OPEN_TAGS = {"account_hold_requested", "records_alignment_confirmed", "rep_name_captured"}
 
 
 # ── state machine (A1 coverage gate, A2 already-asked, A3 repeat cap) ───────
@@ -44,7 +44,7 @@ def test_gate_blocks_first_time_when_tags_missing(machine, call):
     assert resp["move_allowed"] is False
     assert resp["next_move"] == "open_and_hold_account"  # stays on the rung
     assert "before moving on, cover:" in resp["notes"]
-    assert "itemized bill status" in resp["notes"]      # humanized tag
+    assert "records alignment confirmed" in resp["notes"]      # humanized tag
     assert "account hold requested" in resp["notes"]
 
 
@@ -54,7 +54,7 @@ def test_gate_allows_second_time_and_flags_incomplete(machine, call):
     resp = machine.advance(call, "open_and_hold_account", "accepted")
     assert resp["move_allowed"] is True
     assert resp["next_move"] == "reach_authority"       # advanced this time
-    assert set(resp["coverage_incomplete"]) == {"account_hold_requested", "itemized_bill_status"}
+    assert set(resp["coverage_incomplete"]) == {"account_hold_requested", "records_alignment_confirmed"}
 
 
 def test_full_coverage_advances_clean(machine, call):
@@ -217,7 +217,7 @@ def test_report_lever_result_surfaces_coverage_incomplete(client):
     assert r1.json()["move_allowed"] is False
     r2 = client.post("/tools/report_lever_result", json={
         "call_id": "qg-endpoint", "lever": "open_and_hold_account", "result": "accepted"})
-    assert set(r2.json()["coverage_incomplete"]) == {"account_hold_requested", "itemized_bill_status"}
+    assert set(r2.json()["coverage_incomplete"]) == {"account_hold_requested", "records_alignment_confirmed"}
 
 
 # ── per-question coverage events (War Room coverage panel) ─────────────────
@@ -229,8 +229,8 @@ def test_state_machine_returns_newly_covered_once(machine, call):
     # first exchange: both tags covered for the first time (rung still blocks on
     # the third, but the covered tags are reported as newly covered regardless)
     r1 = machine.advance(call, "open_and_hold_account", "accepted",
-                         questions_asked=["rep_name_captured", "itemized_bill_status"])
-    assert set(r1["newly_covered"]) == {"rep_name_captured", "itemized_bill_status"}
+                         questions_asked=["rep_name_captured", "records_alignment_confirmed"])
+    assert set(r1["newly_covered"]) == {"rep_name_captured", "records_alignment_confirmed"}
     # second exchange: one repeat + one fresh → only the fresh tag is newly covered
     r2 = machine.advance(call, "open_and_hold_account", "accepted",
                          questions_asked=["rep_name_captured", "account_hold_requested"])

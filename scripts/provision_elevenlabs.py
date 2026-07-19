@@ -144,7 +144,7 @@ NEGOTIATOR_TOOLS = [
                         "items": {"type": "string", "description": "One coverage tag from the vocabulary"},
                         "description": (
                             "Coverage tags you covered this exchange. Vocabulary — "
-                            "open_and_hold_account: account_hold_requested, itemized_bill_status, rep_name_captured; "
+                            "open_and_hold_account: account_hold_requested, records_alignment_confirmed, rep_name_captured; "
                             "financial_assistance_screen: fap_exists, pauses_collections_while_pending; "
                             "diagnostic_questions (collections): interest_accruing, will_sue, credit_bureau_reported, "
                             "debt_owned_or_bought, predetermined_settlement_floor."
@@ -363,13 +363,20 @@ def main() -> None:
             cc["agent"]["first_message"] = spec["first_message"]
             cc["agent"]["language"] = "en"
             if tools is not None:
-                cc["agent"]["prompt"]["tools"] = tools
+                cc["agent"]["prompt"]["tools"] = list(tools)
                 cc["agent"]["prompt"].pop("tool_ids", None)  # API rejects both at once
             if name == "negotiator":
-                # Self-hangup: enable ElevenLabs' end_call SYSTEM tool via built_in_tools.
-                # The old prompt.tools {"type":"system"} shape is HARD-REJECTED by the API —
-                # built_in_tools.end_call = {} is the accepted form. The LLM passes a reason
-                # (+ optional farewell). Plus a silence backstop so we never sit on a per-minute line.
+                # Self-hangup: a previous sync wrote built_in_tools.end_call and the API
+                # accepted it, but GET showed end_call: null and a live call proved the
+                # agent could not hang up. Current docs put system tools in prompt.tools
+                # as {"type":"system","name":"end_call","description":...}. Ship BOTH
+                # shapes; verify_end_call() below reports what actually stuck.
+                if tools is not None:
+                    cc["agent"]["prompt"]["tools"] = list(tools) + [{
+                        "type": "system",
+                        "name": "end_call",
+                        "description": END_CALL_TOOL["description"],
+                    }]
                 cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
                 cc.setdefault("turn", {}).update(NEGOTIATOR_TURN)
             # pin_voice agents override the live voice with the config default;
@@ -392,6 +399,21 @@ def main() -> None:
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
                 patch_body["platform_settings"] = allow_voice_override(live.get("platform_settings"))
             s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
+            if s != 200 and name == "negotiator" and tools is not None:
+                # Fallback: some API versions reject type:system inside prompt.tools.
+                # Retry with webhook tools only (built_in_tools still carries end_call).
+                print(f"  (system tool in prompt.tools rejected: {str(resp)[:120]} — retrying without it)")
+                cc["agent"]["prompt"]["tools"] = list(tools)
+                s, resp = call("PATCH", f"/v1/convai/agents/{agent_id}", key, patch_body)
+            if s == 200 and name == "negotiator":
+                sv, fresh = call("GET", f"/v1/convai/agents/{agent_id}", key)
+                if sv == 200:
+                    fp = fresh["conversation_config"]["agent"]["prompt"]
+                    in_tools = any(t.get("name") == "end_call" for t in (fp.get("tools") or []))
+                    bit = fp.get("built_in_tools") or {}
+                    in_bit = bool(bit.get("end_call"))
+                    print(f"  end_call live: prompt.tools={in_tools} built_in_tools={in_bit}"
+                          + ("" if (in_tools or in_bit) else "  ← STILL NOT ENABLED, the agent cannot hang up"))
         else:
             conversation_config = {
                 "agent": {
