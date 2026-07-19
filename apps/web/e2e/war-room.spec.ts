@@ -15,12 +15,18 @@ test.describe("war room", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("scenario picker shows the empty state cleanly (WS4 artifacts not in this build)", async ({ page }) => {
+  test("scenario picker shows the empty state cleanly (builds without scenarios)", async ({ page }) => {
+    // Inverse gate of the happy path below: with the 9-scenario suite merged
+    // (E2E_SCENARIOS_READY=1), GET /scenarios is non-empty and the empty
+    // state is unreachable — the happy path covers the picker instead.
+    test.skip(
+      !!process.env.E2E_SCENARIOS_READY,
+      "scenario suite present on this build — empty state not reachable"
+    );
     await page.goto("/warroom");
     await page.getByRole("button", { name: /switch scenario/i }).click();
-    // GET /scenarios returns [] on this build (the 9-scenario suite is a
-    // sibling-branch deliverable) — listScenarios() never throws, so the
-    // picker must show its documented empty state, not an error banner.
+    // listScenarios() never throws on an empty list — the picker must show
+    // its documented empty state, not an error banner.
     await expect(page.getByTestId("scenario-picker-empty")).toBeVisible();
     await expect(page.getByTestId("scenario-picker")).toHaveCount(0);
   });
