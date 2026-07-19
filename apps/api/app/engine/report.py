@@ -82,8 +82,19 @@ def build_recommendation(ranked: list[dict]) -> str:
     if not ranked:
         return ("No completed calls yet — launch the negotiation calls to generate "
                 "outcomes for this case.")
-    parts: list[str] = []
+    # One sentence per ENTITY (best-ranked outcome wins). Without this the
+    # recommendation degrades every demo re-run (probe finding: 12+ accumulated
+    # outcomes rendered a ~2,000-char wall of repeated sentences).
+    seen_entities: set[str] = set()
+    deduped: list[dict] = []
     for o in ranked:
+        key = o.get("target_entity") or o.get("entity") or "?"
+        if key in seen_entities:
+            continue
+        seen_entities.add(key)
+        deduped.append(o)
+    parts: list[str] = []
+    for o in deduped:
         otype = o.get("outcome_type")
         if o.get("final_amount") is not None:
             final, orig = float(o["final_amount"]), o.get("original_amount")
