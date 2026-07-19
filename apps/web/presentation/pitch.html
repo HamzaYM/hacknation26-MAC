@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Haggl — your medical bill just met its match</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231a1410'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20font-family='sans-serif'%20font-weight='800'%20fill='%23ef6b45'%20text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
+<style>
+/* ---------------------------------------------------------------------------
+   Fonts — self-hosted, zero external requests at present time.
+   Bricolage Grotesque is a single variable file covering 600..800.
+--------------------------------------------------------------------------- */
+@font-face{
+  font-family:"Bricolage Grotesque";
+  src:url("/pitch-assets/fonts/bricolage-latin.woff2") format("woff2");
+  font-weight:600 800; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"General Sans";
+  src:url("/pitch-assets/fonts/generalsans-400.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"General Sans";
+  src:url("/pitch-assets/fonts/generalsans-500.woff2") format("woff2");
+  font-weight:500; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"IBM Plex Mono";
+  src:url("/pitch-assets/fonts/plexmono-400.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"IBM Plex Mono";
+  src:url("/pitch-assets/fonts/plexmono-500.woff2") format("woff2");
+  font-weight:500; font-style:normal; font-display:swap;
+}
+
+:root{
+  --bg-product:#faf7f2; --bg-surface:#ffffff; --bg-surface-muted:#f5f1ec;
+  --ink:#1a1410; --text-2:#6b6058; --text-3:#a69c91;
+  --accent:#ef6b45; --accent-hover:#d95a34; --accent-tint:#fce3d8;
+  --flag:#c98a2e; --flag-tint:#f6e7cc; --border:#e8ddd3;
+  --sage:#dcebe0; --sage-line:#bcd5c4; --sky:#dce6f0; --sky-line:#bcd0e2;
+  --cream:#f5f1ec; --dark:#1a1410;
+  --font-d:"Bricolage Grotesque", ui-sans-serif, sans-serif;
+  --font-b:"General Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-m:"IBM Plex Mono", ui-monospace, monospace;
+  --shadow-card:0 1px 2px rgba(26,20,16,.06), 0 18px 48px rgba(26,20,16,.10);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%; width:100%; overflow:hidden; background:#e7ddce;}
+body{font-family:var(--font-b); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+#viewport{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 120% at 50% 0%, #efe6d8 0%, #e3d8c8 100%);}
+
+#stage{
+  position:relative; width:1280px; height:800px; flex:0 0 auto;
+  transform-origin:center center; background:var(--bg-product); overflow:hidden;
+  box-shadow:0 40px 120px rgba(26,20,16,.28);
+}
+
+/* ---- ambient (GPU-composited blurred gradients, subtle) ---- */
+.ambient{position:absolute; inset:0; overflow:hidden; z-index:0; pointer-events:none;}
+.blob{position:absolute; border-radius:50%; filter:blur(84px); will-change:transform;}
+.blob.b1{width:560px;height:560px; left:-160px; top:-180px;
+  background:radial-gradient(circle,rgba(239,107,69,.15),transparent 70%); animation:drift1 24s ease-in-out infinite;}
+.blob.b2{width:640px;height:640px; right:-200px; bottom:-220px;
+  background:radial-gradient(circle,rgba(201,138,46,.11),transparent 70%); animation:drift2 30s ease-in-out infinite;}
+.blob.b3{width:460px;height:460px; left:42%; top:34%;
+  background:radial-gradient(circle,rgba(239,107,69,.07),transparent 72%); animation:drift3 34s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-46px,-34px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-40px)}}
+
+/* ---- persistent chrome ---- */
+.chrome-brand{position:absolute; top:44px; left:64px; z-index:4;
+  font-family:var(--font-d); font-weight:800; font-size:22px; letter-spacing:-.01em; color:var(--ink);}
+.lh{position:relative; display:inline-block;}
+.lh::after{content:""; position:absolute; left:.067em; width:.60em; top:.42em; height:.19em;
+  background:var(--accent); border-radius:.09em; transform:rotate(-24deg);}
+.counter{position:absolute; top:46px; right:64px; z-index:4;
+  font-family:var(--font-m); font-size:13px; letter-spacing:.06em; color:var(--text-3);}
+.counter b{color:var(--ink); font-weight:500;}
+.rail{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(26,20,16,.08); z-index:4;}
+.rail-fill{height:100%; width:12.5%; background:var(--accent); transition:width .5s cubic-bezier(.16,1,.3,1);}
+#stage.dark{background:var(--dark);}
+#stage.dark .chrome-brand{color:var(--cream);}
+#stage.dark .counter{color:rgba(245,241,236,.55);}
+#stage.dark .counter b{color:var(--cream);}
+#stage.dark .rail{background:rgba(245,241,236,.12);}
+
+/* ---- slides ---- */
+.slide{position:absolute; inset:0; z-index:1; opacity:0; pointer-events:none;
+  padding:104px 96px 84px; display:flex; flex-direction:column;}
+.slide.active{opacity:1; pointer-events:auto; z-index:2;}
+
+.eyebrow{font-family:var(--font-m); font-weight:500; font-size:12px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--accent);}
+.mask{overflow:hidden; display:block;}
+.riseline{display:block; opacity:0;}
+.r{opacity:0;}
+h1.head{font-family:var(--font-d); font-weight:800; letter-spacing:-.02em; color:var(--ink);}
+.sub{color:var(--text-2); line-height:1.55;}
+.mono{font-family:var(--font-m);}
+
+/* ===== S1 title ===== */
+.s-title{align-items:flex-start; justify-content:center;}
+.badge{display:inline-flex; align-items:center; gap:9px; background:var(--ink); color:var(--accent);
+  padding:9px 18px; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:.01em;}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent); animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+.wordmark-xl{font-family:var(--font-d); font-weight:800; font-size:190px; line-height:.9;
+  letter-spacing:-.03em; color:var(--ink); margin:28px 0 8px;}
+.wordmark-xl .lh::after{top:.44em; height:.16em; width:.58em;}
+.title-line{font-family:var(--font-d); font-weight:600; font-size:34px; line-height:1.18;
+  letter-spacing:-.01em; color:var(--ink); max-width:820px;}
+.title-line .coral{color:var(--accent);}
+.title-foot{margin-top:auto; display:flex; align-items:baseline; gap:16px;}
+.title-foot .url{font-family:var(--font-m); font-size:15px; color:var(--text-2);}
+
+/* ===== S2 problem ===== */
+.problem-head{max-width:1040px;}
+.problem-head h1{font-size:60px; line-height:1.04;}
+.stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:30px; margin-top:auto;}
+.stat .num{font-family:var(--font-m); font-weight:500; font-size:66px; line-height:1; color:var(--ink); letter-spacing:-.03em;}
+.stat .num .pre{font-size:26px; color:var(--text-3); letter-spacing:0; margin-right:4px; vertical-align:top; position:relative; top:8px;}
+.stat.hot .num{color:var(--accent);}
+.stat .cap{font-size:14.5px; line-height:1.4; color:var(--ink); margin-top:14px; max-width:230px;}
+.stat .src{font-size:11px; line-height:1.4; color:var(--text-3); margin-top:10px; max-width:230px; font-family:var(--font-m);}
+.stat .divi{height:2px; width:36px; background:var(--accent); border-radius:2px; margin-top:16px; opacity:.55;}
+
+/* ===== S3 what it does ===== */
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:64px; flex:1; align-items:center;}
+.s3-head h1{font-size:54px; line-height:1.05; margin-bottom:14px;}
+.s3-head .sub{font-size:17px; max-width:440px;}
+.steps{margin-top:26px; display:flex; flex-direction:column; gap:18px;}
+.step{display:flex; gap:16px; align-items:flex-start;}
+.step .n{font-family:var(--font-m); font-weight:500; font-size:13px; color:var(--accent);
+  border:1px solid var(--accent-tint); background:var(--accent-tint); border-radius:9999px;
+  width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; margin-top:2px;}
+.step .t{font-size:16px; color:var(--ink);}
+.step .t b{font-weight:600;}
+.step .t span{color:var(--text-2); display:block; font-size:14px; margin-top:2px; line-height:1.45;}
+
+/* screenshot frame */
+.frame-wrap{opacity:0;}
+.eyelab{font-family:var(--font-m); font-weight:500; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:12px;}
+.frame{position:relative; background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:14px; box-shadow:var(--shadow-card); overflow:hidden;}
+.frame .bar{display:flex; align-items:center; gap:7px; padding:11px 14px; background:#f3ede4; border-bottom:1px solid var(--border);}
+.frame .bar i{width:10px;height:10px;border-radius:50%; background:#d9ccbc; display:block;}
+.frame .bar .addr{margin-left:10px; font-family:var(--font-m); font-size:11px; color:var(--text-3);
+  background:#fff; border:1px solid var(--border); border-radius:9999px; padding:3px 12px;}
+.frame img{display:block; width:100%; height:auto;}
+.frame .shot{width:100%; height:352px; object-fit:cover; object-position:top center; display:block;}
+.brackets{position:absolute; inset:-7px; pointer-events:none;}
+.brackets svg{position:absolute; width:40px; height:40px; overflow:visible;}
+.brackets .tl{left:0; top:0;} .brackets .tr{right:0; top:0; transform:rotate(90deg);}
+.brackets .br{right:0; bottom:0; transform:rotate(180deg);} .brackets .bl{left:0; bottom:0; transform:rotate(270deg);}
+.brackets path{fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round;}
+
+/* ===== S4 money (dark) ===== */
+.s-money{color:var(--cream);}
+.s-money .eyebrow{color:var(--accent);}
+.money-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:56px; flex:1; align-items:center;}
+.count-old{font-family:var(--font-m); font-size:22px; color:rgba(245,241,236,.42); text-decoration:line-through;}
+.count-fig{font-family:var(--font-m); font-weight:500; font-size:132px; line-height:.98; letter-spacing:-.04em; color:var(--cream); position:relative; display:inline-block;}
+.count-fig.flash{animation:cflash .35s ease-out;}
+@keyframes cflash{0%{color:var(--accent-tint)}100%{color:var(--cream)}}
+.pct-pill{display:inline-flex; align-items:center; gap:8px; margin-top:20px; opacity:0;
+  background:rgba(239,107,69,.16); border:1px solid rgba(239,107,69,.4); color:var(--accent);
+  font-family:var(--font-m); font-weight:500; font-size:22px; padding:8px 20px; border-radius:9999px;}
+.count-caption{margin-top:20px; font-size:16px; color:rgba(245,241,236,.72);}
+.arc{margin-top:14px; font-family:var(--font-m); font-size:13px; line-height:1.7; color:rgba(245,241,236,.55); max-width:520px;}
+.arc b{color:var(--cream); font-weight:500;} .arc .g{color:var(--accent);}
+.flags{display:flex; flex-direction:column; gap:11px;}
+.flags .fl-h{font-family:var(--font-m); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:rgba(245,241,236,.45); margin-bottom:4px;}
+.flag-chip{display:flex; justify-content:space-between; align-items:center; gap:14px;
+  background:rgba(201,138,46,.12); border:1px solid rgba(201,138,46,.34); border-radius:12px; padding:13px 16px;}
+.flag-chip .lab{font-size:13.5px; color:var(--cream);}
+.flag-chip .lab b{font-family:var(--font-m); font-weight:500; color:#e0b25c; font-size:12px; letter-spacing:.03em; display:block; margin-bottom:2px;}
+.flag-chip .amt{font-family:var(--font-m); font-weight:500; font-size:15px; color:#e0b25c; white-space:nowrap;}
+.flag-chip.dupe .amt{color:rgba(245,241,236,.5);}
+
+/* ===== S5 architecture ===== */
+.s5-head h1{font-size:52px; line-height:1.03; margin-bottom:10px;}
+.s5-head .sub{font-size:16.5px; max-width:640px;}
+.diagram{position:relative; width:1088px; height:300px; margin:22px auto 0;}
+.diagram svg.wires{position:absolute; inset:0; width:100%; height:100%; overflow:visible;}
+.connector{fill:none; stroke:var(--sage-line); stroke-width:2.5; stroke-linecap:round;}
+.node{position:absolute; border-radius:18px; padding:16px 20px; border:1px solid transparent;
+  display:flex; flex-direction:column; justify-content:center; opacity:0;}
+.node .nt{font-family:var(--font-d); font-weight:600; font-size:18px; color:var(--ink); letter-spacing:-.01em;}
+.node .ns{font-size:12.5px; color:var(--text-2); margin-top:4px; line-height:1.35;}
+.node.sage{background:var(--sage); border-color:var(--sage-line);}
+.node.sky{background:var(--sky); border-color:var(--sky-line);}
+.node.big{}
+.arch-rail{display:flex; gap:12px; justify-content:center; margin-top:24px;}
+.arch-chip{opacity:0; display:flex; align-items:center; gap:9px; background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:9999px; padding:9px 16px; box-shadow:var(--shadow-card); font-size:13px; color:var(--ink);}
+.arch-chip .k{font-family:var(--font-m); font-size:11px; color:var(--accent); font-weight:500;}
+.arch-foot{margin-top:20px; text-align:center; font-size:13.5px; color:var(--text-2);}
+.arch-foot b{color:var(--ink); font-weight:600; font-family:var(--font-m); font-size:13px;}
+
+/* ===== S6 honesty ===== */
+.s6-head h1{font-size:52px; line-height:1.04;}
+.beats{display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-top:auto;}
+.beat{background:var(--bg-surface); border:1px solid var(--border); border-radius:16px;
+  box-shadow:var(--shadow-card); padding:26px 24px; position:relative;}
+.beat .bn{font-family:var(--font-m); font-size:12px; letter-spacing:.1em; color:var(--accent); text-transform:uppercase;}
+.beat h3{font-family:var(--font-d); font-weight:600; font-size:21px; margin:12px 0 10px; color:var(--ink);}
+.beat p{font-size:14.5px; line-height:1.55; color:var(--text-2);}
+.beat p code{font-family:var(--font-m); font-size:13px; background:var(--bg-surface-muted); color:var(--accent-hover); padding:1px 6px; border-radius:5px;}
+.honesty-foot{margin-top:26px; display:flex; align-items:center; gap:14px; background:var(--accent-tint);
+  border-radius:12px; padding:16px 22px; font-size:15px; color:var(--ink);}
+.honesty-foot b{font-weight:600;}
+.honesty-foot .tag{font-family:var(--font-m); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-hover);}
+
+/* ===== S7 stack ===== */
+.s7-head h1{font-size:52px; line-height:1.04; margin-bottom:12px;}
+.stack-list{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; max-width:520px;}
+.tech{display:inline-flex; flex-direction:column; gap:2px; background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:12px; padding:11px 15px; box-shadow:var(--shadow-card);}
+.tech b{font-size:14.5px; font-weight:600; color:var(--ink);}
+.tech span{font-size:11.5px; color:var(--text-2);}
+.config-note{margin-top:26px; max-width:520px;}
+.config-note .lab{font-family:var(--font-m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+.config-note p{font-size:15.5px; line-height:1.55; color:var(--ink);}
+.config-note p b{color:var(--accent-hover);}
+.config-note .files{font-family:var(--font-m); font-size:12px; color:var(--text-3); margin-top:8px;}
+
+/* ===== S8 team + close ===== */
+.s-close{align-items:flex-start; justify-content:center; overflow:hidden;}
+.team-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin:20px 0 auto; max-width:920px;}
+.tm{background:var(--bg-surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-card); padding:20px;}
+.tm .nm{font-family:var(--font-d); font-weight:700; font-size:20px; color:var(--ink);}
+.tm .rl{font-size:13px; color:var(--text-2); margin-top:4px;}
+.close-line{font-family:var(--font-d); font-weight:800; font-size:52px; line-height:1.05; letter-spacing:-.02em; color:var(--ink); max-width:820px;}
+.close-line .coral{color:var(--accent); position:relative;}
+.close-line .coral::after{content:""; position:absolute; left:0; right:0; bottom:2px; height:5px; background:var(--accent); border-radius:3px; opacity:.85;}
+.close-foot{margin-top:18px; display:flex; align-items:center; gap:14px;}
+.close-foot .url{font-family:var(--font-m); font-size:17px; color:var(--ink);}
+.close-foot .dot{width:5px;height:5px;border-radius:50%;background:var(--text-3);}
+.close-foot .tag{font-size:14px; color:var(--text-2);}
+/* money rain (close only) */
+.rain{position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+.bill{position:absolute; top:-60px; width:44px; height:26px; border-radius:5px; background:var(--accent);
+  box-shadow:0 4px 10px rgba(36,26,21,.12); opacity:.34; animation:fall linear infinite;}
+.bill::before{content:"$"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font:800 13px var(--font-d); color:#fff;}
+.bill.ink{background:var(--ink);} .bill.ink::before{color:#ffb27a;}
+@keyframes fall{0%{top:-60px;opacity:0}8%{opacity:.34}92%{opacity:.34}100%{top:112%;opacity:0}}
+
+/* ---- cover ---- */
+#cover{position:absolute; inset:0; z-index:50; background:var(--bg-product);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  transition:opacity .5s ease; cursor:pointer;}
+#cover.hide{opacity:0; pointer-events:none;}
+#cover .cw{font-family:var(--font-d); font-weight:800; font-size:120px; letter-spacing:-.03em; color:var(--ink);}
+#cover .cw .lh::after{top:.44em;height:.16em;width:.58em;}
+#cover .ct{font-size:18px; color:var(--text-2); margin-top:14px; max-width:520px; line-height:1.5;}
+#cover .prompt{margin-top:44px; display:inline-flex; align-items:center; gap:12px; font-size:14px; color:var(--text-2);}
+#cover .key{font-family:var(--font-m); font-size:12px; border:1px solid var(--border); background:#fff;
+  border-radius:8px; padding:6px 12px; color:var(--ink); box-shadow:0 2px 0 var(--border);}
+#cover .prompt .blip{width:8px;height:8px;border-radius:50%;background:var(--accent); animation:pulse 1.6s ease-in-out infinite;}
+
+@media (prefers-reduced-motion: reduce){
+  .blob{animation:none;} .badge .dot,#cover .prompt .blip{animation:none;} .bill{animation:none; opacity:.28;}
+  .rail-fill{transition:none;}
+}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+    <div class="chrome-brand"><span class="lh">H</span>aggl</div>
+    <div class="counter"><b id="cnum">01</b> / 08</div>
+    <div class="rail"><div class="rail-fill" id="rail"></div></div>
+
+    <!-- ============ S1 ============ -->
+    <section class="slide s-title active" data-i="1">
+      <span class="mask"><span class="riseline"><span class="badge"><span class="dot"></span>AI voice agent · real phone calls</span></span></span>
+      <div class="wordmark-xl"><span class="mask"><span class="riseline"><span class="lh">H</span>aggl</span></span></div>
+      <div class="title-line"><span class="mask"><span class="riseline">an AI advocate that reads your hospital bill</span></span><span class="mask"><span class="riseline">and talks the price <span class="coral">down</span> on a live call.</span></span></div>
+      <div class="title-foot r"><span class="url">hagglfor.me</span></div>
+    </section>
+
+    <!-- ============ S2 problem ============ -->
+    <section class="slide" data-i="2">
+      <div class="problem-head">
+        <div class="mask"><span class="riseline eyebrow">The problem</span></div>
+        <h1 class="head" style="margin-top:18px">
+          <span class="mask"><span class="riseline">The bill is inflated, error-prone,</span></span>
+          <span class="mask"><span class="riseline">and almost no one pushes back.</span></span>
+        </h1>
+      </div>
+      <div class="stat-grid">
+        <div class="stat r"><div class="num"><span class="pre">up to</span>80<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of medical bills carry at least one error.</div><div class="src">Est. 49% to 80%. Medical Billing Advocates of America; CFPB.</div></div>
+        <div class="stat r"><div class="num">254<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of Medicare is what private insurers pay for the same care, at the same hospital.</div><div class="src">RAND Hospital Price Transparency Study, 2024.</div></div>
+        <div class="stat r"><div class="num">85<span style="font-size:40px">M</span></div><div class="divi"></div><div class="cap">in-network claims denied in 2024. About 1 in 5.</div><div class="src">KFF, 2026.</div></div>
+        <div class="stat hot r"><div class="num">62<span style="font-size:40px">%</span></div><div class="divi"></div><div class="cap">of people who negotiate get a lower price. Most never try.</div><div class="src">Duffy et al., JAMA Health Forum, 2024.</div></div>
+      </div>
+    </section>
+
+    <!-- ============ S3 what it does ============ -->
+    <section class="slide" data-i="3">
+      <div class="two-col">
+        <div class="s3-head">
+          <div class="mask"><span class="riseline eyebrow">What Haggl does</span></div>
+          <h1 class="head" style="margin-top:16px">
+            <span class="mask"><span class="riseline">You upload the bill.</span></span>
+            <span class="mask"><span class="riseline">Haggl works the phones.</span></span>
+          </h1>
+          <div class="steps">
+            <div class="step r"><div class="n">1</div><div class="t"><b>Reads the bill.</b><span>OpenAI vision parses every line, CPT code, and the EOB.</span></div></div>
+            <div class="step r"><div class="n">2</div><div class="t"><b>Finds the errors and the law on your side.</b><span>Duplicates, upcodes, and the statutes that cap what you owe.</span></div></div>
+            <div class="step r"><div class="n">3</div><div class="t"><b>Calls the billing office.</b><span>A real phone call to patient financial services, for you.</span></div></div>
+            <div class="step r"><div class="n">4</div><div class="t"><b>Talks the price down, live.</b><span>It works the balance while you get on with your day.</span></div></div>
+          </div>
+        </div>
+        <div class="frame-wrap">
+          <div class="eyelab">Product · your bills</div>
+          <div class="frame">
+            <div class="bar"><i></i><i></i><i></i><span class="addr">hagglfor.me/bills</span></div>
+            <img class="shot" src="/pitch-assets/shots/bills.png" alt="Haggl bills page showing savings" />
+            <div class="brackets">
+              <svg class="tl"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="tr"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="br"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="bl"><path d="M4,32 L4,4 L32,4"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ S4 money (dark) ============ -->
+    <section class="slide s-money" data-i="4">
+      <div class="mask"><span class="riseline eyebrow">Maya Chen · Mercy General, Boston · live call</span></div>
+      <div class="money-grid">
+        <div>
+          <div class="count-old r">$4,287</div>
+          <div class="count-fig" id="countFig">$4,287</div>
+          <div><span class="pct-pill" id="pctPill">−62% off</span></div>
+          <div class="count-caption r">Settled today. Paid in full.</div>
+          <div class="arc r"><b>$4,287</b> balance <span class="g">→</span> <b>$3,875</b> once the duplicate charge came off <span class="g">→</span> rep countered <b>$2,400</b> <span class="g">→</span> <b>$1,650</b> settled. That is 61.5% off.</div>
+        </div>
+        <div class="flags">
+          <div class="fl-h r">Four flags the engine found</div>
+          <div class="flag-chip r"><div class="lab"><b>DUPLICATE · CPT 71046</b>Chest X-ray billed twice</div><div class="amt">−$412</div></div>
+          <div class="flag-chip r"><div class="lab"><b>UPCODE · 99285 → 99283</b>ER level higher than the visit</div><div class="amt">−$2,011</div></div>
+          <div class="flag-chip r"><div class="lab"><b>UNBUNDLED · CPT 80053</b>Metabolic panel split apart</div><div class="amt">−$642</div></div>
+          <div class="flag-chip dupe r"><div class="lab"><b>EOB MISMATCH · $412</b>Same duplicate. Explains the gap.</div><div class="amt">reconciled</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ S5 architecture ============ -->
+    <section class="slide" data-i="5">
+      <div class="s5-head">
+        <div class="mask"><span class="riseline eyebrow">How it works</span></div>
+        <h1 class="head" style="margin-top:14px">
+          <span class="mask"><span class="riseline">The model is the mouth.</span></span>
+          <span class="mask"><span class="riseline">Not the brain-stem.</span></span>
+        </h1>
+        <div class="sub r" style="margin-top:12px">A deterministic ladder decides every move. The agent can only speak a number a tool handed it.</div>
+      </div>
+      <div class="diagram">
+        <svg class="wires" viewBox="0 0 1088 300" preserveAspectRatio="none">
+          <path class="connector" d="M212,120 C250,120 262,120 300,120"/>
+          <path class="connector" d="M572,120 C620,120 640,120 688,120"/>
+          <path class="connector" d="M892,120 C920,120 936,120 964,120"/>
+        </svg>
+        <div class="node sky"  style="left:20px;  top:84px;  width:192px; height:92px;"><div class="nt">Bill + EOB</div><div class="ns">what you upload</div></div>
+        <div class="node sage big" style="left:300px; top:72px; width:272px; height:116px;"><div class="nt">Dossier + Ladder</div><div class="ns">deterministic state machine · decides every move · <span class="mono" style="font-size:11px">state_machine.py</span></div></div>
+        <div class="node sage" style="left:688px; top:84px; width:204px; height:92px;"><div class="nt">Voice agent</div><div class="ns">the mouth · ElevenLabs</div></div>
+        <div class="node sky"  style="left:964px; top:84px; width:104px; height:92px;"><div class="nt">Live call</div><div class="ns">Twilio PSTN</div></div>
+      </div>
+      <div class="arch-rail">
+        <div class="arch-chip"><span class="k">tools</span> numbers only through registered tools</div>
+        <div class="arch-chip"><span class="k">audit</span> post-call honesty audit</div>
+        <div class="arch-chip"><span class="k">realtime</span> Supabase War Room</div>
+        <div class="arch-chip"><span class="k">config</span> verticals as YAML</div>
+      </div>
+      <div class="arch-foot r">The benchmark tool cites the hospital's own file. Mercy's posted cash price is <b>$2,633</b>. Insurers there pay <b>$999</b>. Both public.</div>
+    </section>
+
+    <!-- ============ S6 honesty ============ -->
+    <section class="slide" data-i="6">
+      <div class="s6-head">
+        <div class="mask"><span class="riseline eyebrow">Nothing synthetic</span></div>
+        <h1 class="head" style="margin-top:16px">
+          <span class="mask"><span class="riseline">On a live call, our agent invented a code.</span></span>
+          <span class="mask"><span class="riseline">So we made numbers come only from tools.</span></span>
+        </h1>
+      </div>
+      <div class="beats">
+        <div class="beat r"><div class="bn">The slip</div><h3>It filled a gap itself</h3><p>On a real call, the agent spoke a CPT code that was never in the dossier. Its tools were not registered, so it made one up.</p></div>
+        <div class="beat r"><div class="bn">The fix</div><h3>Four webhook tools</h3><p>Same day, we registered <code>get_benchmark</code> and three more. Now every number comes from a tool call, or the agent does not say it.</p></div>
+        <div class="beat r"><div class="bn">The audit</div><h3>Checked after every call</h3><p>A computed honesty audit reconciles each claim against the dossier once the call ends. Anything unsupported gets flagged.</p></div>
+      </div>
+      <div class="honesty-foot r"><span class="tag">Real end to end</span><span>ElevenLabs, Twilio PSTN, Supabase, OpenAI vision. <b>Nothing on this slide is simulated.</b></span></div>
+    </section>
+
+    <!-- ============ S7 stack ============ -->
+    <section class="slide" data-i="7">
+      <div class="two-col">
+        <div class="s7-head">
+          <div class="mask"><span class="riseline eyebrow">Stack + workflow</span></div>
+          <h1 class="head" style="margin-top:14px">
+            <span class="mask"><span class="riseline">Real data. Real calls.</span></span>
+            <span class="mask"><span class="riseline">Built to generalize.</span></span>
+          </h1>
+          <div class="stack-list r">
+            <div class="tech"><b>Next.js</b><span>web + War Room</span></div>
+            <div class="tech"><b>FastAPI</b><span>engine + ladder</span></div>
+            <div class="tech"><b>Supabase</b><span>realtime + data</span></div>
+            <div class="tech"><b>ElevenLabs</b><span>voice agents</span></div>
+            <div class="tech"><b>Twilio</b><span>PSTN calls</span></div>
+            <div class="tech"><b>OpenAI</b><span>vision parse</span></div>
+          </div>
+          <div class="config-note r">
+            <div class="lab">Config, not code</div>
+            <p>Medical bills today. Moving quotes tomorrow. <b>Same engine, a different config file.</b></p>
+            <div class="files">config/verticals/medical_bills.yaml · moving.yaml</div>
+          </div>
+        </div>
+        <div class="frame-wrap">
+          <div class="eyelab">Report · billed vs fair vs achieved</div>
+          <div class="frame">
+            <div class="bar"><i></i><i></i><i></i><span class="addr">hagglfor.me/report</span></div>
+            <img class="shot" src="/pitch-assets/shots/report.png" alt="Haggl report page, ranked outcomes" />
+            <div class="brackets">
+              <svg class="tl"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="tr"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="br"><path d="M4,32 L4,4 L32,4"/></svg>
+              <svg class="bl"><path d="M4,32 L4,4 L32,4"/></svg>
+            </div>
+          </div>
+          <div class="r" style="margin-top:14px; font-size:13px; color:var(--text-2); line-height:1.5; font-family:var(--font-m)">Benchmarks run on Mass General's real published price file. 159,000 rows.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ S8 close ============ -->
+    <section class="slide s-close" data-i="8">
+      <div class="rain" id="rain"></div>
+      <div class="mask" style="position:relative;z-index:1"><span class="riseline eyebrow">The team</span></div>
+      <div class="team-grid" style="position:relative;z-index:1">
+        <div class="tm r"><div class="nm">Hamza</div><div class="rl">product + engine</div></div>
+        <div class="tm r"><div class="nm">Susy</div><div class="rl">UX + frontend</div></div>
+        <div class="tm r"><div class="nm">J</div><div class="rl">data</div></div>
+        <div class="tm r"><div class="nm">Kar Shin</div><div class="rl">personas + voice</div></div>
+      </div>
+      <div class="close-line" style="position:relative;z-index:1">
+        <span class="mask"><span class="riseline">your medical bill</span></span>
+        <span class="mask"><span class="riseline">just met its <span class="coral">match</span>.</span></span>
+      </div>
+      <div class="close-foot r" style="position:relative;z-index:1"><span class="url">hagglfor.me</span><span class="dot"></span><span class="tag">an AI advocate that haggles, on real calls</span></div>
+    </section>
+
+    <!-- ============ cover ============ -->
+    <div id="cover">
+      <div class="cw"><span class="lh">H</span>aggl</div>
+      <div class="ct">your medical bill just met its match.</div>
+      <div class="prompt"><span class="blip"></span> press <span class="key">Enter</span> to begin</div>
+    </div>
+  </div>
+</div>
+
+<script src="/pitch-assets/anime.min.js"></script>
+<script>
+(function(){
+  var TOTAL = 8;
+  var stage = document.getElementById('stage');
+  var rail = document.getElementById('rail');
+  var cnum = document.getElementById('cnum');
+  var cover = document.getElementById('cover');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var DARK = {4:true};
+  var idx = 0, locked = false, started = false, unlockT = null;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches || !window.anime;
+
+  function scale(){
+    var s = Math.min(window.innerWidth/1280, window.innerHeight/800);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', scale); scale();
+
+  function chrome(){
+    rail.style.width = ((idx+1)/TOTAL*100) + '%';
+    cnum.textContent = ('0'+(idx+1)).slice(-2);
+    stage.classList.toggle('dark', !!DARK[idx+1]);
+  }
+
+  // instant end-state (reduced motion / no anime)
+  function settle(s){
+    s.querySelectorAll('.riseline,.r,.node,.frame-wrap').forEach(function(el){
+      el.style.opacity = 1; el.style.transform = 'none';
+    });
+    s.querySelectorAll('.connector').forEach(function(p){ p.style.strokeDasharray='none'; p.style.strokeDashoffset=0; });
+    s.querySelectorAll('.brackets path').forEach(function(p){ p.style.strokeDasharray='none'; p.style.strokeDashoffset=0; });
+    if(s.getAttribute('data-i')==='4'){
+      var f=document.getElementById('countFig'); if(f) f.textContent='$1,650';
+      var p=document.getElementById('pctPill'); if(p){ p.style.opacity=1; p.style.transform='none'; }
+    }
+    if(s.getAttribute('data-i')==='8') buildRain();
+  }
+
+  function buildRain(){
+    var r=document.getElementById('rain'); if(!r || r.childElementCount) return;
+    for(var i=0;i<8;i++){
+      var b=document.createElement('div');
+      b.className='bill'+(i%3===0?' ink':'');
+      b.style.left=(6+i*11.5+Math.random()*4)+'%';
+      b.style.animationDuration=(7+Math.random()*4)+'s';
+      b.style.animationDelay=(-Math.random()*7)+'s';
+      b.style.transform='rotate('+(Math.random()*40-20)+'deg)';
+      r.appendChild(b);
+    }
+  }
+
+  function enter(i){
+    var s = slides[i];
+    s.classList.add('active');
+    chrome();
+    if(reduce){ settle(s); locked=false; if(i+1===8) buildRain(); return; }
+
+    var tl = anime.timeline({ complete:function(){ locked=false; } });
+    var lines = s.querySelectorAll('.riseline');
+    if(lines.length) tl.add({ targets:lines, translateY:['110%','0%'], opacity:[0,1],
+      duration:650, easing:'easeOutExpo', delay:anime.stagger(70) });
+    var rs = s.querySelectorAll('.r');
+    if(rs.length) tl.add({ targets:rs, translateY:[18,0], opacity:[0,1],
+      duration:600, easing:'easeOutCubic', delay:anime.stagger(55) }, lines.length ? '-=430' : 0);
+
+    if(i+1===3 || i+1===7) frame(tl, s);
+    if(i+1===4) money(tl, s);
+    if(i+1===5) nodes(tl, s);
+    if(i+1===8) buildRain();
+
+    // safety unlock in case a timeline never fires complete
+    clearTimeout(unlockT); unlockT = setTimeout(function(){ locked=false; }, 2400);
+  }
+
+  function frame(tl, s){
+    var fw = s.querySelector('.frame-wrap');
+    tl.add({ targets:fw, opacity:[0,1], translateY:[24,0], duration:520, easing:'easeOutCubic' }, '-=360');
+    var br = s.querySelectorAll('.brackets path');
+    br.forEach(function(p){ var L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; });
+    tl.add({ targets:br, strokeDashoffset:[anime.setDashoffset, 0], duration:460, easing:'easeOutCubic', delay:anime.stagger(40) }, '-=240');
+  }
+
+  function money(tl, s){
+    var fig = document.getElementById('countFig');
+    var pill = document.getElementById('pctPill');
+    var obj = { v:4287 };
+    tl.add({ targets:obj, v:1650, duration:900, easing:'easeOutExpo', round:1,
+      begin:function(){ fig.classList.remove('flash'); void fig.offsetWidth; fig.classList.add('flash'); },
+      update:function(){ fig.textContent = '$' + Math.round(obj.v).toLocaleString('en-US'); }
+    }, '-=120');
+    tl.add({ targets:pill, opacity:[0,1], scale:[0.9,1], duration:180, easing:'easeOutBack' }, '-=260');
+  }
+
+  function nodes(tl, s){
+    var paths = Array.prototype.slice.call(s.querySelectorAll('.connector'));
+    var nd = Array.prototype.slice.call(s.querySelectorAll('.node'));
+    paths.forEach(function(p){ var L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; });
+    tl.add({ targets:nd[0], opacity:[0,1], scale:[0.92,1], duration:420, easing:'easeOutCubic' }, '-=220');
+    paths.forEach(function(p,k){
+      tl.add({ targets:p, strokeDashoffset:[anime.setDashoffset,0], duration:640, easing:'easeInOutSine' }, k===0?'-=140':'-=240');
+      if(nd[k+1]) tl.add({ targets:nd[k+1], opacity:[0,1], scale:[0.92,1], duration:400, easing:'easeOutCubic' }, '-=360');
+    });
+    var chips = s.querySelectorAll('.arch-chip');
+    tl.add({ targets:chips, opacity:[0,1], translateY:[10,0], duration:380, easing:'easeOutCubic', delay:anime.stagger(70) }, '-=160');
+  }
+
+  function go(n){
+    if(locked || n<0 || n>=TOTAL || n===idx) return;
+    locked = true;
+    var cur = slides[idx];
+    var done = function(){
+      cur.classList.remove('active');
+      cur.style.opacity=''; cur.style.transform='';
+      idx = n; try{ history.replaceState(null,'','#'+(idx+1)); }catch(e){}
+      enter(idx);
+    };
+    if(reduce){ done(); return; }
+    anime({ targets:cur, opacity:[1,0], translateY:[0,-14], duration:240, easing:'easeInQuad', complete:done });
+  }
+
+  function begin(){
+    if(started) return; started = true;
+    try{ var el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(function(){}); }catch(e){}
+    cover.classList.add('hide');
+    setTimeout(function(){ cover.style.display='none'; }, 500);
+    enter(idx);
+  }
+
+  // deep link: reload at #4 opens slide 4 (skip cover, arm immediately)
+  var h = parseInt((location.hash||'').replace('#',''), 10);
+  if(h>=1 && h<=TOTAL){
+    idx = h-1; started = true;
+    slides.forEach(function(s){ s.classList.remove('active'); });
+    cover.style.display='none';
+    enter(idx);
+  } else {
+    idx = 0; chrome();
+  }
+
+  window.addEventListener('keydown', function(e){
+    if(!started){
+      if(e.key==='Enter' || e.key===' ' || e.key==='ArrowRight'){ e.preventDefault(); begin(); }
+      return;
+    }
+    if(e.key==='ArrowRight' || e.key===' ' || e.key==='PageDown'){ e.preventDefault(); go(idx+1); }
+    else if(e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); go(idx-1); }
+    else if(e.key==='Home'){ e.preventDefault(); go(0); }
+  });
+  cover.addEventListener('click', begin);
+})();
+</script>
+</body>
+</html>
