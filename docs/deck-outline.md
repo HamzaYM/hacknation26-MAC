@@ -19,7 +19,8 @@ One-line: *reads your bill + EOB, finds the errors and the law on your side, and
 - *Visual: the $1,158–$6,506 spread framing from the Visual Brief, adapted to the medical bill.*
 
 ### 3 · What we built — the three modules
-Estimator → Caller → Closer, one closed loop. *Visual: the architecture flow from Visual Brief §6 / PRD §6 mermaid (Next.js · FastAPI · Supabase · ElevenLabs+Twilio · OpenAI).*
+Estimator → Caller → Closer, one closed loop. *Visual: the top-level mermaid in `docs/architecture.md` (Next.js · FastAPI · Supabase · ElevenLabs+Twilio · OpenAI); Visual Brief §6 / PRD §6 flow as fallback.*
+Speaker notes: the five theses in `docs/architecture.md`, one line each (LLM as mouth · structural honesty · verticals as config · reconciliation-gated real data · one PSTN transport), each backed by a file judges can open.
 - **Estimator:** bill+EOB parsed + ElevenLabs voice interview → one confirmed JobSpec, reused verbatim.
 - **Caller:** real Twilio calls vs. distinct counterparties; structured, comparable quotes.
 - **Closer:** deterministic negotiation ladder + ranked, transcript-cited report.

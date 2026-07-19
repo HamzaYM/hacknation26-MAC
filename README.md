@@ -25,6 +25,8 @@ Claude Code orchestrates the build (integration, wiring, unblocking) with Hamza.
 
 Next.js (UI) ↔ FastAPI (state machine · webhook tools · post-call webhooks) ↔ Supabase (Postgres · Storage · **Realtime → live War Room**) ↔ **ElevenLabs Agents** (voice loop, brain LLM billed in-platform) ↔ **Twilio** (every call is a real PSTN call) — plus OpenAI for offline text/vision. Negotiation *policy* is deterministic server-side code; the LLM is the mouth, not the brain-stem (PRD §7).
 
+The full walkthrough lives in **[docs/architecture.md](docs/architecture.md)**: two diagrams plus five design theses (LLM as mouth · structural honesty · verticals as config · reconciliation-gated real data · one transport), each tied to a file you can open.
+
 ## Repo map & ownership
 
 | Path | What | Owner |
