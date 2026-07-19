@@ -76,6 +76,14 @@ export default function Confirm() {
   const pctHigh = savings.percentSavedSoFar + savings.percentProjectedHigh;
   const totalFlagged = flags.reduce((sum, f) => sum + f.dollar_impact, 0);
 
+  // What the voice interview / intake card captured — the negotiator's settlement
+  // ceiling (dossier floor = lump_sum_available). Surfacing it here is the visible
+  // proof the interview changed the plan.
+  const putDownToday =
+    typeof spec.financial_profile?.lump_sum_available === "number"
+      ? (spec.financial_profile.lump_sum_available as number)
+      : null;
+
   // Prefer the server's Action Plan copy (numbers guaranteed verbatim from the
   // engine); fall back to the locally computed strings when it's unavailable.
   const copy = plan?.copy;
@@ -135,6 +143,21 @@ export default function Confirm() {
           {copy?.savings_line ??
             `Estimated savings if the calls go our way: ${pctLow}–${pctHigh}% off your ${money(savings.originalBalance)} balance.`}
         </div>
+        {putDownToday != null && (
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+              fontSize: 14,
+              color: "var(--text-secondary)",
+            }}
+          >
+            You told us you could put down{" "}
+            <span className="mono-figure" style={{ color: "var(--accent)" }}>{money(putDownToday)}</span> today
+            — that&apos;s the ceiling, we won&apos;t offer a dollar more.
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>

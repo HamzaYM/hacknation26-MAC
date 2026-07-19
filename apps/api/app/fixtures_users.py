@@ -149,14 +149,32 @@ OWNER_EMAIL_BY_CASE_ID: dict[str, str] = {
 }
 
 
+def apply_financial_overlay(spec: dict | None) -> dict | None:
+    """Overlay any captured financial fields (POST /cases/{id}/financial-profile,
+    persisted to cases.financial_profile — migration 0006) onto a fixture spec:
+    captured values override the fixture, so the voice interview / manual card
+    visibly changes the served JobSpec and the dossier floor derived from it.
+
+    Returns the SAME dict untouched when there's no DB / nothing captured, so the
+    demo_flags identity-cache path (flags_for_spec) and all fixture-only tests
+    stay exactly as they were."""
+    if spec is None:
+        return None
+    from . import db  # lazy: keeps this module import-cheap and cycle-free
+
+    captured = db.get_case_financial_profile(spec["case_id"])
+    if not captured:
+        return spec
+    return {**spec, "financial_profile": {**spec.get("financial_profile", {}), **captured}}
+
+
 def spec_for_email(email: str | None) -> dict | None:
-    return SPEC_BY_EMAIL.get((email or "").strip().lower())
+    return apply_financial_overlay(SPEC_BY_EMAIL.get((email or "").strip().lower()))
 
 
 def spec_for_case(case_id: str) -> dict | None:
-    if case_id == "demo":
-        return DEMO_JOB_SPEC
-    return SPEC_BY_CASE_ID.get(case_id)
+    base = DEMO_JOB_SPEC if case_id == "demo" else SPEC_BY_CASE_ID.get(case_id)
+    return apply_financial_overlay(base)
 
 
 def flags_for_spec(spec_dict: dict) -> list:
