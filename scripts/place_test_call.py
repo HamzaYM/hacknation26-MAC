@@ -1,64 +1,44 @@
-"""Place the first real PSTN test call: negotiator agent dials the Stonewaller.
+"""Place a real PSTN test call: negotiator agent dials the Stonewaller.
 
 This is the agent-to-agent go/no-go (PRD §16): two ElevenLabs agents on a real
-Twilio call. Run from repo root:
+Twilio call. Run from repo root (needs the api deps, e.g. ./.venv/bin/python):
 
     python3 scripts/place_test_call.py            # negotiator → Stonewaller line
     python3 scripts/place_test_call.py +1XXXXXXX  # negotiator → any number (e.g. your cell)
 
-Then watch/listen: ElevenLabs dashboard → Agents → Calls, or poll
-GET /v1/convai/conversations. Costs ~2 voice legs (~$0.02/min total).
+The `calls` row is created BEFORE dialing and the ElevenLabs conversation_id
+is persisted on it (POST /calls/place-real code path), so mid-call tool events
+and the post-call webhook (transcript + audio) land in-product — watch it live
+at the printed War Room URL. Costs ~2 voice legs (~$0.02/min total).
 """
-import json
+import os
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT = Path(__file__).resolve().parents[1]
-STONEWALLER_NUMBER = "+18576757033"
-NEGOTIATOR_PHONE_ID = "phnum_4701kxvqv879f7d9sm8nvsg2akce"
-
-
-def env() -> dict[str, str]:
-    vals = {}
-    for line in (ROOT / ".env").read_text().splitlines():
-        s = line.strip()
-        if s and not s.startswith("#") and "=" in s:
-            k, _, v = s.partition("=")
-            vals[k.strip()] = v.strip()
-    return vals
+sys.path.insert(0, str(ROOT / "apps" / "api"))
 
 
 def main() -> None:
-    e = env()
-    to_number = sys.argv[1] if len(sys.argv) > 1 else STONEWALLER_NUMBER
-    body = {
-        "agent_id": e["ELEVENLABS_AGENT_ID_NEGOTIATOR"],
-        "agent_phone_number_id": NEGOTIATOR_PHONE_ID,
-        "to_number": to_number,
-        "conversation_initiation_client_data": {
-            "dynamic_variables": {
-                "patient_name": "Maya Chen",
-                "account_number": "MG-4471983",
-                "target_entity": "Mercy General Hospital patient financial services",
-                "route": "provider",
-                "anchor": "657",
-                "target": "876",
-            }
-        },
-    }
-    req = urllib.request.Request(
-        "https://api.elevenlabs.io/v1/convai/twilio/outbound-call",
-        method="POST",
-        headers={"xi-api-key": e["ELEVENLABS_API_KEY"], "Content-Type": "application/json"},
-        data=json.dumps(body).encode(),
-    )
+    load_dotenv(ROOT / ".env")
+    # this script's whole point is a real dial — flip the feature flag on
+    os.environ.setdefault("ELEVENLABS_OUTBOUND_ENABLED", "1")
+    from app.routers.calls import PlaceRealRequest, place_real_call
+
+    to_number = sys.argv[1] if len(sys.argv) > 1 else None
     try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            print("CALL PLACED:", json.dumps(json.loads(r.read()), indent=2))
-    except urllib.error.HTTPError as err:
-        print("failed:", err.code, err.read().decode()[:600])
+        out = place_real_call(PlaceRealRequest(to_number=to_number))
+    except Exception as err:  # noqa: BLE001 — surface HTTP/dial errors plainly
+        print("failed:", err)
+        raise SystemExit(1) from err
+
+    print(f"calls row created: {out['call_id']} (case {out['case_id']})")
+    print(f"dialed {out['to_number']} → conversation_id: {out.get('conversation_id')}")
+    if out.get("note"):
+        print("note:", out["note"])
+    print(f"watch live: {out['war_room_url']}")
 
 
 if __name__ == "__main__":

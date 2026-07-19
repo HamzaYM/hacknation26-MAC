@@ -49,7 +49,7 @@ cp .env apps/web/.env.local    # required — the browser needs the NEXT_PUBLIC_
 
 # Frontend (Susy)
 cd apps/web && npm install && npm run dev          # → http://localhost:3000
-# demo login: maya@hagglfor.me / HagglDemo2026!
+# demo logins: see the demo-accounts table below
 
 # Backend (Hamza; works with zero external services — fixture data built in)
 cd apps/api && python3 -m venv .venv && source .venv/bin/activate
@@ -64,6 +64,17 @@ cd data/pipeline && python3 transform.py --check   # validates seed vs demo answ
 ```
 
 (Use `127.0.0.1`, not `localhost` — stray IPv6 listeners on port 8000 will confuse curl.)
+
+## Demo accounts
+
+All passwords: `HagglDemo2026!` (seed/repair with `python scripts/seed_demo_users.py`).
+Logging in on hagglfor.me routes `/bills` to that user's case; logged out you get Maya's.
+
+| Login | Case | The story |
+|---|---|---|
+| `maya@hagglfor.me` | Mercy General ER, $4,287 balance | The flagship: 4 seeded flags (duplicate/upcode/unbundle/EOB), 3 entities, −62% settlement arc |
+| `dan@hagglfor.me` | $2,140 sold to Meridian Recovery Services | Collections route: duplicate + markup flags, $900 floor, lump-sum-anchor ladder |
+| `nina@hagglfor.me` | $3,120 out-of-network anesthesia balance bill | No Surprises Act: `nsa` + EOB-mismatch flags — cite the statute and file a complaint, don't negotiate |
 
 ## Demo-critical gotchas (web-verified 2026-07)
 - **Twilio trial can't call unverified numbers** (error 21608, ≤5 verified) — upgrade to paid at H0.

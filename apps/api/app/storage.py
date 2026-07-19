@@ -41,6 +41,29 @@ def store_document(path: str, data: bytes, content_type: str = "application/pdf"
     return None
 
 
+def store_recording(call_id: str, audio: bytes) -> str | None:
+    """Upload call audio to the recordings bucket; returns "recordings/<id>.mp3"
+    (the shape set_call_recording stores) or None."""
+    url, key = _env()
+    if not (url and key):
+        return None
+    path = f"{call_id}.mp3"
+    try:
+        resp = httpx.post(
+            f"{url}/storage/v1/object/recordings/{path}",
+            headers={"Authorization": f"Bearer {key}", "apikey": key,
+                     "Content-Type": "audio/mpeg", "x-upsert": "true"},
+            content=audio,
+            timeout=60,
+        )
+        if resp.status_code in (200, 201):
+            return f"recordings/{path}"
+        log.warning("recording upload failed: %s %s", resp.status_code, resp.text[:200])
+    except httpx.HTTPError as err:
+        log.warning("recording upload failed: %s", err)
+    return None
+
+
 def sign_url(storage_path: str, expires_in: int = 3600) -> str | None:
     """Signed URL for a stored object; storage_path includes the bucket
     (e.g. "recordings/<call_id>.mp3", the shape set_call_recording stores)."""
