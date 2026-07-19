@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Haggl · the 60-second technical tour</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231a1410'/%3E%3Ctext%20x='16'%20y='23'%20font-size='20'%20font-family='sans-serif'%20font-weight='800'%20fill='%23ef6b45'%20text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E" />
+<style>
+/* Fonts self-hosted under /pitch-assets, zero external requests (same rule as the pitch deck). */
+@font-face{font-family:"Bricolage Grotesque";src:url("/pitch-assets/fonts/bricolage-latin.woff2") format("woff2");font-weight:600 800;font-style:normal;font-display:swap;}
+@font-face{font-family:"General Sans";src:url("/pitch-assets/fonts/generalsans-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:"General Sans";src:url("/pitch-assets/fonts/generalsans-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:"IBM Plex Mono";src:url("/pitch-assets/fonts/plexmono-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:"IBM Plex Mono";src:url("/pitch-assets/fonts/plexmono-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap;}
+
+:root{
+  --bg-product:#faf7f2; --bg-surface:#ffffff; --bg-surface-muted:#f5f1ec;
+  --ink:#1a1410; --text-2:#6b6058; --text-3:#a69c91;
+  --accent:#ef6b45; --accent-hover:#d95a34; --accent-tint:#fce3d8;
+  --flag:#c98a2e; --flag-tint:#f6e7cc; --border:#e8ddd3;
+  --font-d:"Bricolage Grotesque", ui-sans-serif, sans-serif;
+  --font-b:"General Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-m:"IBM Plex Mono", ui-monospace, monospace;
+  --shadow-card:0 1px 2px rgba(26,20,16,.06), 0 1px 8px rgba(26,20,16,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;overflow:hidden;background:#e7ddce;}
+body{font-family:var(--font-b);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 120% at 50% 0%, #efe6d8 0%, #e3d8c8 100%);}
+#stage{position:relative;width:1280px;height:800px;flex:0 0 auto;transform-origin:center center;
+  background:var(--bg-product);overflow:hidden;box-shadow:0 40px 120px rgba(26,20,16,.28);}
+
+/* ambient drifting blobs */
+.ambient{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+.blob{position:absolute;border-radius:50%;filter:blur(84px);will-change:transform;}
+.blob.b1{width:560px;height:560px;left:-160px;top:-180px;
+  background:radial-gradient(circle,rgba(239,107,69,.15),transparent 70%);animation:drift1 24s ease-in-out infinite;}
+.blob.b2{width:640px;height:640px;right:-200px;bottom:-220px;
+  background:radial-gradient(circle,rgba(201,138,46,.11),transparent 70%);animation:drift2 30s ease-in-out infinite;}
+.blob.b3{width:460px;height:460px;left:42%;top:34%;
+  background:radial-gradient(circle,rgba(239,107,69,.07),transparent 72%);animation:drift3 34s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-46px,-34px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-40px)}}
+
+/* persistent chrome */
+.brand{position:absolute;top:34px;left:64px;z-index:6;font-family:var(--font-d);font-weight:800;
+  font-size:26px;letter-spacing:-.01em;transition:color .4s;}
+.lh{position:relative;display:inline-block;}
+.lh::after{content:"";position:absolute;left:.067em;width:.60em;top:.42em;height:.19em;
+  background:var(--accent);border-radius:.09em;transform:rotate(-24deg);
+  box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.slot{position:absolute;top:41px;right:64px;z-index:6;font-family:var(--font-m);font-size:12px;
+  color:var(--text-3);letter-spacing:.02em;}
+#stage.darkmode .brand{color:#fff;}
+#stage.darkmode #railbar{background:#3a322c;}
+#stage.darkmode .tick{background:#4a413a;}
+#stage.darkmode .tick.on{background:var(--accent);}
+#stage.darkmode #clock{color:#fff;}
+
+/* timing rail */
+#rail{position:absolute;left:64px;right:64px;bottom:26px;z-index:6;}
+#railbar{position:relative;height:4px;border-radius:2px;background:var(--border);}
+#railfill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:2px;background:var(--accent);}
+.tick{position:absolute;top:-4px;width:2px;height:12px;background:#d8ccbf;border-radius:1px;}
+.tick.on{background:var(--accent);}
+#railmeta{display:flex;justify-content:space-between;margin-top:7px;font-family:var(--font-m);
+  font-size:11px;color:var(--text-3);}
+#clock{color:var(--ink);font-weight:500;}
+
+/* slides + transitions */
+.slide{position:absolute;inset:0;padding:96px 64px 92px;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transform:translateY(34px) scale(.988);z-index:2;
+  transition:opacity .5s cubic-bezier(.2,.7,.2,1), transform .5s cubic-bezier(.2,.7,.2,1);}
+.slide.on{opacity:1;pointer-events:auto;transform:none;z-index:3;}
+.slide.out{opacity:0;transform:translateY(-40px) scale(1.012);z-index:2;pointer-events:none;}
+.slide .an{opacity:0;}
+.slide.on .an{animation:rise .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.1s);}
+.slide.on h1.an{animation:riseH .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*.1s);}
+@keyframes rise{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;}}
+@keyframes riseH{from{opacity:0;transform:translateY(44px);filter:blur(12px);}
+  to{opacity:1;transform:none;filter:blur(0);}}
+
+.kicker{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.chip{display:inline-block;padding:7px 17px;border-radius:9999px;font-size:14px;font-weight:500;
+  letter-spacing:.02em;}
+.chip.cat{background:var(--accent-tint);color:var(--accent-hover);text-transform:uppercase;}
+.chip.crit{background:var(--flag-tint);color:var(--flag);}
+.chip.neutral{background:var(--bg-surface-muted);color:var(--text-2);}
+h1{font-family:var(--font-d);font-weight:800;font-size:70px;line-height:1.02;letter-spacing:-.015em;
+  margin-bottom:18px;}
+h1 .a{color:var(--accent);}
+.lede{font-size:23px;line-height:1.45;color:var(--text-2);max-width:1000px;}
+.lede b{color:var(--ink);font-weight:500;}
+.grow{flex:1;display:flex;flex-direction:column;justify-content:center;}
+
+.card{background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;
+  box-shadow:var(--shadow-card);padding:26px;}
+.card h3{font-size:22px;font-weight:600;line-height:1.25;margin-bottom:8px;}
+.card .sub{font-size:17px;color:var(--text-2);line-height:1.45;}
+.mono{font-family:var(--font-m);}
+.path{font-family:var(--font-m);font-size:16px;color:var(--text-2);}
+.files{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--font-m);font-size:14px;
+  color:var(--text-3);margin-top:26px;}
+.files b{color:var(--text-2);font-weight:500;}
+.arrow{font-family:var(--font-b);color:var(--text-3);font-size:26px;align-self:center;}
+
+/* S1 stack strip */
+.strip{display:flex;align-items:stretch;gap:14px;}
+.strip .card{flex:1;padding:32px 26px;min-height:238px;display:flex;flex-direction:column;justify-content:center;}
+.svc{font-family:var(--font-d);font-weight:700;font-size:29px;margin-bottom:16px;}
+.strip .sub{font-size:18px;}
+.models{margin-top:24px;font-family:var(--font-m);font-size:14.5px;color:var(--text-2);line-height:1.5;}
+.models b{color:var(--ink);font-weight:500;}
+
+/* S2 loop + ladder */
+.cols{display:flex;gap:28px;align-items:stretch;}
+.loopcol{flex:1.18;display:flex;flex-direction:column;gap:14px;justify-content:center;}
+.turn{display:flex;gap:16px;align-items:flex-start;}
+.who{flex:0 0 108px;font-family:var(--font-m);font-size:13px;color:var(--text-3);padding-top:16px;
+  text-align:right;}
+.bubble{flex:1;background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;
+  padding:17px 21px;font-size:18.5px;line-height:1.4;box-shadow:var(--shadow-card);}
+.bubble.tool{background:var(--bg-surface-muted);font-family:var(--font-m);font-size:16px;}
+.bubble.engine{border-color:var(--accent);}
+.bubble .tag{display:inline-block;margin-left:8px;padding:3px 13px;border-radius:9999px;
+  background:var(--accent-tint);color:var(--accent-hover);font-family:var(--font-b);
+  font-size:13px;font-weight:500;}
+.laddercol{flex:1;display:flex;}
+.laddercol .card{flex:1;display:flex;flex-direction:column;justify-content:center;}
+.laddercol h3{font-size:19px;}
+.ladder{list-style:none;counter-reset:rung;}
+.ladder li{counter-increment:rung;display:flex;gap:13px;align-items:baseline;
+  font-family:var(--font-m);font-size:16px;color:var(--text-2);padding:6.5px 0 6.5px 16px;
+  border-left:2px solid var(--border);}
+.ladder li::before{content:counter(rung,decimal-leading-zero);font-size:13px;color:var(--text-3);}
+.ladder li.hot{border-left-color:var(--accent);color:var(--ink);font-weight:500;}
+
+/* S3 the bluff story */
+.story{display:flex;gap:16px;align-items:stretch;}
+.story .step{flex:1;border-radius:16px;padding:28px 26px;display:flex;flex-direction:column;gap:12px;}
+.step .n{font-family:var(--font-m);font-size:14px;letter-spacing:.04em;}
+.step h3{font-family:var(--font-d);font-weight:700;font-size:26px;line-height:1.15;}
+.step p{font-size:18px;line-height:1.5;}
+.step.fail{background:var(--flag-tint);border:1px solid var(--flag);}
+.step.fail .n{color:var(--flag);}
+.step.fix{background:var(--ink);color:#fff;}
+.step.fix .n{color:#f0a58e;}
+.step.fix p{color:#e8ddd3;}
+.step.prove{background:var(--bg-surface);border:1px solid var(--border);box-shadow:var(--shadow-card);}
+.step.prove .n{color:var(--accent-hover);}
+.toolpills{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;}
+.toolpill{font-family:var(--font-m);font-size:14px;padding:7px 14px;border-radius:9999px;
+  background:rgba(255,255,255,.12);color:#fff;}
+
+/* S4 transport */
+.net{display:flex;gap:15px;align-items:center;}
+.net .card{flex:1;}
+.pstn{flex:0 0 176px;text-align:center;font-family:var(--font-d);font-weight:700;font-size:23px;
+  background:var(--ink);color:#fff;border-radius:9999px;padding:22px 0;}
+.slide.on .pstn{animation:rise .6s cubic-bezier(.2,.7,.2,1) .4s both, pulse 2.6s ease-in-out 1.4s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,107,69,.35);}
+  50%{box-shadow:0 0 0 16px rgba(239,107,69,0);}}
+.stackrow{display:flex;gap:14px;align-items:center;margin-top:18px;}
+.stackrow .card{flex:1;padding:20px 22px;}
+.evt{font-family:var(--font-m);font-size:15px;color:var(--text-2);line-height:1.6;}
+.pull{margin-top:30px;font-family:var(--font-d);font-weight:700;font-size:30px;line-height:1.25;
+  max-width:1120px;}
+.pull .a{color:var(--accent);}
+
+/* S5 config */
+.yamls{display:flex;gap:22px;align-items:center;}
+.yaml{flex:1;background:var(--ink);color:#e8ddd3;border-radius:16px;padding:28px 30px;
+  font-family:var(--font-m);font-size:16px;line-height:1.95;}
+.yaml .fn{color:#fff;font-weight:500;margin-bottom:12px;display:block;font-size:17px;}
+.yaml .k{color:#f0a58e;}
+.yaml .c{color:#8b7d70;}
+.swap{flex:0 0 76px;text-align:center;font-family:var(--font-d);font-size:40px;color:var(--accent);}
+.slide.on .swap{animation:rise .6s cubic-bezier(.2,.7,.2,1) .4s both, sway 2.2s ease-in-out 1.4s infinite;}
+@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+
+/* S6 close */
+.slide.dark{background:var(--ink);color:#fff;align-items:center;justify-content:center;
+  text-align:center;}
+.closer{font-family:var(--font-d);font-weight:800;font-size:64px;line-height:1.1;
+  letter-spacing:-.015em;max-width:1040px;}
+.closer .a{color:var(--accent);}
+.wordmark{margin-top:52px;font-family:var(--font-d);font-weight:800;font-size:38px;}
+.url{margin-top:18px;font-family:var(--font-m);font-size:16px;color:#a69c91;}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+  <div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+  <div class="brand"><span class="lh">H</span>aggl</div>
+  <div class="slot">TECH VIDEO · 60s · stack / architecture / implementation</div>
+
+  <!-- S1 · 0:00–0:08 · Stack -->
+  <section class="slide" data-t="0">
+    <div class="kicker an" style="--i:0"><span class="chip cat">Stack</span><span class="chip crit">boring on purpose</span></div>
+    <h1 class="an" style="--i:1">we kept the stack <span class="a">boring</span></h1>
+    <p class="lede an" style="--i:2">The hard part was never the plumbing. It was the phone call. So we spent our cleverness there.</p>
+    <div class="grow">
+      <div class="strip">
+        <div class="card an" style="--i:3"><div class="svc">Next.js</div><div class="sub">The app plus the live War Room</div></div>
+        <div class="arrow an" style="--i:3">→</div>
+        <div class="card an" style="--i:4"><div class="svc">FastAPI</div><div class="sub">The engine and the call tools</div></div>
+        <div class="arrow an" style="--i:4">→</div>
+        <div class="card an" style="--i:5"><div class="svc">Supabase</div><div class="sub">Postgres, storage, realtime</div></div>
+        <div class="arrow an" style="--i:5">→</div>
+        <div class="card an" style="--i:6"><div class="svc">ElevenLabs</div><div class="sub">Voice agents, brain runs gpt-5.4</div></div>
+        <div class="arrow an" style="--i:6">→</div>
+        <div class="card an" style="--i:7"><div class="svc">Twilio</div><div class="sub">Every call is a real call</div></div>
+      </div>
+      <div class="files an" style="--i:9"><span>Four of us built four parts against frozen schemas in <span class="path">contracts/</span>, and they just fit.</span></div>
+    </div>
+  </section>
+
+  <!-- S2 · 0:08–0:22 · The model never picks the price -->
+  <section class="slide" data-t="8">
+    <div class="kicker an" style="--i:0"><span class="chip cat">Architecture</span><span class="chip crit">the price moves for real reasons</span></div>
+    <h1 class="an" style="--i:1">the AI never <span class="a">picks the price</span></h1>
+    <p class="lede an" style="--i:2">You don't hand a chatbot someone's money. A state machine runs the deal. The voice just does the talking.</p>
+    <div class="grow">
+      <div class="cols">
+        <div class="loopcol">
+          <div class="turn an" style="--i:3"><div class="who">rep</div><div class="bubble">“I can’t change charges. That’s our policy.”</div></div>
+          <div class="turn an" style="--i:4"><div class="who">agent → tool</div><div class="bubble tool">report_lever_result(stonewalled)</div></div>
+          <div class="turn an" style="--i:5"><div class="who">engine</div><div class="bubble engine mono">advance() <span class="tag">forced move</span></div></div>
+          <div class="turn an" style="--i:6"><div class="who">server → agent</div><div class="bubble tool">next: reach_authority</div></div>
+        </div>
+        <div class="laddercol an" style="--i:5">
+          <div class="card">
+            <h3>The negotiation ladder lives in YAML</h3>
+            <ol class="ladder">
+              <li>open_and_hold_account</li>
+              <li>reach_authority</li>
+              <li>financial_assistance_screen</li>
+              <li class="hot">line_item_disputes</li>
+              <li class="hot">benchmark_anchor</li>
+              <li>lump_sum_settlement</li>
+              <li>escalate_or_exit</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="files an" style="--i:8"><span>An offer under the patient's floor gets rejected before the agent can even say it.</span></div>
+    </div>
+  </section>
+
+  <!-- S3 · 0:22–0:35 · Never bluffs -->
+  <section class="slide" data-t="22">
+    <div class="kicker an" style="--i:0"><span class="chip cat">Implementation</span><span class="chip crit">honest about the hard parts</span></div>
+    <h1 class="an" style="--i:1">we made sure it <span class="a">never bluffs</span></h1>
+    <p class="lede an" style="--i:2">It tried once. On our very first call, it made up a billing code out of thin air. So we shut that down for good.</p>
+    <div class="grow">
+      <div class="story">
+        <div class="step fail an" style="--i:3">
+          <span class="n">THE SCARE</span>
+          <h3>It invented a code.</h3>
+          <p>A tool-less agent will make things up. We watched ours do it, live on a phone line.</p>
+        </div>
+        <div class="step fix an" style="--i:4">
+          <span class="n">THE FIX</span>
+          <h3>Every number goes through a tool.</h3>
+          <p>Now these are the only things it can say out loud:</p>
+          <div class="toolpills"><span class="toolpill">get_case_brief</span><span class="toolpill">get_benchmark</span><span class="toolpill">report_lever_result</span><span class="toolpill">end_call_summary</span></div>
+        </div>
+        <div class="step prove an" style="--i:5">
+          <span class="n">THE PROOF</span>
+          <h3>Real hospital prices.</h3>
+          <p>We pulled Mass General's machine-readable price file. Their own published cash price, $2,633.25, is the number the agent negotiates against.</p>
+        </div>
+      </div>
+      <div class="files an" style="--i:7"><span>After the call, an eval re-checks every number it spoke. And it always admits it's an AI. <span class="path">never_deny_ai: true</span></span></div>
+    </div>
+  </section>
+
+  <!-- S4 · 0:35–0:45 · No demo mode -->
+  <section class="slide" data-t="35">
+    <div class="kicker an" style="--i:0"><span class="chip cat">Implementation</span><span class="chip crit">three styles, one real path</span></div>
+    <h1 class="an" style="--i:1">there is <span class="a">no demo mode</span></h1>
+    <p class="lede an" style="--i:2">No canned audio. No faked dashboard. Persona calls and the live human call ride the exact same wire.</p>
+    <div class="grow">
+      <div class="net">
+        <div class="card an" style="--i:3"><h3>Negotiator</h3><div class="sub">Dials out from our real number</div></div>
+        <div class="pstn an" style="--i:4">PSTN</div>
+        <div class="card an" style="--i:5"><h3>Personas</h3><div class="sub">Stonewaller, policy-citer, collections</div></div>
+        <div class="card an" style="--i:6"><h3>A real human</h3><div class="sub">On a cell, for the showstopper</div></div>
+      </div>
+      <div class="stackrow">
+        <div class="card an" style="--i:7"><h3 class="mono">call_events</h3><div class="evt">status · transcript · quote · state_change · outcome</div></div>
+        <div class="arrow an" style="--i:7">→</div>
+        <div class="card an" style="--i:8"><h3>Supabase Realtime</h3><div class="sub">Streams straight to the screen</div></div>
+        <div class="arrow an" style="--i:8">→</div>
+        <div class="card an" style="--i:9"><h3>War Room</h3><div class="sub">Live tickers and price moves</div></div>
+      </div>
+      <p class="pull an" style="--i:10">When the calls went real, the War Room needed <span class="a">zero changes</span>.</p>
+    </div>
+  </section>
+
+  <!-- S5 · 0:45–0:55 · One file -->
+  <section class="slide" data-t="45">
+    <div class="kicker an" style="--i:0"><span class="chip cat">Architecture</span><span class="chip crit">config, not code</span></div>
+    <h1 class="an" style="--i:1">new market? <span class="a">one file</span></h1>
+    <p class="lede an" style="--i:2">The brief asked for config over code. We actually built it. The engine reads YAML and knows nothing about medicine.</p>
+    <div class="grow">
+      <div class="yamls">
+        <div class="yaml an" style="--i:3"><span class="fn">medical_bills.yaml</span>
+<span class="k">red_flags:</span> duplicate · upcode · unbundle<br/>
+<span class="k">ladder:</span> 9 rungs <span class="c"># + 5 for collections</span><br/>
+<span class="k">personas:</span> stonewaller · policy_citer<br/>
+<span class="k">never_deny_ai:</span> true</div>
+        <div class="swap an" style="--i:4">⇄</div>
+        <div class="yaml an" style="--i:5"><span class="fn">moving.yaml</span>
+<span class="k">red_flags:</span> lowball <span class="c"># 30% under = warning</span><br/>
+<span class="k">ladder:</span> describe_job → close_or_decline<br/>
+<span class="k">personas:</span> hard_sell · lowballer<br/>
+<span class="k">opening_line:</span> “…quote for my client…”</div>
+      </div>
+      <div class="files an" style="--i:6"><span>Same engine. Same tools. Swap the YAML, swap the market.</span></div>
+    </div>
+  </section>
+
+  <!-- S6 · 0:55–1:00 · Close -->
+  <section class="slide dark" data-t="55">
+    <div class="closer an" style="--i:0">Code decides what’s true.<br/>The model decides <span class="a">how to say it</span>.</div>
+    <div class="wordmark an" style="--i:2"><span class="lh">H</span>aggl</div>
+    <div class="url an" style="--i:3">hagglfor.me · docs/architecture.md</div>
+  </section>
+
+  <div id="rail">
+    <div id="railbar"><div id="railfill"></div></div>
+    <div id="railmeta"><span id="clock">00.0s</span><span>Space to play · arrows to step · R to reset</span><span>60s</span></div>
+  </div>
+</div></div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage'), slides=[...document.querySelectorAll('.slide')];
+  const beats=slides.map(s=>parseFloat(s.dataset.t)), DUR=60;
+  const fill=document.getElementById('railfill'), clock=document.getElementById('clock');
+  const bar=document.getElementById('railbar');
+  const ticks=beats.map(t=>{const d=document.createElement('div');d.className='tick';
+    d.style.left=(t/DUR*100)+'%';bar.appendChild(d);return d;});
+
+  let cur=0, running=false, t0=0, raf=0, outTimer=0;
+  function show(i){const next=Math.max(0,Math.min(slides.length-1,i));
+    if(next===cur&&slides[cur].classList.contains('on'))return;
+    const prev=cur;cur=next;
+    clearTimeout(outTimer);
+    slides.forEach((s,j)=>{s.classList.remove('out');s.classList.toggle('on',j===cur);});
+    if(prev!==cur&&slides[prev]){slides[prev].classList.add('out');
+      outTimer=setTimeout(()=>slides[prev].classList.remove('out'),550);}
+    ticks.forEach((t,j)=>t.classList.toggle('on',j<=cur));
+    stage.classList.toggle('darkmode',slides[cur].classList.contains('dark'));}
+  function setClock(sec){fill.style.width=Math.min(100,sec/DUR*100)+'%';
+    clock.textContent=sec.toFixed(1).padStart(4,'0')+'s';}
+  function loop(now){const sec=(now-t0)/1000;
+    if(sec>=DUR){setClock(DUR);running=false;return;}
+    setClock(sec);
+    let i=0;for(let j=0;j<beats.length;j++)if(sec>=beats[j])i=j;
+    if(i!==cur)show(i);
+    raf=requestAnimationFrame(loop);}
+  function start(){running=true;show(0);t0=performance.now();raf=requestAnimationFrame(loop);}
+  function stop(){running=false;cancelAnimationFrame(raf);}
+  function reset(){stop();show(0);setClock(0);}
+
+  addEventListener('keydown',e=>{
+    if(e.key===' '){e.preventDefault();running?stop():start();}
+    else if(e.key==='ArrowRight'){stop();show(cur+1);setClock(beats[cur]);}
+    else if(e.key==='ArrowLeft'){stop();show(cur-1);setClock(beats[cur]);}
+    else if(e.key==='r'||e.key==='R'){reset();}});
+
+  function fit(){const s=Math.min(innerWidth/1280,innerHeight/800);
+    stage.style.transform='scale('+Math.min(s,1.4)+')';}
+  addEventListener('resize',fit);fit();
+  slides[0].classList.add('on');setClock(0);
+})();
+</script>
+</body>
+</html>
