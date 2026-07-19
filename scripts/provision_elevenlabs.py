@@ -216,6 +216,16 @@ NEGOTIATOR_TOOLS = [
 
 # ElevenLabs native turn config for the negotiator: hang up after ~10s of silence
 # as a per-minute-billing backstop (default -1 disables it).
+# The live API requires name (+ accepts description) on the built-in tool object —
+# a bare {} 400s with "Field required: ...end_call.name". Description biases a FAST
+# hangup at the mutual goodbye instead of the model's own "natural conclusion" judgment.
+END_CALL_TOOL = {
+    "name": "end_call",
+    "description": ("End the call as soon as both you and the rep have exchanged a closing "
+                    "thank-you or goodbye and there is no outstanding ask. Do not wait for "
+                    "the rep to hang up first, and do not linger on the line."),
+}
+
 NEGOTIATOR_TURN = {"silence_end_call_timeout": 10}
 
 
@@ -351,7 +361,7 @@ def main() -> None:
                 # The old prompt.tools {"type":"system"} shape is HARD-REJECTED by the API —
                 # built_in_tools.end_call = {} is the accepted form. The LLM passes a reason
                 # (+ optional farewell). Plus a silence backstop so we never sit on a per-minute line.
-                cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = {}
+                cc["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
                 cc.setdefault("turn", {}).update(NEGOTIATOR_TURN)
             # pin_voice agents override the live voice with the config default;
             # everything else keeps its dashboard voice.
@@ -391,7 +401,7 @@ def main() -> None:
             }
             if name == "negotiator":
                 # Self-hangup + silence backstop on create (see the PATCH branch note).
-                conversation_config["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = {}
+                conversation_config["agent"]["prompt"].setdefault("built_in_tools", {})["end_call"] = END_CALL_TOOL
                 conversation_config["turn"] = dict(NEGOTIATOR_TURN)
             create_body: dict = {"name": name, "conversation_config": conversation_config}
             if name == "negotiator":  # let the Voice Picker override tts.voice_id per call
