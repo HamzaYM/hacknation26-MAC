@@ -144,7 +144,7 @@ NEGOTIATOR_TOOLS = [
                         "items": {"type": "string", "description": "One coverage tag from the vocabulary"},
                         "description": (
                             "Coverage tags you covered this exchange. Vocabulary — "
-                            "open_and_hold_account: account_hold_requested, itemized_bill_status, rep_name_captured; "
+                            "open_and_hold_account: account_hold_requested, records_alignment_confirmed, rep_name_captured; "
                             "financial_assistance_screen: fap_exists, pauses_collections_while_pending; "
                             "diagnostic_questions (collections): interest_accruing, will_sue, credit_bureau_reported, "
                             "debt_owned_or_bought, predetermined_settlement_floor."
