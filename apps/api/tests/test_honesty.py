@@ -33,6 +33,31 @@ class TestDisclosure:
         assert result["checks"]["disclosure"]["passed"] is False
         assert result["passed"] is False
 
+    def test_only_if_asked_mode_passes_without_proactive_disclosure(self):
+        """The live policy: competence-first open, disclose only when asked.
+        A call where the rep never asks must PASS the audit (it used to fail
+        D1 and render 'Honesty audit: FAILED' on a fully compliant call)."""
+        tr = _transcript([
+            ("agent", "Hi, this is Alex. I'm calling about Maya Chen's account."),
+            ("rep", "Go ahead."),
+            ("agent", "There's a duplicate charge I'd like removed."),
+            ("rep", "Let me look."),
+        ])
+        result = audit_call(tr, ALLOWED, disclosure_mode="only_if_asked")
+        assert result["checks"]["disclosure"]["passed"] is True
+        assert "not required" in result["checks"]["disclosure"]["detail"]
+        assert result["passed"] is True
+
+    def test_only_if_asked_mode_still_fails_on_denial(self):
+        tr = _transcript([
+            ("agent", "Hi, this is Alex. I'm calling about Maya Chen's account."),
+            ("rep", "Are you a robot?"),
+            ("agent", "No, I'm not a robot."),
+        ])
+        result = audit_call(tr, ALLOWED, disclosure_mode="only_if_asked")
+        assert result["checks"]["robot_question"]["passed"] is False
+        assert result["passed"] is False
+
 
 class TestRobotQuestion:
     def test_confirmed_ai_passes(self):

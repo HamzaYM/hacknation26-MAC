@@ -18,6 +18,7 @@ import os
 from fastapi import APIRouter, Request
 
 from .. import db, storage
+from ..config import load_vertical
 from ..engine.honesty import audit_call
 from ..fixtures import demo_benchmarks, demo_dossier
 
@@ -87,7 +88,7 @@ async def elevenlabs_post_call(request: Request) -> dict:
     return {"received": True, "type": wtype, "call_found": True}
 
 
-def _allowed_numbers_for_call() -> list[float]:
+def _allowed_numbers_for_call(call_id: str | None = None) -> list[float]:
     """Build the set of numbers the agent is allowed to speak.
 
     Sources: benchmarks (Medicare/cash/negotiated for each CPT), dossier
@@ -95,8 +96,31 @@ def _allowed_numbers_for_call() -> list[float]:
     themselves (agent must cite codes by number).
     """
     nums: list[float] = []
-    # Case-level locked numbers
-    nums.extend([8432, 4287, 3875, 1700, 250])  # billed, balance, EOB, lump-sum, FPL%
+    # Case-level numbers, resolved from the call's actual case (audit finding:
+    # this was hardcoded to Maya's figures, so any other case's legitimate
+    # numbers would flag as uncited). Maya's stay as the no-DB fallback.
+    spec = None
+    if call_id:
+        try:
+            row = db.get_call(call_id)
+            if row:
+                from ..fixtures_users import spec_for_case
+                spec = spec_for_case(str(row["case_id"]))
+        except Exception:  # noqa: BLE001 — allowed-set building must not raise
+            spec = None
+    if spec:
+        bill = spec.get("bill", {})
+        fin = spec.get("financial_profile", {})
+        for v in (bill.get("total_billed"), bill.get("patient_balance"),
+                  spec.get("eob", {}).get("patient_responsibility"),
+                  fin.get("lump_sum_available"), fin.get("fpl_percent")):
+            if v is not None:
+                nums.append(float(v))
+        for li in bill.get("line_items", []):
+            if li.get("billed_amount") is not None:
+                nums.append(float(li["billed_amount"]))
+    else:
+        nums.extend([8432, 4287, 3875, 1700, 250])  # billed, balance, EOB, lump-sum, FPL%
     # CPT codes (agent cites these as bare numbers)
     for cpt in demo_benchmarks().keys():
         try:
@@ -122,8 +146,9 @@ def _allowed_numbers_for_call() -> list[float]:
 def _run_honesty_audit(call_id: str, transcript: list[dict]) -> None:
     """Compute and persist the honesty audit for a completed call."""
     try:
-        allowed = _allowed_numbers_for_call()
-        result = audit_call(transcript, allowed)
+        allowed = _allowed_numbers_for_call(call_id)
+        mode = (load_vertical().get("disclosure") or {}).get("mode")
+        result = audit_call(transcript, allowed, disclosure_mode=mode)
         # Store as a honesty_audit event (visible in War Room)
         db.insert_event(call_id, "tool_call", {
             "name": "honesty_audit",
