@@ -762,6 +762,62 @@ main { max-width: 960px; margin: 0 auto; padding: var(--space-xl) var(--space-lg
 .wr-docs-caption { font-size: 11px; color: rgba(245,241,236,0.45); margin: 0 0 10px; line-height: 1.4; }
 .wr-doc-frame { width: 100%; height: 360px; border: 1px solid rgba(245,241,236,0.18); border-radius: var(--radius-input); background: #fff; }
 
+/* Header row so the "Enlarge" affordance sits beside the panel title. */
+.wr-docs-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
+.wr-docs-expand {
+  font-family: var(--font-mono); font-size: 11px; padding: 3px 10px;
+  border-radius: var(--radius-pill); border: 1px solid rgba(245,241,236,0.15);
+  background: transparent; color: rgba(245,241,236,0.6); cursor: pointer;
+}
+.wr-docs-expand:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Small preview: the whole frame is a click target; the iframe is inert so the
+   click reaches the wrapper. A hint badge fades up on hover. */
+.wr-doc-preview { position: relative; cursor: pointer; border-radius: var(--radius-input); }
+.wr-doc-preview .wr-doc-frame { pointer-events: none; display: block; transition: border-color 0.15s ease; }
+.wr-doc-preview:hover .wr-doc-frame,
+.wr-doc-preview:focus-visible .wr-doc-frame { border-color: var(--accent); }
+.wr-doc-preview:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wr-doc-hint {
+  position: absolute; bottom: 8px; right: 8px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.02em;
+  padding: 3px 8px; border-radius: var(--radius-pill);
+  background: rgba(26,20,16,0.82); color: #f5f1ec; border: 1px solid rgba(245,241,236,0.18);
+  opacity: 0.75; transition: opacity 0.15s ease; pointer-events: none;
+}
+.wr-doc-preview:hover .wr-doc-hint,
+.wr-doc-preview:focus-visible .wr-doc-hint { opacity: 1; }
+
+/* Full-screen lightbox — the intake .upload-preview-* pattern, dark-themed for
+   the War Room. Dark scrim, ~90vw/90vh centered frame, click-outside + ✕ close. */
+.wr-doc-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(10, 8, 6, 0.82);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-xl);
+}
+.wr-doc-lightbox {
+  background: #1a1410;
+  border: 1px solid rgba(245,241,236,0.15);
+  border-radius: var(--radius-modal);
+  width: 90vw; height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+}
+.wr-doc-lightbox-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid rgba(245,241,236,0.12);
+}
+.wr-doc-lightbox-title { font-size: 14px; color: #f5f1ec; }
+.wr-doc-lightbox-title .mono-figure { font-size: 12px; color: rgba(245,241,236,0.5); }
+.wr-doc-lightbox-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1; color: rgba(245,241,236,0.6); padding: 4px 8px;
+}
+.wr-doc-lightbox-close:hover { color: #f5f1ec; }
+.wr-doc-lightbox-frame { flex: 1; width: 100%; border: none; background: #fff; }
+
 /* ---- voice picker (/voice) ---- */
 .voice-current {
   display: flex;
