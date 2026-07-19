@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .. import db, scheduler
+from .. import case_store, db, scheduler
 from ..config import load_vertical
 from ..engine.dossier import compute_501r_window
 from ..engine.state_machine import LadderStateMachine
@@ -117,16 +117,24 @@ class LogEvent(BaseModel):
 def get_case_brief(body: dict) -> dict:
     """Verbatim JobSpec facts for the call (challenge: spec reused verbatim),
     with derived_flags computed live by the engine. When the body carries a
-    call_id, the launched call's stored case resolves the spec (fixture
-    fallback: Maya's demo case)."""
+    call_id, the launched call's stored case resolves the spec: the fixture
+    registry first (Maya/Dan/Nina, unchanged), then case_store (cases created
+    via POST /cases or a scenario load), fixture fallback: Maya's demo case."""
     spec_dict = DEMO_JOB_SPEC
+    case_id = None
     call_id = _resolve_call_id((body or {}).get("call_id"))
     if call_id:
         row = db.get_call(call_id)
         if row is not None:
-            spec_dict = spec_for_case(str(row["case_id"])) or DEMO_JOB_SPEC
+            case_id = str(row["case_id"])
+            spec_dict = spec_for_case(case_id) or case_store.get_job_spec(case_id) or DEMO_JOB_SPEC
     spec = dict(spec_dict)
-    spec["derived_flags"] = [f.model_dump() for f in flags_for_spec(spec_dict)]
+    # A scenario load's flags are the code-generated answer key — already
+    # correct for that case's own codes; only recompute (against the 5-CPT
+    # demo fixture) when nothing was stored for this case.
+    stored_flags = case_store.get(case_id, "flags") if case_id else None
+    spec["derived_flags"] = stored_flags if stored_flags else [
+        f.model_dump() for f in flags_for_spec(spec_dict)]
     bill = spec_dict.get("bill", {}) or {}
     days_since, inside_window = compute_501r_window(
         bill.get("statement_date"), bool(bill.get("nonprofit_status")))
@@ -137,10 +145,62 @@ def get_case_brief(body: dict) -> dict:
     }
 
 
+def _benchmark_row_from_line(line: dict) -> dict:
+    """Shape a contracts/anchor_set.schema.json line_benchmark into the same
+    flat dict shape get_benchmark has always returned (cpt/description/
+    medicare_rate/mrf_cash/mrf_negotiated_median/band_low/band_high/
+    source_url), so the negotiator prompt's existing handling of this tool's
+    response keeps working unchanged. Adds medicare_multiple/coverage as
+    extra fields (additive — old callers that only read the original keys
+    are unaffected)."""
+    anchors = {a.get("method"): a for a in (line.get("anchors") or [])}
+    medicare = anchors.get("medicare")
+    cash = anchors.get("cash_price")
+    band = anchors.get("cross_payer_band") or {}
+    fair_band = line.get("fair_band") or {}
+    return {
+        "cpt": line.get("code"),
+        "description": line.get("description"),
+        "medicare_rate": medicare.get("value") if medicare else None,
+        "mrf_cash": cash.get("value") if cash else None,
+        "mrf_negotiated_median": band.get("value") if band else None,
+        "band_low": (band.get("band") or {}).get("p25", fair_band.get("low")),
+        "band_high": (band.get("band") or {}).get("p75", fair_band.get("high")),
+        "source_url": medicare.get("source_url") if medicare else None,
+        "medicare_multiple": line.get("medicare_multiple"),
+        "coverage": line.get("coverage"),
+    }
+
+
+def _case_id_for_call(call_id: str | None) -> str | None:
+    if not call_id:
+        return None
+    row = db.get_call(call_id)
+    return str(row["case_id"]) if row else None
+
+
 @router.post("/get_benchmark")
 def get_benchmark(body: dict) -> dict:
-    """The only citable price source. body: {"cpt": "71046"}"""
+    """The only citable price source. body: {"cpt": "71046", "call_id": "..."}.
+
+    Resolves the call's case; when that case has a stored benchmark_report
+    (scenario load / a case run through the generalized pipeline), the line's
+    anchors are served AS STORED — no recomputation mid-call, so a number
+    spoken on the call always matches the number in the case's report (no
+    drift). Falls back to the 5-CPT demo fixture — the exact prior
+    behavior — when the case has no stored report (Maya via DEMO_CASE_ID,
+    or no call_id at all)."""
     cpt = str(body.get("cpt", ""))
+    call_id = _resolve_call_id(body.get("call_id"))
+    case_id = _case_id_for_call(call_id) or DEMO_CASE_ID
+
+    report = case_store.get(case_id, "benchmark_report")
+    if report:
+        line = next((l for l in report.get("lines", []) if str(l.get("code")) == cpt), None)
+        if not line:
+            return {"found": False, "say": "I don't have a benchmark for that code."}
+        return {"found": True, "benchmark": _benchmark_row_from_line(line)}
+
     row = demo_benchmarks().get(cpt)
     if not row:
         return {"found": False, "say": "I don't have a benchmark for that code."}

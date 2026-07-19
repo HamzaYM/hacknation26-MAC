@@ -25,7 +25,7 @@ from . import db
 from .config import load_vertical
 from .engine.dossier import build_dossier
 from .engine.state_machine import LadderStateMachine
-from .fixtures import DEMO_JOB_SPEC, demo_benchmarks, demo_flags
+from .fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_benchmarks, demo_flags
 from .models import JobSpec
 
 log = logging.getLogger("negotiator.simulator")
@@ -40,6 +40,16 @@ ENTITY_PERSONAS = {
 DISCLOSURE = (
     "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient "
     "Maya Chen, who has authorized me to discuss {ref}. "
+    "This call may be recorded on both ends."
+)
+
+# Case-generic version (build_generic_sequence, below) — the four hand-authored
+# scenarios above stay literally Maya's script (DISCLOSURE, unchanged) so the
+# existing test_simulator.py assertions keep passing byte-for-byte; every
+# OTHER case gets its own patient name templated in here instead.
+DISCLOSURE_TEMPLATE = (
+    "Hi, my name is Alex — I'm an AI assistant calling on behalf of your patient "
+    "{patient}, who has authorized me to discuss {ref}. "
     "This call may be recorded on both ends."
 )
 
@@ -352,15 +362,126 @@ SCENARIOS = {
 }
 
 
-def build_sequence(persona: str, call_id: str) -> list[dict]:
-    """PURE: the full ordered step list for one simulated call."""
+# ── case-generic driver ─────────────────────────────────────────────────────
+def _resolve_case_context(case_id: str) -> tuple[dict, list]:
+    """job_spec + engine-computed flags for ANY case: the fixture registry
+    first (Maya/Dan/Nina, unchanged), then case_store (POST /cases or a
+    scenario load). Falls back to Maya's demo spec as a last resort so a bad
+    case_id degrades to something showable instead of crashing a background
+    task. Lazy imports mirror fixtures_users.py's own pattern (cycle-free)."""
+    from . import case_store
+    from .fixtures_users import flags_for_spec, spec_for_case
+
+    spec_dict = spec_for_case(case_id)
+    if spec_dict is None:
+        spec_dict = case_store.get_job_spec(case_id)
+    if spec_dict is None:
+        spec_dict = DEMO_JOB_SPEC
+    flags = flags_for_spec(spec_dict)
+    return spec_dict, flags
+
+
+def build_generic_sequence(call_id: str, case_id: str, entity_name: str | None = None) -> list[dict]:
+    """Case-generic scripted call: the SAME beats as the hand-authored
+    personas above (disclose -> open account -> cite top flag -> benchmark
+    anchor -> lump-sum settle -> wrap), but every number/name is pulled from
+    the REAL case (job_spec + a real engine-built dossier) instead of
+    literals. Used for any case that isn't the Maya demo — the hand-authored
+    scripts above keep serving DEMO_CASE_ID exactly as before. PURE: no DB,
+    no sleeps — deterministic for the same case_id/call_id/entity_name."""
+    spec_dict, flags = _resolve_case_context(case_id)
+    spec = JobSpec.model_validate(spec_dict)
+    entity = next((e for e in spec.entities if e.name == entity_name), None) \
+        if entity_name else None
+    entity = entity or (spec.entities[0] if spec.entities else None)
+    if entity is None:
+        raise ValueError(f"case {case_id!r} has no entities to simulate a call against")
+
+    benchmarks = demo_benchmarks()  # TODO(WS1/WS2): case-scoped lookup layer
+    dossier = build_dossier(spec, flags, benchmarks, load_vertical(), entity=entity)
+    sm = LadderStateMachine(load_vertical())
+    sm.ensure_call(call_id, dossier)
+    cur = sm.current_rung(call_id)
+
+    patient_name = spec.patient.get("legal_name") or "the patient"
+    balance = entity.balance if entity.balance is not None else (spec.bill.patient_balance or 0.0)
+    top_flag = max(flags, key=lambda f: f.dollar_impact) if flags else None
+
+    steps = [
+        _status("ringing"),
+        _status("live"),
+        _tool("disclose_ai", "disclosed + recording consent"),
+        _t("agent", DISCLOSURE_TEMPLATE.format(
+            patient=patient_name, ref=f"account {spec.bill.account_number}")),
+        _t("rep", f"This is {entity.name}. What do you need?"),
+        _ev("state_change", rung=cur["rung"], rung_index=cur["rung_index"]),
+        _t("agent", f"I'd like to review the balance on account {spec.bill.account_number} "
+                    "and ask you to hold any collections activity while we do."),
+        _t("rep", f"Balance is ${balance:,.2f}. That's what's on file."),
+        _quote(round(balance, 2)),
+    ]
+    if top_flag:
+        steps += [
+            _t("agent", f"I see a {top_flag.type} charge on code {top_flag.cpt} worth about "
+                        f"${top_flag.dollar_impact:,.2f} — can we correct that?"),
+            _tool(lever_event_name(f"error_{top_flag.type}_{top_flag.cpt}"),
+                 f"{top_flag.type} {top_flag.cpt} (${top_flag.dollar_impact:,.2f}) cited"),
+        ]
+    resp = sm.advance(call_id, cur["rung"], "accepted")
+    steps += [_sc(resp)]
+    steps += [
+        _tool(lever_event_name("benchmark_anchor"),
+             f"Medicare-anchored ask of ${dossier.anchor:,.0f} cited"),
+        _t("agent", "Based on Medicare-anchored pricing for these codes, a fair figure here "
+                    f"is closer to ${dossier.target:,.0f}."),
+        _t("rep", f"Best I can do is ${dossier.target:,.0f}."),
+        _quote(round(dossier.target, 2)),
+        _t("agent", f"{patient_name} can settle today, in one payment, at ${dossier.floor:,.0f}."),
+        _quote(round(dossier.floor, 2)),
+        _t("rep", f"${dossier.floor:,.0f} today, paid in full — reference GEN-{call_id[:8].upper()}."),
+        _t("agent", f"Thank you — noting reference GEN-{call_id[:8].upper()}, "
+                    f"${dossier.floor:,.0f} paid in full."),
+        _tool("end_call_summary", f"reduction — settled ${dossier.floor:,.0f} of ${balance:,.0f}"),
+        _tool("honesty_audit", HONESTY_PASS),
+        _outcome(
+            call_id=call_id,
+            outcome_type="reduction",
+            original_amount=round(balance, 2),
+            final_amount=round(dossier.floor, 2),
+            reduction_pct=round(100 * (1 - dossier.floor / balance), 1) if balance else None,
+            winning_lever="lump_sum_settlement",
+            reference_number=f"GEN-{call_id[:8].upper()}",
+            rep_name="Rep",
+            next_action="settlement confirmation pending",
+            honesty_audit={"passed": True,
+                           "checked_claims": [f"${balance:,.2f} balance (case data)",
+                                              f"${dossier.floor:,.0f} floor (dossier)"]},
+        ),
+        _status("ended"),
+    ]
+    return steps
+
+
+def build_sequence(persona: str, call_id: str, case_id: str | None = None,
+                   entity_name: str | None = None) -> list[dict]:
+    """PURE: the full ordered step list for one simulated call.
+
+    Maya's demo (case_id omitted, or DEMO_CASE_ID) keeps the hand-authored,
+    line-perfect persona scripts (SCENARIOS above) exactly as before — every
+    existing test_simulator.py assertion exercises this path unchanged. Any
+    OTHER case_id gets the case-generic templated driver
+    (build_generic_sequence), so a simulated call for a case built through
+    the generalized pipeline speaks that case's own numbers, not Maya's."""
+    if case_id and case_id != DEMO_CASE_ID:
+        return build_generic_sequence(call_id, case_id, entity_name)
     return SCENARIOS[persona](call_id)
 
 
 # ── async player ──────────────────────────────────────────────────────────
-async def play_call(call_id: str, persona: str) -> None:
+async def play_call(call_id: str, persona: str, case_id: str | None = None,
+                    entity_name: str | None = None) -> None:
     try:
-        steps = build_sequence(persona, call_id)
+        steps = build_sequence(persona, call_id, case_id=case_id, entity_name=entity_name)
     except Exception:  # noqa: BLE001 — a bad scenario must not kill the server
         log.exception("simulator: failed to build sequence for %s", call_id)
         await asyncio.to_thread(db.update_call_status, call_id, "failed")
@@ -385,6 +506,7 @@ async def play_call(call_id: str, persona: str) -> None:
     log.info("simulator: call %s (%s) finished, %d events", call_id, persona, len(event_ids))
 
 
-async def play_calls(specs: list[tuple[str, str]]) -> None:
-    """Run all simulated calls in parallel (one BackgroundTask for the batch)."""
-    await asyncio.gather(*(play_call(call_id, persona) for call_id, persona in specs))
+async def play_calls(specs: list[tuple]) -> None:
+    """Run all simulated calls in parallel (one BackgroundTask for the batch).
+    Each spec is (call_id, persona) or (call_id, persona, case_id[, entity_name])."""
+    await asyncio.gather(*(play_call(*s) for s in specs))

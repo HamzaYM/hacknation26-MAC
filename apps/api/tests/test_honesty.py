@@ -1,4 +1,5 @@
-"""Tests for the deterministic honesty audit (engine/honesty.py)."""
+"""Tests for the deterministic honesty audit (engine/honesty.py) and its
+case-scoped allowed-numbers builder (routers/webhooks.py)."""
 import pytest
 from app.engine.honesty import audit_call
 
@@ -147,3 +148,73 @@ class TestOverallResult:
         assert result["checks"]["disclosure"]["passed"] is True
         assert result["checks"]["robot_question"]["passed"] is True
         assert result["checks"]["numbers"]["passed"] is True
+
+
+class TestAllowedNumbersForCallCaseScoped:
+    """routers/webhooks._allowed_numbers_for_call must build the citable set
+    from the CALL'S OWN case (case_store allowed_numbers, scenario answer key
+    or benchmark report), with the global fixture set as fallback ONLY for
+    DEMO_CASE_ID / no call row / no stored allowed_numbers — generalized
+    pipeline, WS3."""
+
+    CASE_ID = "55555555-5555-5555-5555-555555555555"
+    CALL_ID = "66666666-6666-6666-6666-666666666666"
+
+    def test_case_with_stored_allowed_numbers_uses_them_not_the_demo_set(self, monkeypatch):
+        from app import case_store, db
+        from app.routers import webhooks
+
+        case_store.put(self.CASE_ID, "job_spec", {
+            "case_id": self.CASE_ID,
+            "bill": {"total_billed": 500.0, "patient_balance": 500.0, "line_items": []},
+            "eob": {},
+            "financial_profile": {},
+        })
+        case_store.put(self.CASE_ID, "allowed_numbers", [999.0, 71046.0])
+        monkeypatch.setattr(db, "get_call", lambda call_id: (
+            {"id": self.CALL_ID, "case_id": self.CASE_ID} if call_id == self.CALL_ID else None))
+
+        nums = webhooks._allowed_numbers_for_call(self.CALL_ID)
+        assert 999.0 in nums
+        assert 71046.0 in nums
+        assert 500.0 in nums  # the case's own balance
+        # Maya's demo-fixture-only numbers must NOT leak into another case's set
+        assert 8432 not in nums
+        assert 4287 not in nums
+        case_store.clear(self.CASE_ID)
+
+    def test_demo_case_id_keeps_the_global_fixture_fallback(self, monkeypatch):
+        """DEMO_CASE_ID must still get the full legacy fixture set even when
+        it has no case_store allowed_numbers entry — unchanged behavior."""
+        from app import db
+        from app.fixtures import DEMO_CASE_ID
+        from app.routers import webhooks
+
+        monkeypatch.setattr(db, "get_call", lambda call_id: (
+            {"id": self.CALL_ID, "case_id": DEMO_CASE_ID} if call_id == self.CALL_ID else None))
+
+        nums = webhooks._allowed_numbers_for_call(self.CALL_ID)
+        assert 4287.0 in nums   # Maya's balance (spec)
+        assert 71046.0 in nums  # CPT code from the demo benchmarks
+        assert 63.0 in nums     # medicare rate for 71046 (demo benchmarks)
+
+    def test_no_call_id_keeps_the_offline_default_set(self):
+        from app.routers import webhooks
+
+        nums = webhooks._allowed_numbers_for_call(None)
+        assert 4287 in nums
+        assert 8432 in nums
+
+    def test_case_without_stored_allowed_numbers_falls_back_to_fixture_set(self, monkeypatch):
+        """A real case (not Maya) that hasn't accumulated a stored
+        allowed_numbers set yet must still produce a non-empty, sane set
+        rather than an empty list that fails every citation."""
+        from app import db
+        from app.routers import webhooks
+
+        other_case = "77777777-7777-7777-7777-777777777777"
+        monkeypatch.setattr(db, "get_call", lambda call_id: (
+            {"id": self.CALL_ID, "case_id": other_case} if call_id == self.CALL_ID else None))
+
+        nums = webhooks._allowed_numbers_for_call(self.CALL_ID)
+        assert 63.0 in nums  # falls back to the demo benchmark set

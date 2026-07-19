@@ -6,7 +6,7 @@ terminal outcome per persona, and the honesty audit as the LAST tool_call.
 """
 import pytest
 
-from app.simulator import SCENARIOS, build_sequence, lever_event_name
+from app.simulator import SCENARIOS, build_generic_sequence, build_sequence, lever_event_name
 
 
 def events(steps, type_):
@@ -122,3 +122,67 @@ def test_lever_event_name_mapping():
     assert lever_event_name("statutory_501r") == "lever_armed:charity_care"
     assert lever_event_name("statutory_nsa") == "lever_armed:nsa"
     assert lever_event_name("error_unbundle_80053") == "lever_armed:error_unbundle_80053"
+
+
+class TestGenericCaseDriver:
+    """build_generic_sequence / build_sequence's non-Maya dispatch —
+    generalized pipeline, WS3. Uses Dan's fixture case (fixtures_users.py) as
+    a real, non-Maya case with its own balance/entities/flags."""
+
+    def test_deterministic_for_the_same_inputs(self):
+        from app.fixtures_users import DAN_CASE_ID
+
+        a = build_generic_sequence("sim-gen-1", DAN_CASE_ID)
+        b = build_generic_sequence("sim-gen-1", DAN_CASE_ID)
+        assert a == b
+
+    def test_uses_the_case_own_numbers_not_maya(self):
+        """Dan's collections balance is $2,140 (fixtures_users.py), not
+        Maya's $4,287/$980 — the generic driver must speak Dan's numbers and
+        Dan's own name, never Maya's literals."""
+        from app.fixtures_users import DAN_CASE_ID
+
+        steps = build_generic_sequence("sim-gen-2", DAN_CASE_ID)
+        quotes = [s["payload"]["amount"] for s in steps
+                 if s["kind"] == "event" and s["type"] == "quote"]
+        assert quotes[0] == 2140.0
+        transcript_text = " ".join(
+            s["payload"]["text"] for s in steps
+            if s["kind"] == "event" and s["type"] == "transcript")
+        assert "Dan Kowalski" in transcript_text
+        assert "Maya" not in transcript_text
+        assert "4,287" not in transcript_text
+
+    def test_ends_with_honesty_audit_and_one_outcome(self):
+        from app.fixtures_users import DAN_CASE_ID
+
+        steps = build_generic_sequence("sim-gen-3", DAN_CASE_ID)
+        assert steps[0] == {"kind": "status", "status": "ringing"}
+        assert steps[-1] == {"kind": "status", "status": "ended"}
+        last_tool = [s for s in steps if s["kind"] == "event" and s["type"] == "tool_call"][-1]
+        assert "honesty_audit" in last_tool["payload"]["name"]
+        outcomes = [s for s in steps if s["kind"] == "outcome"]
+        assert len(outcomes) == 1
+        assert outcomes[0]["outcome"]["original_amount"] == 2140.0
+
+    def test_build_sequence_dispatches_generic_for_non_demo_case(self):
+        from app.fixtures_users import DAN_CASE_ID
+
+        via_dispatch = build_sequence("collections_agent", "sim-gen-4", case_id=DAN_CASE_ID)
+        direct = build_generic_sequence("sim-gen-4", DAN_CASE_ID)
+        assert via_dispatch == direct
+
+    def test_build_sequence_keeps_scripted_persona_for_demo_case_id(self):
+        """Passing DEMO_CASE_ID explicitly must reproduce the exact
+        hand-authored script — no behavior change for Maya's own launch."""
+        from app.fixtures import DEMO_CASE_ID
+
+        via_dispatch = build_sequence("gruff_stonewaller", "sim-gen-5", case_id=DEMO_CASE_ID)
+        direct = SCENARIOS["gruff_stonewaller"]("sim-gen-5")
+        assert via_dispatch == direct
+
+    def test_build_sequence_omitted_case_id_unchanged(self):
+        """The original two-arg call signature (no case_id) must be byte-for-byte
+        identical to before this change — test_simulator.py's other tests all
+        rely on this."""
+        assert build_sequence("policy_citer", "sim-gen-6") == SCENARIOS["policy_citer"]("sim-gen-6")
