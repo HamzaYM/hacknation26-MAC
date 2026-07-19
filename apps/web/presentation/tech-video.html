@@ -134,56 +134,53 @@ h1 .a{color:var(--accent);}
   background:var(--accent);border-radius:2px;}
 .serif-sub{margin-top:16px;font-size:20px;color:var(--text-2);line-height:1.4;max-width:1000px;}
 
-.diagram{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;
-  background:var(--bg-surface);border:1px solid var(--border);border-radius:22px;
-  box-shadow:var(--shadow-card);padding:20px 30px;margin-top:14px;}
+/* ---------- Architecture-page diagram renderings, ported into the deck ---------- */
+/* S2 · one negotiation turn: flowstrip + advance() gate stack (technical-architecture.html §b) */
+.turnwrap{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;margin-top:8px;}
+.flowstrip{display:flex;gap:0;align-items:stretch;}
+.fs-node{flex:1;background:#fffdf8;border:1px solid #e6dccd;border-radius:14px;
+  padding:16px 12px;text-align:center;box-shadow:0 1px 2px rgba(34,28,21,.05);
+  display:flex;flex-direction:column;justify-content:center;}
+.fs-node .t{font-family:var(--font-b);font-size:17px;font-weight:600;line-height:1.2;color:#221c15;}
+.fs-node .s{font-family:var(--font-m);font-size:12px;color:#6c6357;margin-top:5px;display:block;}
+.fs-node.who{background:#d9e7f1;border-color:#aecbe0;}
+.fs-node.llm{background:#f8e2cd;border-color:#ecc4a0;}
+.fs-node.code{background:#dcece1;border-color:#aecebb;}
+.fs-arrow{display:flex;align-items:center;color:#a1968a;font-size:24px;padding:0 10px;flex:0 0 auto;}
 
-/* soft rounded pastel nodes */
-.node{border-radius:15px;border:1.5px solid var(--neutral-bd);background:var(--neutral-bg);
-  padding:15px 18px;position:relative;display:flex;flex-direction:column;justify-content:center;}
-.node .nt{font-weight:600;font-size:18px;line-height:1.15;color:var(--neutral-ink);}
-.node .nc{font-size:13.5px;line-height:1.32;color:var(--text-2);margin-top:5px;}
-.node.mint{background:var(--mint-bg);border-color:var(--mint-bd);}   .node.mint .nt{color:var(--mint-ink);}
-.node.coral{background:var(--coral-bg);border-color:var(--coral-bd);} .node.coral .nt{color:var(--coral-ink);}
-.node.lav{background:var(--lav-bg);border-color:var(--lav-bd);}       .node.lav .nt{color:var(--lav-ink);}
-.node.blue{background:var(--blue-bg);border-color:var(--blue-bd);}    .node.blue .nt{color:var(--blue-ink);}
-.node.amber{background:var(--amber-bg);border-color:var(--amber-bd);} .node.amber .nt{color:var(--amber-ink);}
-.node .badge{position:absolute;top:-11px;left:-9px;width:26px;height:26px;border-radius:50%;
-  background:var(--ink);color:#fff;font-family:var(--font-m);font-size:13px;font-weight:500;
-  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-card);}
-.node.mono .nt{font-family:var(--font-m);font-size:16px;}
+.gatecard{background:#fffdf8;border:1px solid #e6dccd;border-radius:18px;
+  padding:18px 26px 20px;box-shadow:0 1px 3px rgba(34,28,21,.05);}
+.gatecard .gc-h{display:flex;align-items:center;gap:12px;margin-bottom:2px;}
+.gate-pill{font-family:var(--font-m);font-size:15px;background:#dcece1;border:1px solid #aecebb;
+  color:#2c5540;padding:4px 12px;border-radius:8px;font-weight:500;}
+.gc-note{font-family:var(--font-m);font-size:13.5px;color:#a1968a;margin-left:auto;}
+.gates{list-style:none;margin:10px 0 0;display:grid;gap:0;}
+.gates li{display:flex;gap:16px;padding:12px 0;border-top:1px dashed #e6dccd;align-items:flex-start;}
+.gates li:first-child{border-top:none;}
+.gnum{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#221c15;color:#fff;
+  font-family:var(--font-b);font-weight:600;font-size:14px;display:grid;place-items:center;margin-top:1px;}
+.gtxt{font-family:var(--font-b);font-size:18px;line-height:1.4;color:#221c15;}
+.gtxt b{font-weight:600;}
+.gtxt .src{font-family:var(--font-m);font-size:14px;color:#6c6357;}
+.dcap{font-family:var(--font-b);font-size:15px;color:#a1968a;line-height:1.4;text-align:center;}
 
-.flowrow{display:flex;align-items:stretch;gap:12px;}
-.flowrow .node{flex:1;}
-.fa{align-self:center;color:var(--text-3);font-size:22px;flex:0 0 auto;}
-.dn{align-self:center;color:var(--text-3);font-size:16px;line-height:1;text-align:center;}
-
-/* S2 gate panel */
-.gate{border:1.5px solid var(--accent);background:linear-gradient(180deg,#fff,#fdf4ef);
-  border-radius:16px;padding:16px 20px 18px;position:relative;}
-.gate .gh{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.gate .gh .badge{position:static;}
-.gate .gt{font-family:var(--font-m);font-size:17px;font-weight:500;color:var(--accent-hover);}
-.gate .gm{font-size:13.5px;color:var(--text-3);margin-left:auto;}
-.checks{display:flex;gap:12px;}
-.check{flex:1;background:var(--bg-surface-muted);border:1px solid var(--border);border-radius:11px;
-  padding:12px 14px;}
-.check .ct{font-weight:600;font-size:15px;color:var(--ink);margin-bottom:3px;}
-.check .cs{font-size:13px;line-height:1.3;color:var(--text-2);}
 .tagline{text-align:center;font-family:var(--font-d);font-weight:700;font-size:24px;color:var(--ink);
   margin-top:2px;}
 .tagline .a{color:var(--accent);}
 
-/* S4 topology groups */
-.tgroup{display:flex;flex-direction:column;gap:9px;}
-.glabel{font-family:var(--font-m);font-size:12px;letter-spacing:.14em;text-transform:uppercase;}
-.glabel.screen{color:var(--mint-ink);}
-.glabel.call{color:var(--coral-ink);}
-.datastrip{display:flex;gap:12px;align-items:stretch;}
-.dcard{flex:1;border-radius:13px;border:1.5px solid var(--lav-bd);background:var(--lav-bg);padding:13px 16px;}
-.dcard .dt{font-weight:600;font-size:16px;color:var(--lav-ink);}
-.dcard .ds{font-family:var(--font-m);font-size:13px;color:var(--text-2);margin-top:4px;}
-.datacap{font-size:13.5px;color:var(--text-3);align-self:center;flex:0 0 168px;line-height:1.35;}
+/* S4 · runtime topology: inlined numbered-spine SVG (technical-architecture.html §a) */
+.topo-svg{margin-top:12px;}
+.topo-svg svg{display:block;width:100%;height:auto;}
+svg .n-title{font-family:var(--font-b);font-weight:600;font-size:14px;fill:#221c15;}
+svg .n-sub{font-family:var(--font-m);font-size:10.5px;}
+svg .lbl{font-family:var(--font-b);font-size:11px;fill:#6c6357;}
+svg .lbl-i{font-family:var(--font-b);font-size:10.5px;font-style:italic;fill:#a1968a;}
+svg .badge-t{font-family:var(--font-b);font-weight:700;font-size:11px;fill:#fff;}
+.topocap{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 18px;
+  margin-top:16px;font-family:var(--font-b);}
+.topocap .tc{font-size:15px;color:#6c6357;}
+.topocap .tc b{color:#221c15;font-weight:600;}
+.topocap .tc-sep{color:#d8ccbf;}
 
 /* S3 guardrail grid */
 .gguard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
@@ -257,27 +254,29 @@ h1 .a{color:var(--accent);}
       <div class="serif-h"><span class="ltr">a.</span> One negotiation turn</div>
       <div class="serif-sub">Where the LLM fires, and where it never gets a vote.</div>
     </div>
-    <div class="diagram">
-      <div class="flowrow an" style="--i:2">
-        <div class="node mint"><span class="badge">1</span><div class="nt">Rep speaks</div><div class="nc">hits a wall: "that's just our policy"</div></div>
-        <div class="fa">→</div>
-        <div class="node coral"><span class="badge">2</span><div class="nt">The LLM, the mouth</div><div class="nc">hears the stonewall, reaches for a tool</div></div>
-        <div class="fa">→</div>
-        <div class="node lav mono"><span class="badge">3</span><div class="nt">report_lever_result()</div><div class="nc">hands the turn to the server</div></div>
+    <div class="turnwrap">
+      <div class="flowstrip an" style="--i:2">
+        <div class="fs-node who"><span class="t">Rep speaks</span><span class="s">on the PSTN</span></div>
+        <div class="fs-arrow">&rsaquo;</div>
+        <div class="fs-node llm"><span class="t">LLM proposes</span><span class="s">a move, in words</span></div>
+        <div class="fs-arrow">&rsaquo;</div>
+        <div class="fs-node code"><span class="t">report_lever_result</span><span class="s">tool call</span></div>
+        <div class="fs-arrow">&rsaquo;</div>
+        <div class="fs-node code"><span class="t">advance()</span><span class="s">the gates below</span></div>
+        <div class="fs-arrow">&rsaquo;</div>
+        <div class="fs-node code"><span class="t">next move</span><span class="s">allowed or forced</span></div>
+        <div class="fs-arrow">&rsaquo;</div>
+        <div class="fs-node llm"><span class="t">LLM voices it</span><span class="s">the agent speaks</span></div>
       </div>
-      <div class="dn an" style="--i:3">↓</div>
-      <div class="gate an" style="--i:3">
-        <div class="gh"><span class="badge">4</span><span class="gt">advance() · the deterministic gate</span><span class="gm">no model in this loop</span></div>
-        <div class="checks">
-          <div class="check"><div class="ct">Floor</div><div class="cs">no offer above what the patient can pay</div></div>
-          <div class="check"><div class="ct">Plan math</div><div class="cs">monthly x months x interest, done server-side</div></div>
-          <div class="check"><div class="ct">Repetition</div><div class="cs">same point three times, parked, move on</div></div>
-          <div class="check"><div class="ct">Coverage</div><div class="cs">cannot skip a required question</div></div>
-        </div>
-      </div>
-      <div class="dn an" style="--i:4">↓</div>
-      <div class="flowrow an" style="--i:4">
-        <div class="node mint"><span class="badge">5</span><div class="nt">Allowed, or a forced move</div><div class="nc">the server picks the next step, then the LLM says it out loud</div></div>
+      <p class="dcap an" style="--i:3">Peach is the language model. Mint is deterministic code. The price move lives entirely in mint.</p>
+      <div class="gatecard an" style="--i:4">
+        <div class="gc-h"><span class="gate-pill">engine/state_machine.py · advance()</span><span class="gc-note">no model in this loop</span></div>
+        <ol class="gates">
+          <li><span class="gnum">1</span><span class="gtxt"><b>Floor.</b> No offer above <span class="src">dossier.floor</span>, the most the patient can actually pay, is ever spoken.</span></li>
+          <li><span class="gnum">2</span><span class="gtxt"><b>Plan math, with interest.</b> Plans are multiplied out <span class="src">monthly × months × (1 + interest)</span>; one that only clears once interest is added is refused.</span></li>
+          <li><span class="gnum">3</span><span class="gtxt"><b>Repetition cap.</b> The same point made three times is parked as an open item, and the call moves to the next lever.</span></li>
+          <li><span class="gnum">4</span><span class="gtxt"><b>Question coverage.</b> The agent cannot leave a rung with its required questions still unanswered.</span></li>
+        </ol>
       </div>
     </div>
     <div class="tagline an" style="--i:6">The AI never picks the price. <span class="a">Code does.</span></div>
@@ -307,36 +306,111 @@ h1 .a{color:var(--accent);}
       <div class="serif-h"><span class="ltr">b.</span> Runtime topology</div>
       <div class="serif-sub">Every box is live. hagglfor.me talks to all of it, right now.</div>
     </div>
-    <div class="diagram">
-      <div class="tgroup an" style="--i:2">
-        <div class="glabel screen">The screen path</div>
-        <div class="flowrow">
-          <div class="node blue"><div class="nt">Browser</div><div class="nc">hagglfor.me</div></div>
-          <div class="fa">→</div>
-          <div class="node mint"><div class="nt">Next.js</div><div class="nc">app + War Room</div></div>
-          <div class="fa">→</div>
-          <div class="node coral"><div class="nt">FastAPI</div><div class="nc">the engine and tools</div></div>
-          <div class="fa">→</div>
-          <div class="node mint"><div class="nt">Supabase</div><div class="nc">Postgres + Realtime, streaming to the live War Room</div></div>
-        </div>
-      </div>
-      <div class="tgroup an" style="--i:3">
-        <div class="glabel call">The call path</div>
-        <div class="flowrow">
-          <div class="node coral"><div class="nt">FastAPI</div><div class="nc">same engine</div></div>
-          <div class="fa">→</div>
-          <div class="node amber"><div class="nt">ElevenLabs</div><div class="nc">voice agent, gpt-5.4 brain</div></div>
-          <div class="fa">→</div>
-          <div class="node lav"><div class="nt">Twilio</div><div class="nc">PSTN</div></div>
-          <div class="fa">→</div>
-          <div class="node blue"><div class="nt">A real phone</div><div class="nc">it actually rings</div></div>
-        </div>
-      </div>
-      <div class="datastrip an" style="--i:4">
-        <div class="datacap">Every number it cites is loaded from data consolidated by code:</div>
-        <div class="dcard"><div class="dt">881,668-row chargemaster</div><div class="ds">3 Boston hospitals: MGH · Brigham &amp; Women's · Newton-Wellesley</div></div>
-        <div class="dcard"><div class="dt">Real CMS Medicare rates</div><div class="ds">PFS · OPPS · CLFS, keyed by code</div></div>
-      </div>
+    <div class="topo-svg an" style="--i:2" aria-label="Runtime topology diagram">
+      <svg width="1080" height="430" viewBox="0 0 1080 430" role="img">
+        <defs>
+          <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,1 L9,5 L0,9" fill="none" stroke="#8f8578" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arw-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,1 L9,5 L0,9" fill="none" stroke="#b8542f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- connectors (drawn first, under nodes) -->
+        <!-- spine -->
+        <line x1="182" y1="213" x2="198" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <line x1="360" y1="213" x2="376" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <line x1="797" y1="213" x2="815" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <!-- FastAPI -> ElevenLabs (launch) forward, with return webhook arc above -->
+        <line x1="584" y1="222" x2="612" y2="222" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <path d="M540,175 C570,132 744,132 758,175" fill="none" stroke="#b8542f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arw-a)"/>
+        <text class="lbl" x="650" y="127" text-anchor="middle">webhook tools · mid-call</text>
+        <!-- Next -> FastAPI: on spine already (Next end 360 -> FastAPI 380) -->
+        <text class="lbl-i" x="368" y="203" text-anchor="middle"></text>
+        <!-- OpenAI vision above FastAPI -->
+        <line x1="467" y1="175" x2="467" y2="120" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <text class="lbl" x="479" y="152" text-anchor="start">PDF parse</text>
+        <!-- Supabase below FastAPI -->
+        <line x1="467" y1="251" x2="467" y2="300" stroke="#8f8578" stroke-width="1.5" marker-start="url(#arw)" marker-end="url(#arw)"/>
+        <text class="lbl" x="479" y="280" text-anchor="start">reads · writes</text>
+        <!-- Realtime -> War Room (Supabase up to Browser) -->
+        <path d="M380,330 C170,330 105,300 105,247" fill="none" stroke="#b8542f" stroke-width="1.5" marker-end="url(#arw-a)"/>
+        <text class="lbl" x="196" y="352" text-anchor="middle">Realtime · call_events → War Room</text>
+        <!-- Twilio -> Phone -->
+        <line x1="874" y1="251" x2="874" y2="300" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+        <text class="lbl-i" x="886" y="280" text-anchor="start">real PSTN call</text>
+
+        <!-- NODES -->
+        <!-- 1 Browser -->
+        <g>
+          <rect x="32" y="177" width="150" height="72" rx="13" fill="#d9e7f1" stroke="#aecbe0" stroke-width="1.2"/>
+          <circle cx="50" cy="195" r="11" fill="#2c5470"/><text class="badge-t" x="50" y="199" text-anchor="middle">1</text>
+          <text class="n-title" x="70" y="200">Browser</text>
+          <text class="n-sub" x="47" y="228" fill="#2c5470">hagglfor.me</text>
+          <text class="n-sub" x="47" y="241" fill="#2c5470">Cloudflare</text>
+        </g>
+        <!-- 2 Next.js -->
+        <g>
+          <rect x="200" y="177" width="160" height="72" rx="13" fill="#d9e7f1" stroke="#aecbe0" stroke-width="1.2"/>
+          <circle cx="218" cy="195" r="11" fill="#2c5470"/><text class="badge-t" x="218" y="199" text-anchor="middle">2</text>
+          <text class="n-title" x="238" y="200">Next.js</text>
+          <text class="n-sub" x="215" y="228" fill="#2c5470">apps/web</text>
+          <text class="n-sub" x="215" y="241" fill="#2c5470">6 screens + War Room</text>
+        </g>
+        <!-- 3 FastAPI -->
+        <g>
+          <rect x="380" y="177" width="204" height="72" rx="13" fill="#dcece1" stroke="#aecebb" stroke-width="1.2"/>
+          <circle cx="398" cy="195" r="11" fill="#2c5540"/><text class="badge-t" x="398" y="199" text-anchor="middle">3</text>
+          <text class="n-title" x="418" y="200">FastAPI engine</text>
+          <text class="n-sub" x="392" y="228" fill="#2c5540">ladder state machine · flags</text>
+          <text class="n-sub" x="392" y="241" fill="#2c5540">dossier · tools · webhooks</text>
+        </g>
+        <!-- 4 ElevenLabs -->
+        <g>
+          <rect x="616" y="177" width="181" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+          <circle cx="634" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="634" y="199" text-anchor="middle">4</text>
+          <text class="n-title" x="654" y="200">ElevenLabs agent</text>
+          <text class="n-sub" x="631" y="228" fill="#8a4d24">"Alex" · gpt-5.4 brain</text>
+          <text class="n-sub" x="631" y="241" fill="#8a4d24">Jason voice</text>
+        </g>
+        <!-- 5 Twilio -->
+        <g>
+          <rect x="815" y="177" width="118" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+          <circle cx="833" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="833" y="199" text-anchor="middle">5</text>
+          <text class="n-title" x="853" y="200">Twilio</text>
+          <text class="n-sub" x="830" y="228" fill="#8a4d24">native PSTN</text>
+        </g>
+        <!-- 6 Phone -->
+        <g>
+          <rect x="815" y="302" width="118" height="66" rx="13" fill="#fbf9f4" stroke="#e3d8c8" stroke-width="1.2"/>
+          <circle cx="833" cy="320" r="11" fill="#221c15"/><text class="badge-t" x="833" y="324" text-anchor="middle">6</text>
+          <text class="n-title" x="853" y="325">Real phone</text>
+          <text class="n-sub" x="830" y="352" fill="#6c6357">whoever answers</text>
+        </g>
+        <!-- OpenAI vision -->
+        <g>
+          <rect x="380" y="70" width="177" height="50" rx="12" fill="#fbeee0" stroke="#ecc4a0" stroke-width="1.2"/>
+          <text class="n-title" x="396" y="92" font-size="13">OpenAI vision</text>
+          <text class="n-sub" x="396" y="108" fill="#8a4d24">gpt-5.6-terra</text>
+        </g>
+        <!-- Supabase -->
+        <g>
+          <rect x="380" y="302" width="270" height="66" rx="13" fill="#e7e1f2" stroke="#c9bce4" stroke-width="1.2"/>
+          <text class="n-title" x="396" y="325">Supabase</text>
+          <text class="n-sub" x="396" y="343" fill="#4b3d75">Postgres · Storage · Realtime</text>
+          <text class="n-sub" x="396" y="356" fill="#4b3d75">calls · call_events · outcomes · recordings</text>
+        </g>
+        <!-- config + data feeders -->
+        <g>
+          <rect x="672" y="302" width="222" height="0" rx="0" fill="none"/>
+        </g>
+      </svg>
+    </div>
+    <div class="topocap an" style="--i:4">
+      <span class="tc"><b>881,668-row</b> chargemaster · 3 Boston hospitals</span>
+      <span class="tc-sep">·</span>
+      <span class="tc"><b>Real CMS Medicare</b> rates · PFS · OPPS · CLFS, keyed by code</span>
     </div>
   </section>
 
