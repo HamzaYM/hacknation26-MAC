@@ -234,15 +234,34 @@ export interface ReportOutcome {
   reference_number?: string | null;
   rep_name?: string | null;
   agreed_action?: string | null;
+  next_action?: string | null;      // the outcomes table's free-text next step
   next_action_date?: string | null;
+  resolved_at?: string | null;      // the call's ended_at — dates the paper trail
   evidence?: EvidenceEvent[];
   recording_url?: string | null;
+}
+
+// A parked/open topic the negotiator set aside to chase separately. A parallel
+// builder is adding the open_items table + API; until it lands `open_items`
+// arrives undefined and the case view derives everything from outcomes alone.
+export interface OpenItem {
+  entity?: string | null;
+  lever?: string | null;
+  detail?: string | null;
+  amount_at_stake?: number | null;
+  status?: "open" | "scheduled" | "resolved";
+  next_attempt_at?: string | null;
+  reference_number?: string | null;
+  resolution_date?: string | null;
 }
 
 export interface CaseReport {
   outcomes: ReportOutcome[];
   lines: ReportLine[];
   recommendation: string;
+  account_number?: string | null;   // the bill's own account number (copyable)
+  claim_number?: string | null;     // the EOB claim number, when present
+  open_items?: OpenItem[];          // optional — see OpenItem
 }
 
 export const OUTCOME_LABELS: Record<OutcomeType, string> = {

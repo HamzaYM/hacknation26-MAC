@@ -327,7 +327,7 @@ def get_case_outcomes(case_id: str) -> list[dict] | None:
         return None
     rows = _run(
         """
-        select o.*, d.target_entity, d.route, c.recording_path
+        select o.*, d.target_entity, d.route, c.recording_path, c.ended_at
         from outcomes o
         join calls c on c.id = o.call_id
         left join strategy_dossiers d on d.id = c.dossier_id
