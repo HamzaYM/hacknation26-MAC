@@ -42,12 +42,16 @@ def test_report_lever_result_uses_the_real_state_machine(client):
     data = resp.json()
     assert data["next_move"] == "reach_authority"   # backward-compatible key
     assert "notes" in data                          # backward-compatible key
-    # stonewall phrase steering
-    resp = client.post("/tools/report_lever_result", json={
-        "call_id": "api-call-1", "lever": "line_item_disputes", "result": "rejected",
-        "quote": "we don't negotiate",
-    })
-    assert resp.json()["next_move"] == "reach_authority"
+    # stonewall phrase steering: two unhedged stonewalls on the same lever PARK it
+    # and move on (escalation is a last resort now — no jump to a supervisor).
+    for _ in range(2):
+        resp = client.post("/tools/report_lever_result", json={
+            "call_id": "api-call-1", "lever": "line_item_disputes", "result": "rejected",
+            "quote": "we don't negotiate",
+        })
+    data = resp.json()
+    assert data["parked"]["lever"] == "line_item_disputes"
+    assert data["next_move"] != "line_item_disputes"
 
 
 def test_get_benchmark_still_answers(client):

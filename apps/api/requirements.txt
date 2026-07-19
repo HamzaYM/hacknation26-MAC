@@ -11,3 +11,4 @@ pypdfium2==4.*
 pillow==11.*
 pytest==8.*
 psycopg2-binary==2.9.*
+APScheduler==3.*

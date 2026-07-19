@@ -66,11 +66,39 @@ required_questions:
   financial_assistance_screen: [fap_exists, pauses_collections_while_pending]
   diagnostic_questions: [interest_accruing, will_sue, credit_bureau_reported, debt_owned_or_bought, predetermined_settlement_floor]
 
-escalation_triggers:                         # stonewall phrases → reach_authority move
+# ── Escalation & parking policy (state machine, apps/api) ────────────────
+# Escalation is a LAST RESORT (Hamza, 07-18 test-call feedback): a stonewall no
+# longer jumps straight to a supervisor. Instead the topic is PARKED as an open
+# item and the agent moves to the next lever. reach_authority arms only when
+# every other lever is attempted/parked with something material still open, OR
+# the rep's own words say only someone with authority can act (authority_triggers).
+escalation_policy: last_resort
+
+escalation_triggers:                         # stonewall phrases — now PARK the topic (was → reach_authority)
   - "that's our policy"
   - "we don't negotiate"
   - "there's nothing i can do"
   - "you need to talk to your insurance"
+
+authority_triggers:                          # rep says only authority can act → arm reach_authority
+  - "i don't have the authority"
+  - "don't have the authority"
+  - "not authorized"
+  - "only a supervisor"
+  - "only a manager"
+  - "that would have to be a supervisor"
+  - "you'd have to talk to a supervisor"
+  - "above my pay grade"
+
+hedge_markers:                               # temporary/soft refusals — NOT a hard impasse (don't count toward parking)
+  - "right now"
+  - "at the moment"
+  - "not today"
+  - "call back later"
+
+# Parked open items are re-attempted this many hours after the call (caller-side
+# APScheduler; auto-dials only when ELEVENLABS_OUTBOUND_ENABLED is set).
+callback_delay_hours: 5
 
 # ── Personas roster (agents created in ElevenLabs; hidden params in DB) ──
 personas:
@@ -88,11 +116,11 @@ voice:
   # (PK6t0r2iXSJEz1l0Gy4k) lives in her personal account and is not assignable here.
   default_voice_id: pNInz6obpgDQGcFmaJgB
   stability: 0.55
-  speed: 0.9                                 # Hamza (07-18): slower so numbers stay legible; keep within 0.9–1.1
+  speed: 0.85                                # Hamza (07-18 late): slower still after hearing 0.9 on a live call; ElevenLabs range 0.7–1.2
   # Brain LLM for the negotiator, pinned by provisioning (Hamza, 07-18 evening:
   # quality over latency for live calls; was gemini-2.5-flash on cost).
   negotiator_llm: gpt-5.4
-  target_wpm: 150
+  target_wpm: 130                            # Hamza (07-18 late): slower pace after the live call (was 150)
   endpointing_ms: 400                        # bias toward waiting; barge-in on
   delivery_notes: prompts/verbalization_guide.md
 
@@ -104,9 +132,12 @@ voice:
 # early/late disclosure without re-authoring it.
 disclosure:
   mode: only_if_asked          # only_if_asked | late | early
+  # First message is ONLY the greet + a warm feeler — no account, no ask yet
+  # (Hamza, 07-18 test call: open slower and warmer, one beat at a time). The
+  # context sentence + account number come on the NEXT turn (see negotiator_system.md
+  # Turn-length section: greet+feeler → one context sentence → first item).
   competence_first_open: >-
-    Hi, this is Alex. I'm calling about {{patient_name}}'s account, number
-    {{account_number}}. Got a minute?
+    Hi, this is Alex. How's your day going over there?
   # Early-disclosure opener: ONLY valid when mode == early. Audit finding (a2a-1):
   # a stale sync once shipped this as the live opener while mode was only_if_asked —
   # the early_ prefix + gate comment exist so provisioning drift can't re-select it.

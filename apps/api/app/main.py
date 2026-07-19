@@ -9,6 +9,8 @@ Routers:
   /tools     — ElevenLabs server-tool endpoints, hit MID-CALL by the voice agent
   /webhooks  — ElevenLabs post-call webhook (transcript + audio)
 """
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,9 +18,21 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import scheduler
 from .routers import cases, calls, documents, tools, voice, webhooks
 
-app = FastAPI(title="The Negotiator API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Caller-side callback scheduler: re-hydrate scheduled open items into jobs.
+    scheduler.start()
+    try:
+        yield
+    finally:
+        scheduler.shutdown()
+
+
+app = FastAPI(title="The Negotiator API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

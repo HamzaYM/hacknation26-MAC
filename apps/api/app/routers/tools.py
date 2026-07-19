@@ -5,15 +5,19 @@ the ONLY sources of numbers the agent may speak. report_lever_result is the
 state machine's steering wheel: the agent reports what happened, code answers
 with the next move. Signatures FROZEN at H3 (PRD §12).
 """
+import re
+from datetime import date, datetime, timedelta
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .. import db
+from .. import db, scheduler
 from ..config import load_vertical
 from ..engine.state_machine import LadderStateMachine
 from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_benchmarks, demo_dossier
 from ..fixtures_users import flags_for_spec, spec_for_case
 from ..models import Lever, StrategyDossier
+from ..scheduler import clamp_to_business_window
 
 router = APIRouter()
 
@@ -151,6 +155,9 @@ def report_lever_result(body: LeverResult) -> dict:
     if resp.get("coverage_incomplete"):
         db.insert_event(call_id, "coverage_gap",
                         {"rung": resp["current_rung"], "missing": resp["coverage_incomplete"]})
+    # Topic parked: an impasse set aside as an open item (escalation last resort).
+    if resp.get("parked"):
+        db.insert_event(call_id, "topic_parked", resp["parked"])
     return resp
 
 
@@ -176,6 +183,56 @@ def log_event(body: LogEvent) -> dict:
     return {"logged": True}
 
 
+def _resolution_date(agreed_action: str | None) -> date:
+    """Best-effort resolution date from the agreed-action text; today when none parses."""
+    if agreed_action:
+        m = re.search(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b", agreed_action)
+        if m:
+            try:
+                return date(int(m[1]), int(m[2]), int(m[3]))
+            except ValueError:
+                pass
+        m = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b", agreed_action)
+        if m:
+            year = int(m[3])
+            year += 2000 if year < 100 else 0
+            try:
+                return date(year, int(m[1]), int(m[2]))
+            except ValueError:
+                pass
+    return date.today()
+
+
+def _persist_open_items(call_id: str, case_id: str, body: dict, resolved_ok: bool = True) -> int:
+    """End-of-call bookkeeping: unresolved parked topics → scheduled open_items (a
+    callback is armed), and the winning lever → a resolved open_item with a
+    resolution_date (2a). resolved_ok is False when the win was downgraded to a
+    callback (A5, written confirmation pending) so nothing is marked resolved yet.
+    Returns how many callbacks were scheduled."""
+    parked = state_machine.parked_topics(call_id)
+    winning = body.get("winning_lever")
+    if winning and resolved_ok:
+        db.insert_open_item(
+            case_id, lever=winning, detail=body.get("agreed_action"),
+            status="resolved", resolved_call_id=call_id,
+            resolution_date=_resolution_date(body.get("agreed_action")),
+            reference_number=body.get("reference_number"),
+        )
+    delay = load_vertical().get("callback_delay_hours", 5)
+    next_attempt = clamp_to_business_window(datetime.now() + timedelta(hours=delay))
+    scheduled = 0
+    for p in parked:
+        if winning and resolved_ok and p["lever"] == winning:
+            continue  # resolved on this call — not left open
+        db.insert_open_item(case_id, lever=p["lever"], detail=p.get("reason"),
+                            status="scheduled", created_call_id=call_id,
+                            next_attempt_at=next_attempt)
+        scheduled += 1
+    if scheduled:
+        scheduler.schedule_callback(case_id, next_attempt)
+    return scheduled
+
+
 @router.post("/end_call_summary")
 def end_call_summary(body: dict) -> dict:
     """Agent's structured wrap-up before hang-up: ref #, rep name, agreed action.
@@ -191,7 +248,7 @@ def end_call_summary(body: dict) -> dict:
            reference_number_unverified (warning, not a block).
     """
     call_id = _resolve_call_id(body.get("call_id"))
-    _ensure_call_row(call_id)
+    call_row = _ensure_call_row(call_id)
     db.insert_event(call_id, "tool_call",
                     {"name": "end_call_summary",
                      "result": body.get("agreed_action") or body.get("outcome_type") or "received"})
@@ -255,4 +312,13 @@ def end_call_summary(body: dict) -> dict:
     # A6: a reference number nobody read back is unverified — flag, don't block.
     if body.get("reference_number") and not db.has_event(call_id, "read_back"):
         resp["warnings"] = ["reference_number_unverified"]
+
+    # Parked topics persist as scheduled callbacks; the winning lever resolves
+    # (unless the win was downgraded to a callback for a pending written confirmation).
+    case_id = str(call_row["case_id"]) if call_row else None
+    if case_id:
+        _persist_open_items(call_id, case_id, body, resolved_ok=not downgraded)
+    # Close ritual: the summary is banked → the agent should hang up now, not wait
+    # for the rep (every extra second on the line is billed per-minute).
+    resp["end_call_now"] = True
     return resp

@@ -24,7 +24,7 @@ from .fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC
 log = logging.getLogger("negotiator.db")
 
 CALL_EVENT_TYPES = {"transcript", "tool_call", "state_change", "quote", "escalation",
-                    "coverage_gap", "read_back"}
+                    "coverage_gap", "read_back", "topic_parked", "callback_due"}
 
 _lock = threading.RLock()
 _conn: Any = None
@@ -346,6 +346,70 @@ def get_case_outcomes(case_id: str) -> list[dict] | None:
         where c.case_id = %s
         """,
         (case_id,),
+        fetch=True,
+    )
+    return [_jsonable(r) for r in rows] if rows is not None else None
+
+
+# ── open items (parked topics that persist across calls, migration 0005) ──
+def insert_open_item(case_id: str, lever: str, *, detail: str | None = None,
+                     amount_at_stake: float | None = None, status: str = "open",
+                     created_call_id: str | None = None, resolved_call_id: str | None = None,
+                     resolution_date=None, next_attempt_at=None,
+                     reference_number: str | None = None) -> str | None:
+    """Persist a parked/resolved topic; returns the new row id. No-op without a DB."""
+    if not _is_uuid(case_id):
+        return None
+    rows = _run(
+        """
+        insert into open_items
+          (case_id, lever, detail, amount_at_stake, status, created_call_id,
+           resolved_call_id, resolution_date, next_attempt_at, reference_number)
+        values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        returning id
+        """,
+        (case_id, lever, detail, amount_at_stake, status,
+         created_call_id if _is_uuid(created_call_id) else None,
+         resolved_call_id if _is_uuid(resolved_call_id) else None,
+         resolution_date, next_attempt_at, reference_number),
+        fetch=True,
+    )
+    return str(rows[0]["id"]) if rows else None
+
+
+def list_open_items_by_case(case_id: str) -> list[dict] | None:
+    """Open items for a case (parallel case-file UI contract). None without a DB."""
+    if not _is_uuid(case_id):
+        return None
+    rows = _run("select * from open_items where case_id = %s order by created_at",
+                (case_id,), fetch=True)
+    return [_jsonable(r) for r in rows] if rows is not None else None
+
+
+def update_open_item_status(item_id: str, status: str, *, resolved_call_id: str | None = None,
+                            resolution_date=None, reference_number: str | None = None):
+    if not _is_uuid(item_id):
+        return None
+    return _run(
+        """
+        update open_items set
+          status = %s,
+          resolved_call_id = coalesce(%s, resolved_call_id),
+          resolution_date  = coalesce(%s, resolution_date),
+          reference_number = coalesce(%s, reference_number)
+        where id = %s
+        """,
+        (status, resolved_call_id if _is_uuid(resolved_call_id) else None,
+         resolution_date, reference_number, item_id),
+    )
+
+
+def list_scheduled_open_items() -> list[dict] | None:
+    """Every scheduled item due in the future — the scheduler re-hydrates jobs from
+    this on startup (status='scheduled' and next_attempt_at > now)."""
+    rows = _run(
+        "select * from open_items where status = 'scheduled' and next_attempt_at is not null "
+        "and next_attempt_at > now() order by next_attempt_at",
         fetch=True,
     )
     return [_jsonable(r) for r in rows] if rows is not None else None
