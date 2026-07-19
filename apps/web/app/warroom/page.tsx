@@ -126,7 +126,7 @@ function OverviewCard({ call }: { call: ActiveCall }) {
         <span className="wr-call-entity">{call.dossier?.target_entity ?? "Negotiation call"}</span>
         <span className={`wr-status-pill ${call.status}`}>{call.status === "live" ? "● live" : call.status}</span>
       </div>
-      {call.counterparty === "agent" && <span className="wr-sim-badge">simulated persona · replay</span>}
+      {call.counterparty === "agent" && (call.elevenlabs_conversation_id ? <span className="wr-sim-badge">live phone call</span> : <span className="wr-sim-badge">simulated persona · replay</span>)}
       <div className="wr-call-quote">{latest != null ? `$${latest.toLocaleString()}` : "–"}</div>
       {first != null && latest != null && first > latest && (
         <div className="wr-call-delta">▼ ${(first - latest).toLocaleString()} this call</div>
@@ -480,7 +480,7 @@ function WarRoom() {
           <>
             {`Call ${String(call.id ?? callId).slice(0, 8)} · status: ${call.status}`}
             {call.counterparty === "agent" && (
-              <span className="wr-sim-badge" style={{ marginLeft: 10 }}>simulated persona · replay</span>
+              <span className="wr-sim-badge" style={{ marginLeft: 10 }}>{call.elevenlabs_conversation_id ? "live phone call" : "simulated persona · replay"}</span>
             )}
             <a
               href={caseId !== DEMO_CASE_UUID ? `/warroom?case_id=${caseId}` : "/warroom"}
