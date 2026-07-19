@@ -145,9 +145,9 @@ voice:
   model: eleven_flash_v2_5                   # ~75ms; do NOT use v3 for live calls
   # Default ElevenLabs voice for the negotiator + any agent without a name match.
   # Kar Shin's pick (2026-07-18). Personas keep their own distinct voices.
-  # NOTE: Adam (stock workspace voice) — Hamza's pick 07-18 late, was the Alex clone. Susy's original
+  # NOTE: Jason W. — Hamza's own voice design (07-18 night), replaces Adam. Susy's original
   # (PK6t0r2iXSJEz1l0Gy4k) lives in her personal account and is not assignable here.
-  default_voice_id: pNInz6obpgDQGcFmaJgB
+  default_voice_id: 8duqbsrxNeN6j4yugadv
   stability: 0.55
   speed: 0.85                                # Hamza (07-18 late): slower still after hearing 0.9 on a live call; ElevenLabs range 0.7–1.2
   # Brain LLM for the negotiator, pinned by provisioning (Hamza, 07-18 evening:
