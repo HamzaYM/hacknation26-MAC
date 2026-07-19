@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scenario.schema.json",
+  "title": "Scenario",
+  "description": "One scenario of the suite: a realistic bill (+EOB) generated against the database, with a code-computed answer key. Artifacts live in data/scenarios/<scenario_id>/ as scenario.json, bill.json, eob.json (null for self-pay), answer_key.json, bill.pdf, eob.pdf. Answer keys are produced ONLY by data/scenarios/generate.py querying the lookup layer — never authored by hand, never by an LLM.",
+  "type": "object",
+  "required": ["scenario_id", "archetype", "title", "hospital", "coverage", "provider_entities", "answer_key_ref"],
+  "properties": {
+    "scenario_id": { "type": "string", "pattern": "^sc[0-9]{2}_[a-z0-9_]+$" },
+    "archetype": {
+      "enum": ["maya_baseline", "duplicate_charge", "upcoded_er", "unbundled_panel", "self_pay_gross", "eob_mismatch", "oon_balance_bill", "clean_overpriced", "denial_driven"]
+    },
+    "title": { "type": "string" },
+    "narrative": { "type": "string", "description": "One-paragraph patient story for demo framing" },
+    "hospital": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "description": "Real hospital from chargemaster_coverage" },
+        "ein": { "type": ["string", "null"] },
+        "ccn": { "type": ["string", "null"] },
+        "city": { "type": ["string", "null"] },
+        "state": { "type": ["string", "null"] }
+      }
+    },
+    "patient": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Fictional patient (real people never)" },
+        "dob": { "type": "string" },
+        "account_number": { "type": "string" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["insured", "self_pay"] },
+        "payer_name": { "type": ["string", "null"], "description": "REAL payer string from chargemaster data (decision #8)" },
+        "plan_name": { "type": ["string", "null"] },
+        "member_id": { "type": ["string", "null"] },
+        "network_status": { "enum": ["in_network", "out_of_network", null] }
+      }
+    },
+    "provider_entities": {
+      "type": "array",
+      "description": "Billing entities on the bill; professional entities are excluded from absent_from_chargemaster checks",
+      "items": {
+        "type": "object",
+        "required": ["name", "entity_type"],
+        "properties": {
+          "name": { "type": "string" },
+          "entity_type": { "enum": ["facility", "professional"] }
+        }
+      }
+    },
+    "service_date": { "type": "string" },
+    "answer_key_ref": { "type": "string", "description": "Relative path to answer_key.json" },
+    "answer_key": {
+      "type": "object",
+      "description": "Shape of answer_key.json",
+      "required": ["expected_flags", "benchmark_report", "provenance"],
+      "properties": {
+        "expected_flags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "enum": ["duplicate", "upcode", "unbundle", "phantom", "markup", "nsa_balance_billing", "eob_mismatch", "denial", "units_error", "absent_from_chargemaster"] },
+              "code": { "type": ["string", "null"] },
+              "codes": { "type": ["array", "null"], "items": { "type": "string" } },
+              "dollar_impact": { "type": ["number", "null"] },
+              "severity": { "enum": ["low", "medium", "high", null] },
+              "detail": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "benchmark_report": { "description": "Expected BenchmarkReport (contracts/anchor_set.schema.json)" },
+        "call_talking_points": {
+          "type": "array",
+          "description": "Derived, citable claims the voice agent may use — each references a flag or anchor by id/index, no free numbers",
+          "items": { "type": "string" }
+        },
+        "provenance": {
+          "type": "object",
+          "required": ["generator", "chargemaster_version", "medicare_version"],
+          "properties": {
+            "generator": { "type": "string" },
+            "generated_at": { "type": "string" },
+            "chargemaster_version": { "type": "string" },
+            "medicare_version": { "type": "string" },
+            "config_version": { "type": "string" },
+            "lookup_backend": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
