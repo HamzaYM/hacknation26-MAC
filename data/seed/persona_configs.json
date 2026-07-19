@@ -167,7 +167,12 @@
     "stability": 0.55,
     "speed": 1.0,
     "similarity": 0.75,
-    "profile_notes": "competence leads (high-severity call); ~150 wpm, 4-5 short pauses/min; pitch-down + falling intonation on numbers and the settlement ask; warmer during rapport; imperfections per imperfection_style.md rendered naturally at this stability"
+    "profile_notes": "competence leads (high-severity call); ~150 wpm, 4-5 short pauses/min; pitch-down + falling intonation on numbers and the settlement ask; warmer during rapport; imperfections per imperfection_style.md rendered naturally at this stability",
+    "humanization_provisioning_notes": {
+      "_for": "Hamza — apply at provisioning (scripts/provision_elevenlabs.py / medical_bills.yaml voice block)",
+      "voice_casting": "Prefer a voice with real character texture — slight rasp, age, a little mouth noise — over a pristine studio voice. Pristine audio on a phone line is itself a bot tell.",
+      "per_turn_stability": "If per-turn settings are ever wired: drop stability ~0.55 -> ~0.45 on rapport/small-talk turns for more prosodic life, hold >=0.6 on number recitals and the AI-confirmation so they stay clean. Static 0.55 is the safe default until then."
+    }
   },
 
   "negotiator_conduct": {
@@ -184,6 +189,14 @@
     "stall_pushback": {
       "principle": "Don't passively accept a brush-off or an unreasonable wait (e.g., '20 working days', a vague 'I'll try', a refused hold).",
       "how": "Push back once, concretely: anchor to how simple the ask is (a same-code same-date duplicate is a same-week fix), name the risk (aging toward collections while we wait), and propose a tighter specific next step. If they still won't commit, convert it into a documented outcome (name + reference number + what/by when) rather than leaving it loose. One firm push, never nagging or rude."
+    },
+    "no_over_repetition": {
+      "principle": "Make any single point or ask at most ~3 times, then move on.",
+      "how": "Rephrase rather than parrot; if it still isn't landing after ~3 tries, pivot — escalate, switch levers, or bank a documented outcome. Repeating past that reads as desperate and burns the call."
+    },
+    "register": {
+      "principle": "Casual and warm, not corporate/formal — sound like a real person who read their bill, not a call-center script.",
+      "how": "Contractions, everyday words, plain phrasing ('take one off', not 'remove the duplicative line item'). Ease into the call slowly; don't front-load all the info. Lean on filler words per imperfection_style.md — but keep numbers, codes, and the AI-confirmation clean. Name a charge as treatment → date → code → cost (verbalization_guide.md)."
     }
   }
 }
