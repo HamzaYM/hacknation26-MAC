@@ -46,3 +46,29 @@ def test_report_maps_call_ended_at_to_resolved_at(monkeypatch):
     outcome = report["outcomes"][0]
     assert outcome["resolved_at"] == "2026-07-18T22:51:00+00:00"
     assert "ended_at" not in outcome
+
+
+def test_action_plan_endpoint_returns_200(monkeypatch):
+    """Probe finding: /cases/{id}/action_plan 500'd on every request —
+    undefined _require_demo + un-imported demo_flags in the route body."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    resp = client.get("/cases/demo/action_plan?no_llm=true")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "input" in body and "copy" in body
+
+
+def test_recommendation_dedupes_by_entity():
+    from app.engine.report import build_recommendation
+    ranked = [
+        {"outcome_type": "reduction", "target_entity": "Meridian", "final_amount": 392, "original_amount": 980},
+        {"outcome_type": "reduction", "target_entity": "Meridian", "final_amount": 392, "original_amount": 980},
+        {"outcome_type": "documented_decline", "target_entity": "Mercy"},
+        {"outcome_type": "documented_decline", "target_entity": "Mercy"},
+        {"outcome_type": "documented_decline", "target_entity": "Mercy"},
+    ]
+    rec = build_recommendation(ranked)
+    assert rec.count("Meridian") == 1
+    assert rec.count("Mercy") == 1

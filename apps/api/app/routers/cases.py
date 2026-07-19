@@ -69,9 +69,9 @@ def get_case_action_plan(case_id: str, no_llm: bool = False) -> dict:
     warm `claude -p` prose when available and honest, deterministic fallback
     otherwise. Pass ?no_llm=true to force the fallback (used for fast demos/tests).
     """
-    _require_demo(case_id)
-    spec = JobSpec.model_validate(DEMO_JOB_SPEC)
-    flags, benchmarks = demo_flags(), demo_benchmarks()
+    spec_dict = _resolve_spec(case_id)
+    spec = JobSpec.model_validate(spec_dict)
+    flags, benchmarks = flags_for_spec(spec_dict), demo_benchmarks()
     payload = build_action_plan_input(spec, flags, benchmarks, load_vertical())
     copy = generate_action_plan_copy(payload, use_llm=not no_llm)
     return {"case_id": case_id, "input": payload, "copy": copy}
