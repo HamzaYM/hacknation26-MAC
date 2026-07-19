@@ -1,8 +1,8 @@
 {
   "ask": {
-    "anchor": 646.41,
+    "anchor": 646.39,
     "excess_above_band": 1703.69,
-    "floor": 430.94,
+    "floor": 430.93,
     "per_line_multiples": [
       {
         "code": "70450",
@@ -20,7 +20,7 @@
         "rand_flag": true
       }
     ],
-    "target": 861.88,
+    "target": 861.86,
     "total_medicare_multiple": 6.45
   },
   "benchmark_report": {
@@ -296,20 +296,20 @@
     "payer_name": "TUFTS HEALTH PLAN [170001]",
     "plan_name": "HB CH TUFTS",
     "totals": {
-      "ask_anchor": 646.41,
-      "ask_target": 861.88,
+      "ask_anchor": 646.39,
+      "ask_target": 861.86,
       "billed": 2781.0,
       "excess_above_band": 1703.69,
       "fair_band_high": 1077.31,
       "fair_band_low": 646.41,
-      "floor": 430.94,
-      "medicare": 430.94,
+      "floor": 430.93,
+      "medicare": 430.93,
       "medicare_multiple": 6.45
     }
   },
   "call_talking_points": [
     "eob mismatch on the claim: $2,781.00 (derived flag)",
-    "Billed total $2,781.00 is 6.45x the Medicare rate of $430.94 (benchmark anchor).",
+    "Billed total $2,781.00 is 6.45x the Medicare rate of $430.93 (benchmark anchor).",
     "Lines 70450, 72110, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
   ],
   "expected_flags": [

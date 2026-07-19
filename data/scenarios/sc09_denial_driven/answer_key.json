@@ -1,8 +1,8 @@
 {
   "ask": {
-    "anchor": 486.19,
+    "anchor": 486.18,
     "excess_above_band": 1843.71,
-    "floor": 324.13,
+    "floor": 324.12,
     "per_line_multiples": [
       {
         "code": "70450",
@@ -15,7 +15,7 @@
         "rand_flag": true
       }
     ],
-    "target": 648.26,
+    "target": 648.24,
     "total_medicare_multiple": 8.19
   },
   "benchmark_report": {
@@ -201,20 +201,20 @@
     "payer_name": "COMMONWEALTH CARE ALLIANCE [1007]",
     "plan_name": "HB MGH COMMONWEALTH CARE ALLIANCE",
     "totals": {
-      "ask_anchor": 486.19,
-      "ask_target": 648.26,
+      "ask_anchor": 486.18,
+      "ask_target": 648.24,
       "billed": 2654.0,
       "excess_above_band": 1843.71,
       "fair_band_high": 810.29,
       "fair_band_low": 486.19,
-      "floor": 324.13,
-      "medicare": 324.13,
+      "floor": 324.12,
+      "medicare": 324.12,
       "medicare_multiple": 8.19
     }
   },
   "call_talking_points": [
     "denial on 70450: $1,828.00 (derived flag)",
-    "Billed total $2,654.00 is 8.19x the Medicare rate of $324.13 (benchmark anchor).",
+    "Billed total $2,654.00 is 8.19x the Medicare rate of $324.12 (benchmark anchor).",
     "Lines 70450, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
   ],
   "expected_flags": [

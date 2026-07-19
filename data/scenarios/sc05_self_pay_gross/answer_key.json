@@ -1,8 +1,8 @@
 {
   "ask": {
-    "anchor": 660.42,
-    "excess_above_band": 2404.34,
-    "floor": 440.28,
+    "anchor": 660.4,
+    "excess_above_band": 2411.69,
+    "floor": 440.27,
     "per_line_multiples": [
       {
         "code": "70450",
@@ -25,7 +25,7 @@
         "rand_flag": false
       }
     ],
-    "target": 880.56,
+    "target": 880.54,
     "total_medicare_multiple": 7.96
   },
   "benchmark_report": {
@@ -361,19 +361,19 @@
     "payer_name": null,
     "plan_name": null,
     "totals": {
-      "ask_anchor": 660.42,
-      "ask_target": 880.56,
+      "ask_anchor": 660.4,
+      "ask_target": 880.54,
       "billed": 3505.0,
-      "excess_above_band": 2404.34,
+      "excess_above_band": 2411.69,
       "fair_band_high": 1100.66,
       "fair_band_low": 660.42,
-      "floor": 440.28,
-      "medicare": 440.28,
+      "floor": 440.27,
+      "medicare": 440.27,
       "medicare_multiple": 7.96
     }
   },
   "call_talking_points": [
-    "Billed total $3,505.00 is 7.96x the Medicare rate of $440.28 (benchmark anchor).",
+    "Billed total $3,505.00 is 7.96x the Medicare rate of $440.27 (benchmark anchor).",
     "Lines 70450, 72110, 96360 are billed above the commercial (RAND-norm) ceiling — quantified overcharges (benchmark anchor)."
   ],
   "expected_flags": [],

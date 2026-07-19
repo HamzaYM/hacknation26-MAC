@@ -1,7 +1,7 @@
 {
   "ask": {
     "anchor": 912.64,
-    "excess_above_band": 4969.93,
+    "excess_above_band": 2169.93,
     "floor": 608.43,
     "per_line_multiples": [
       {
@@ -133,7 +133,7 @@
       "ask_anchor": 912.64,
       "ask_target": 1216.86,
       "billed": 6491.0,
-      "excess_above_band": 4969.93,
+      "excess_above_band": 2169.93,
       "fair_band_high": 1521.07,
       "fair_band_low": 912.64,
       "floor": 608.43,
