@@ -46,6 +46,9 @@ export default function Login() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            // A password-manager extension injects data-* attributes before
+            // hydration; suppress the resulting attribute-mismatch warning.
+            suppressHydrationWarning
           />
           <input
             type="password"
@@ -54,6 +57,7 @@ export default function Login() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            suppressHydrationWarning
           />
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? "Logging in…" : "Log in"}

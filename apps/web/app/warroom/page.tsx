@@ -195,9 +195,8 @@ function CallsOverview() {
       </div>
       <p className="wr-overview-note">
         One negotiator, {calls.length} lines in parallel. Click a card for the full transcript and
-        event log. Cards marked <span className="wr-sim-badge">simulated persona · replay</span> are
-        negotiations against a scripted counterpart persona, not a human on a phone line. The{" "}
-        <code>calls.counterparty</code> field is the source of that label.
+        event log. Calls labeled <span className="wr-sim-badge">simulated persona · replay</span> run
+        against a scripted counterparty, not a live phone line.
       </p>
     </>
   );
@@ -242,6 +241,9 @@ function AdvocateRoster() {
               <div className="wr-persona-voice mono-figure">{p.voice}</div>
               <p className="wr-persona-why">{p.why}</p>
               <div className="wr-persona-for">Picked for: {p.pickedFor}</div>
+              <div className="wr-persona-for" style={{ marginTop: 6, color: "rgba(245,241,236,0.5)" }}>
+                Always honest about numbers and identity. The persona changes tone, never the rules.
+              </div>
             </div>
           ))}
         </>

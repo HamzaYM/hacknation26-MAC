@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getMyCase, getReport } from "../../lib/api";
 import { useSession } from "../../lib/auth";
 import { money } from "../../lib/savings";
+import { FEE_LINE, yourShare } from "../../lib/fees";
 import {
   BUCKET_META,
   BUCKET_ORDER,
@@ -61,7 +62,9 @@ export default function Report() {
   }
 
   const patientName = (spec?.patient?.legal_name as string) ?? "–";
-  const facility = spec?.bill.facility_name;
+  const partyCount = spec?.entities.length ?? 0;
+  const billCountLabel = partyCount ? `your ${partyCount} bills` : "your bills";
+  const financialCaptured = spec?.financial_profile?.household_income != null;
   const items = report ? buildCaseItems(report, spec) : [];
   const counts = caseCounts(items);
 
@@ -69,8 +72,8 @@ export default function Report() {
     <div>
       <h1 style={{ marginTop: 16 }}>Your case</h1>
       <p style={{ color: "var(--text-secondary)", margin: "6px 0 20px", fontSize: 15 }}>
-        Everything we&apos;ve done on {facility ? `your ${facility} bill` : "your bill"}, in one place —
-        newest first, with the paper trail behind every number.
+        Everything we&apos;ve done across {billCountLabel}, in one place, newest first, with the paper
+        trail behind every number.
       </p>
 
       <CaseHeader
@@ -81,7 +84,11 @@ export default function Report() {
         billCount={items.length}
       />
 
-      {spec?.bill.statement_date && <DeadlineStrip statementDate={spec.bill.statement_date} />}
+      <p style={{ fontSize: 12.5, color: "var(--text-tertiary)", margin: "0 0 16px" }}>{FEE_LINE}</p>
+
+      {spec?.bill.statement_date && (
+        <DeadlineStrip statementDate={spec.bill.statement_date} financialProfileCaptured={financialCaptured} />
+      )}
 
       {items.length === 0 ? (
         <EmptyCase />
@@ -134,6 +141,12 @@ function CaseHeader({
         <span className="case-savings-cap">
           locked in so far{billCount > 0 ? ` · ${billCount} ${billCount === 1 ? "party" : "parties"}` : ""}
         </span>
+        {lockedIn > 0 && (
+          <span className="case-savings-cap" style={{ marginTop: 4 }}>
+            Your share after our 25%:{" "}
+            <span className="mono-figure" style={{ color: "var(--accent)" }}>{money(yourShare(lockedIn))}</span>
+          </span>
+        )}
       </div>
     </header>
   );

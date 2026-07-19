@@ -160,6 +160,52 @@ def test_documented_decline_stays_ungated(client):
     assert "missing" not in body
 
 
+# "Bob in the ref field" — a rep name that leaked into reference_number.
+def test_bare_name_ref_reroutes_to_empty_rep_name(client):
+    resp = client.post("/tools/end_call_summary", json={
+        "call_id": "ecs-bob", "outcome_type": "documented_decline",
+        "reference_number": "Bob"})
+    body = resp.json()
+    assert body["received"] is True
+    assert "reference_number_looked_like_name_moved_to_rep_name" in body.get("warnings", [])
+
+
+def test_bare_name_ref_dropped_when_rep_name_present(client):
+    resp = client.post("/tools/end_call_summary", json={
+        "call_id": "ecs-bob2", "outcome_type": "documented_decline",
+        "reference_number": "Bob", "rep_name": "Dana"})
+    body = resp.json()
+    assert body["received"] is True
+    assert "reference_number_looked_like_name_dropped" in body.get("warnings", [])
+
+
+def test_bare_name_ref_does_not_satisfy_gated_win(client):
+    # "Bob" is dropped, so the gated reduction is now missing its reference —
+    # the win gets pushed back instead of banked with a name as its ref #.
+    resp = client.post("/tools/end_call_summary", json={
+        "call_id": "ecs-bob3", "outcome_type": "reduction",
+        "final_amount": 1650.0, "original_amount": 4287.0,
+        "reference_number": "Bob", "rep_name": "Dana",
+        "agreed_action": "adjust to 1650", "written_confirmation": True})
+    body = resp.json()
+    assert body["received"] is False
+    assert "reference_number" in body["missing"]
+
+
+def test_real_reference_number_is_untouched(client):
+    # A normal ref (has a digit) is never mistaken for a name.
+    resp = client.post("/tools/end_call_summary", json={
+        "call_id": "ecs-realref", "outcome_type": "reduction",
+        "final_amount": 1650.0, "original_amount": 4287.0,
+        "reference_number": "MG-2247", "rep_name": "Dana",
+        "agreed_action": "adjust", "written_confirmation": True})
+    body = resp.json()
+    assert body["received"] is True
+    warnings = body.get("warnings", [])
+    assert "reference_number_looked_like_name_moved_to_rep_name" not in warnings
+    assert "reference_number_looked_like_name_dropped" not in warnings
+
+
 def test_report_lever_result_surfaces_coverage_incomplete(client):
     r1 = client.post("/tools/report_lever_result", json={
         "call_id": "qg-endpoint", "lever": "open_and_hold_account", "result": "accepted",

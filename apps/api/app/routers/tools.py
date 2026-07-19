@@ -42,6 +42,16 @@ def _append_note(base: str | None, note: str) -> str:
     return f"{base}; {note}" if base else note
 
 
+def _looks_like_bare_name(value: object) -> bool:
+    """A reference_number that's really a rep's first name leaked into the wrong
+    field ("Bob"): a single short word, all letters, no digits. Real confirmation
+    numbers always carry a digit (and usually a prefix/dash)."""
+    if not isinstance(value, str):
+        return False
+    v = value.strip()
+    return bool(v) and v.isalpha() and len(v) <= 15
+
+
 def _ensure_call_row(call_id: str | None) -> dict | None:
     """The calls row for a mid-call tool hit, created on demand (demo case)
     when a real uuid has no row yet — so call_events/outcomes FKs resolve for
@@ -275,6 +285,20 @@ def end_call_summary(body: dict) -> dict:
 
     confirm_incomplete = bool(body.get("confirm_incomplete"))
 
+    # Reference-field guard: a bare first name in reference_number ("Bob") is a
+    # rep name that leaked into the wrong field, never a real confirmation
+    # number. Reroute it to rep_name when that's empty, otherwise drop it. Runs
+    # before the A4 gate and the outcome insert so the name can't be banked as a
+    # reference or satisfy the gated-win check.
+    ref_moved_to_rep = ref_dropped = False
+    if _looks_like_bare_name(body.get("reference_number")):
+        if not body.get("rep_name"):
+            body["rep_name"] = body["reference_number"].strip()
+            ref_moved_to_rep = True
+        else:
+            ref_dropped = True
+        body["reference_number"] = None
+
     # A4: gated wins need the paper trail before we bank them.
     missing = [f for f in ("reference_number", "rep_name", "agreed_action")
                if outcome_type in GATED_OUTCOMES and not body.get(f)]
@@ -327,7 +351,11 @@ def end_call_summary(body: dict) -> dict:
         resp["outcome_downgraded"] = "callback"
     # A6: a reference number nobody read back is unverified — flag, don't block.
     if body.get("reference_number") and not db.has_event(call_id, "read_back"):
-        resp["warnings"] = ["reference_number_unverified"]
+        resp.setdefault("warnings", []).append("reference_number_unverified")
+    if ref_moved_to_rep:
+        resp.setdefault("warnings", []).append("reference_number_looked_like_name_moved_to_rep_name")
+    if ref_dropped:
+        resp.setdefault("warnings", []).append("reference_number_looked_like_name_dropped")
 
     # Parked topics persist as scheduled callbacks; the winning lever resolves
     # (unless the win was downgraded to a callback for a pending written confirmation).

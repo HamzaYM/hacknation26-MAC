@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getMyCase } from "../../lib/api";
 import { useSession } from "../../lib/auth";
 import { entitySavings, facilitySavings, money } from "../../lib/savings";
@@ -100,7 +101,12 @@ export default function BillList() {
         <div className="subnote">Cash in anytime, per bill, or let us keep negotiating.</div>
       </div>
 
-      {spec?.bill.statement_date && <DeadlineStrip statementDate={spec.bill.statement_date} />}
+      {spec?.bill.statement_date && (
+        <DeadlineStrip
+          statementDate={spec.bill.statement_date}
+          financialProfileCaptured={spec.financial_profile?.household_income != null}
+        />
+      )}
 
       <div style={{ marginBottom: 24 }}>
         {!creating ? (
@@ -202,6 +208,7 @@ function PendingBillCard({ bill }: { bill: PendingBill }) {
 }
 
 function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
+  const router = useRouter();
   const isFacility = entity.kind === "facility";
   const savings = isFacility ? facilitySavings(spec) : entitySavings(entity);
   const flagCount = isFacility ? spec.derived_flags.length : null;
@@ -209,6 +216,12 @@ function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
   const barTotal = savings.percentSavedSoFar + savings.percentProjectedHigh;
   const achievedWidth = barTotal > 0 ? (savings.percentSavedSoFar / barTotal) * 100 : 0;
   const projectedWidth = barTotal > 0 ? (savings.percentProjectedHigh / barTotal) * 100 : 0;
+  // Name the actual benchmark, not "people like you". Settlement framing for
+  // collections; negotiation framing for the ER/ancillary bills.
+  const sourceLine =
+    entity.kind === "collections"
+      ? "Based on published Massachusetts hospital price data and settlement outcomes for similar collections accounts"
+      : "Based on published Massachusetts hospital price data and negotiation outcomes for similar ER bills";
 
   return (
     <a href={`/bills/${spec.case_id}`} className="entity-card">
@@ -237,12 +250,34 @@ function EntityCard({ entity, spec }: { entity: Entity; spec: JobSpec }) {
           </div>
         ) : (
           <div className="issue-line" style={{ borderTop: "none", paddingTop: 8 }}>
-            Based on our research and aggregated data on people like you: {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
+            {sourceLine}: {money(savings.projectedLow)}–{money(savings.projectedHigh)} possible
           </div>
         )}
         <div style={{ marginTop: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
           <strong style={{ color: "var(--text-primary)" }}>Next:</strong> {nextLine(entity, spec)}
         </div>
+        {status === "awaiting_you" && (
+          <span
+            role="button"
+            tabIndex={0}
+            className="btn btn-primary"
+            style={{ marginTop: 12, padding: "8px 16px", fontSize: 13 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              router.push("/intake");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push("/intake");
+              }
+            }}
+          >
+            Answer 2 quick questions →
+          </span>
+        )}
       </div>
     </a>
   );
