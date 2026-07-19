@@ -229,12 +229,11 @@ footer{padding:56px 0 80px;text-align:center;}
           <!-- spine -->
           <line x1="182" y1="213" x2="198" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
           <line x1="360" y1="213" x2="376" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
-          <line x1="758" y1="213" x2="776" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <line x1="797" y1="213" x2="815" y2="213" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
           <!-- FastAPI -> ElevenLabs (launch) forward, with return webhook arc above -->
-          <line x1="557" y1="222" x2="573" y2="222" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
-          <text class="lbl-i" x="565" y="248" text-anchor="middle">launch</text>
-          <path d="M600,175 C620,140 715,140 735,175" fill="none" stroke="#b8542f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arw-a)"/>
-          <text class="lbl" x="668" y="135" text-anchor="middle">webhook tools · mid-call</text>
+          <line x1="584" y1="222" x2="612" y2="222" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <path d="M540,175 C570,132 744,132 758,175" fill="none" stroke="#b8542f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arw-a)"/>
+          <text class="lbl" x="650" y="127" text-anchor="middle">webhook tools · mid-call</text>
           <!-- Next -> FastAPI: on spine already (Next end 360 -> FastAPI 380) -->
           <text class="lbl-i" x="368" y="203" text-anchor="middle"></text>
           <!-- OpenAI vision above FastAPI -->
@@ -247,8 +246,8 @@ footer{padding:56px 0 80px;text-align:center;}
           <path d="M380,330 C170,330 105,300 105,247" fill="none" stroke="#b8542f" stroke-width="1.5" marker-end="url(#arw-a)"/>
           <text class="lbl" x="196" y="352" text-anchor="middle">Realtime · call_events → War Room</text>
           <!-- Twilio -> Phone -->
-          <line x1="835" y1="251" x2="835" y2="300" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
-          <text class="lbl-i" x="847" y="280" text-anchor="start">real PSTN call</text>
+          <line x1="874" y1="251" x2="874" y2="300" stroke="#8f8578" stroke-width="1.5" marker-end="url(#arw)"/>
+          <text class="lbl-i" x="886" y="280" text-anchor="start">real PSTN call</text>
 
           <!-- NODES -->
           <!-- 1 Browser -->
@@ -269,39 +268,39 @@ footer{padding:56px 0 80px;text-align:center;}
           </g>
           <!-- 3 FastAPI -->
           <g>
-            <rect x="380" y="177" width="177" height="72" rx="13" fill="#dcece1" stroke="#aecebb" stroke-width="1.2"/>
+            <rect x="380" y="177" width="204" height="72" rx="13" fill="#dcece1" stroke="#aecebb" stroke-width="1.2"/>
             <circle cx="398" cy="195" r="11" fill="#2c5540"/><text class="badge-t" x="398" y="199" text-anchor="middle">3</text>
             <text class="n-title" x="418" y="200">FastAPI engine</text>
-            <text class="n-sub" x="395" y="228" fill="#2c5540">flags · dossier · state_machine</text>
-            <text class="n-sub" x="395" y="241" fill="#2c5540">tools · webhooks · simulator</text>
+            <text class="n-sub" x="392" y="228" fill="#2c5540">ladder state machine · flags</text>
+            <text class="n-sub" x="392" y="241" fill="#2c5540">dossier · tools · webhooks</text>
           </g>
           <!-- 4 ElevenLabs -->
           <g>
-            <rect x="577" y="177" width="181" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
-            <circle cx="595" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="595" y="199" text-anchor="middle">4</text>
-            <text class="n-title" x="615" y="200">ElevenLabs agent</text>
-            <text class="n-sub" x="592" y="228" fill="#8a4d24">"Alex" · gpt-5.4 brain</text>
-            <text class="n-sub" x="592" y="241" fill="#8a4d24">Jason voice</text>
+            <rect x="616" y="177" width="181" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+            <circle cx="634" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="634" y="199" text-anchor="middle">4</text>
+            <text class="n-title" x="654" y="200">ElevenLabs agent</text>
+            <text class="n-sub" x="631" y="228" fill="#8a4d24">"Alex" · gpt-5.4 brain</text>
+            <text class="n-sub" x="631" y="241" fill="#8a4d24">Jason voice</text>
           </g>
           <!-- 5 Twilio -->
           <g>
-            <rect x="776" y="177" width="118" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
-            <circle cx="794" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="794" y="199" text-anchor="middle">5</text>
-            <text class="n-title" x="814" y="200">Twilio</text>
-            <text class="n-sub" x="791" y="228" fill="#8a4d24">native PSTN</text>
+            <rect x="815" y="177" width="118" height="72" rx="13" fill="#f8e2cd" stroke="#ecc4a0" stroke-width="1.2"/>
+            <circle cx="833" cy="195" r="11" fill="#8a4d24"/><text class="badge-t" x="833" y="199" text-anchor="middle">5</text>
+            <text class="n-title" x="853" y="200">Twilio</text>
+            <text class="n-sub" x="830" y="228" fill="#8a4d24">native PSTN</text>
           </g>
           <!-- 6 Phone -->
           <g>
-            <rect x="776" y="302" width="118" height="66" rx="13" fill="#fbf9f4" stroke="#e3d8c8" stroke-width="1.2"/>
-            <circle cx="794" cy="320" r="11" fill="#221c15"/><text class="badge-t" x="794" y="324" text-anchor="middle">6</text>
-            <text class="n-title" x="814" y="325">Real phone</text>
-            <text class="n-sub" x="791" y="352" fill="#6c6357">a person on the PSTN</text>
+            <rect x="815" y="302" width="118" height="66" rx="13" fill="#fbf9f4" stroke="#e3d8c8" stroke-width="1.2"/>
+            <circle cx="833" cy="320" r="11" fill="#221c15"/><text class="badge-t" x="833" y="324" text-anchor="middle">6</text>
+            <text class="n-title" x="853" y="325">Real phone</text>
+            <text class="n-sub" x="830" y="352" fill="#6c6357">whoever answers</text>
           </g>
           <!-- OpenAI vision -->
           <g>
             <rect x="380" y="70" width="177" height="50" rx="12" fill="#fbeee0" stroke="#ecc4a0" stroke-width="1.2"/>
             <text class="n-title" x="396" y="92" font-size="13">OpenAI vision</text>
-            <text class="n-sub" x="396" y="108" fill="#8a4d24">gpt-5.6-terra → gpt-4o</text>
+            <text class="n-sub" x="396" y="108" fill="#8a4d24">gpt-5.6-terra</text>
           </g>
           <!-- Supabase -->
           <g>
