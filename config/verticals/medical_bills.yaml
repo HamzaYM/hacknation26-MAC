@@ -71,6 +71,9 @@ personas:
 # ── Voice (ElevenLabs settings, from operational-call-flow-spec.md) ──────
 voice:
   model: eleven_flash_v2_5                   # ~75ms; do NOT use v3 for live calls
+  # Default ElevenLabs voice for the negotiator + any agent without a name match.
+  # Kar Shin's pick (2026-07-18). Personas keep their own distinct voices.
+  default_voice_id: PK6t0r2iXSJEz1l0Gy4k
   stability: 0.55
   speed: 1.0                                 # keep within 0.9–1.1
   target_wpm: 150
