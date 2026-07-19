@@ -240,7 +240,7 @@
   ],
   "negotiator_voice": {
     "_note": "The advocate agent 'Alex' \u2014 not a persona, but its voice spec lives here for one-stop provisioning. See prompts/negotiator_system.md + verbalization_guide.md.",
-    "voice_id": "PK6t0r2iXSJEz1l0Gy4k",
+    "voice_id": "jTWqplUkOPQwOegNjhal",
     "_voice_id_note": "Default voice (Kar Shin's pick, 2026-07-18). Pinned by scripts/provision_elevenlabs.py via config voice.default_voice_id \u2014 overrides recommended_voice below on both create and update.",
     "recommended_voice": "a warm-but-competent professional voice; research picks: 'Stuart' (professional & friendly) or 'Archer' (grounded, friendly, with charm)",
     "model": "eleven_flash_v2_5",
