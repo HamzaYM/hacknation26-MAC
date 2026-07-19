@@ -6,13 +6,16 @@ monkeypatch, exactly the "code defensively, empty list OK" contract in
 docs/generalized-pipeline.md.
 """
 import json
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app import case_store
 from app.main import app
+from app.routers import calls as calls_router
 from app.routers import scenarios as scenarios_router
+from app.simulator import build_generic_sequence
 
 
 @pytest.fixture(scope="module")
@@ -147,3 +150,68 @@ def test_load_scenario_creates_a_case(client, scenario_dir):
     assert report["hospital"] == "Synthetic Test Hospital"
 
     assert case_store.get(case_id, "scenario_id") == "sc01_test_case"
+
+
+def test_scenario_case_launches_simulated_calls_with_events(client, scenario_dir, monkeypatch):
+    """B3: a scenario-loaded case can launch simulated calls end to end. launch
+    used to 404 (spec_for_case only knew the fixtures); it now resolves the case
+    the same way GET /cases does and schedules a sim whose sequence carries the
+    War Room's events."""
+    case_id = client.post("/scenarios/sc01_test_case/load").json()["case_id"]
+
+    scheduled: list = []
+    monkeypatch.setattr(calls_router, "play_calls", lambda specs: scheduled.extend(specs))
+
+    resp = client.post("/calls/launch", json={"case_id": case_id, "simulate": True})
+    assert resp.status_code == 200
+    launched = resp.json()["launched"]
+    assert launched and all(l["status"] == "queued" for l in launched)
+    assert "Synthetic Test Hospital" in [l["entity"] for l in launched]
+    for l in launched:
+        uuid.UUID(l["call_id"])  # real uuid, not a stub
+
+    # the sim was scheduled for THIS case, one spec per launched call
+    assert scheduled and {s[2] for s in scheduled} == {case_id}
+    assert len(scheduled) == len(launched)
+
+    # the scheduled sim builds a real event stream for the scenario case
+    call_id, _persona, sim_case_id, entity_name = scheduled[0]
+    steps = build_generic_sequence(call_id, sim_case_id, entity_name)
+    assert {"status", "event", "outcome"} <= {s["kind"] for s in steps}
+    event_types = {s["type"] for s in steps if s["kind"] == "event"}
+    assert {"transcript", "quote", "tool_call"} <= event_types
+
+
+def test_scenario_case_rehydrates_after_restart(client, scenario_dir):
+    """D1: case_store is process memory, but the scenario artifacts on disk are
+    the source of truth. After a restart (simulated by clearing the store) the
+    persisted case_id -> scenario_id index lets the next GET rebuild the case
+    transparently — including the flags/benchmark slots and the launch path."""
+    case_id = client.post("/scenarios/sc01_test_case/load").json()["case_id"]
+    assert case_store.get_job_spec(case_id) is not None
+
+    case_store.clear()  # fresh process: the in-memory store is empty
+    assert case_store.get_job_spec(case_id) is None
+
+    # GET transparently rehydrates the base spec from disk
+    spec = client.get(f"/cases/{case_id}")
+    assert spec.status_code == 200
+    assert spec.json()["patient"]["legal_name"] == "Sam Rivera"
+    assert spec.json()["bill"]["facility_name"] == "Synthetic Test Hospital"
+
+    # and the dependent slots the endpoints read come back too
+    assert case_store.get(case_id, "scenario_id") == "sc01_test_case"
+    flags = client.get(f"/cases/{case_id}/flags").json()["flags"]
+    assert [f["type"] for f in flags] == ["duplicate"]
+    report = client.get(f"/cases/{case_id}/benchmark_report")
+    assert report.status_code == 200
+    assert report.json()["hospital"] == "Synthetic Test Hospital"
+
+    # a launch after a restart resolves purely from disk (B3 + D1 together)
+    case_store.clear()
+    launch = client.post("/calls/launch", json={"case_id": case_id, "simulate": False})
+    assert launch.status_code == 200
+    assert launch.json()["launched"]
+
+    # an unknown case that maps to no scenario still 404s (rehydration is scoped)
+    assert client.get(f"/cases/{uuid.uuid4()}").status_code == 404

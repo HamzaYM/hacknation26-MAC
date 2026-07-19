@@ -208,13 +208,15 @@ def _allowed_numbers_from_scenario(spec_dict: dict, answer_key: dict) -> list[fl
     return nums
 
 
-@router.post("/{scenario_id}/load")
-def load_scenario(scenario_id: str) -> dict:
-    """Create a case from a scenario's artifacts. Returns {"case_id", "scenario_id"}."""
+def _hydrate_case(case_id: str, scenario_id: str) -> dict | None:
+    """Build a case's JobSpec from a scenario's on-disk artifacts (the
+    deterministic source of truth) and populate every case_store slot for it.
+    Returns the JobSpec dict, or None when the scenario is missing/unreadable.
+    Shared by POST /{id}/load and the post-restart rehydration path (D1)."""
     scenario_dir = SCENARIOS_DIR / scenario_id
     meta = _load_json(scenario_dir / "scenario.json")
     if meta is None:
-        raise HTTPException(404, f"scenario {scenario_id!r} not found")
+        return None
 
     bill = _load_json(scenario_dir / "bill.json") or {}
     eob = _load_json(scenario_dir / "eob.json")
@@ -222,15 +224,9 @@ def load_scenario(scenario_id: str) -> dict:
     answer_key = (_load_json(scenario_dir / answer_key_ref)
                   or _load_json(scenario_dir / "answer_key.json") or {})
 
-    case_id = str(uuidlib.uuid4())
     spec_dict = _build_job_spec(case_id, meta, bill, eob)
     flags = _derived_flags_from_answer_key(answer_key.get("expected_flags"))
     spec_dict["derived_flags"] = flags
-
-    try:
-        JobSpec.model_validate(spec_dict)
-    except Exception as err:  # noqa: BLE001 — a malformed scenario is a 422, not a 500
-        raise HTTPException(422, f"scenario {scenario_id!r} produced an invalid case: {err}") from err
 
     case_store.put(case_id, "job_spec", spec_dict)
     case_store.put(case_id, "scenario_id", scenario_id)
@@ -240,7 +236,60 @@ def load_scenario(scenario_id: str) -> dict:
     if benchmark_report:
         case_store.put(case_id, "benchmark_report", benchmark_report)
     case_store.put(case_id, "allowed_numbers", _allowed_numbers_from_scenario(spec_dict, answer_key))
+    return spec_dict
 
+
+# case_id -> scenario_id index, persisted beside the suite as a hidden file (not
+# a scenario dir, so list_scenarios skips it). case_store is process memory; the
+# scenario artifacts on disk are deterministic, so a loaded case survives an API
+# restart by persisting only this mapping and REHYDRATING case_store on a miss (D1).
+def _case_index_path() -> Path:
+    return SCENARIOS_DIR / ".case_index.json"
+
+
+def _read_case_index() -> dict:
+    data = _load_json(_case_index_path())
+    return data if isinstance(data, dict) else {}
+
+
+def _remember_scenario_case(case_id: str, scenario_id: str) -> None:
+    """Persist the case_id -> scenario_id mapping. Best-effort: a write failure
+    (read-only fs, etc.) is swallowed and never blocks a scenario load."""
+    try:
+        index = _read_case_index()
+        index[case_id] = scenario_id
+        path = _case_index_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(index), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def rehydrate_case(case_id: str) -> dict | None:
+    """Rebuild a scenario-loaded case in case_store from its on-disk artifacts
+    when it's absent from memory — e.g. after an API restart (D1). Returns the
+    JobSpec dict, or None when case_id isn't a known scenario case."""
+    scenario_id = _read_case_index().get(case_id)
+    if scenario_id is None:
+        return None
+    return _hydrate_case(case_id, scenario_id)
+
+
+@router.post("/{scenario_id}/load")
+def load_scenario(scenario_id: str) -> dict:
+    """Create a case from a scenario's artifacts. Returns {"case_id", "scenario_id"}."""
+    case_id = str(uuidlib.uuid4())
+    spec_dict = _hydrate_case(case_id, scenario_id)
+    if spec_dict is None:
+        raise HTTPException(404, f"scenario {scenario_id!r} not found")
+
+    try:
+        JobSpec.model_validate(spec_dict)
+    except Exception as err:  # noqa: BLE001 — a malformed scenario is a 422, not a 500
+        case_store.clear(case_id)  # don't leave a half-built case behind
+        raise HTTPException(422, f"scenario {scenario_id!r} produced an invalid case: {err}") from err
+
+    _remember_scenario_case(case_id, scenario_id)  # survive an API restart (D1)
     db.ensure_case(case_id, spec_dict, None)  # best-effort
     db.record_scenario_load(case_id, scenario_id)  # best-effort
 

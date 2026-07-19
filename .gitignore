@@ -18,6 +18,9 @@ apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/
 
+# Runtime scenario-case index (case_id -> scenario_id map for rehydration)
+data/scenarios/.case_index.json
+
 # Large data files — raw MRFs, chargemasters, and pipeline intermediates
 data/raw/
 *.db

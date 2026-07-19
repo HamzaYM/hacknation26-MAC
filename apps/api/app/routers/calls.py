@@ -1,10 +1,12 @@
 """Caller endpoints — launch and inspect calls.
 
 POST /launch creates REAL `calls` rows (one per entity, real UUIDs) plus a
-persisted StrategyDossier per entity, for any fixture case (Maya/Dan/Nina —
-app/fixtures_users.py). With simulate=true each call is replayed through the
-simulated driver (app/simulator.py) as a background task, so the War Room
-renders a live negotiation without ElevenLabs/Twilio.
+persisted StrategyDossier per entity, for any resolvable case: the fixture
+cases (Maya/Dan/Nina, app/fixtures_users.py) or a scenario-loaded case
+(cases._resolve_spec falls through to case_store + on-disk rehydration). With
+simulate=true each call is replayed through the simulated driver
+(app/simulator.py) as a background task, so the War Room renders a live
+negotiation without ElevenLabs/Twilio.
 
 POST /place-real dials the negotiator agent over PSTN (app/elevenlabs_calls.py)
 with the calls row created BEFORE dialing and the returned conversation_id
@@ -22,9 +24,10 @@ from .. import db, elevenlabs_calls
 from ..config import load_vertical
 from ..engine.dossier import build_dossier
 from ..fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC, demo_benchmarks, demo_flags
-from ..fixtures_users import OWNER_EMAIL_BY_CASE_ID, flags_for_spec, spec_for_case
+from ..fixtures_users import OWNER_EMAIL_BY_CASE_ID, flags_for_spec
 from ..models import JobSpec
 from ..simulator import ENTITY_PERSONAS, play_calls
+from .cases import _resolve_spec
 
 router = APIRouter()
 
@@ -41,9 +44,7 @@ class LaunchRequest(BaseModel):
 
 @router.post("/launch")
 def launch_calls(req: LaunchRequest, background_tasks: BackgroundTasks) -> dict:
-    spec_dict = spec_for_case(req.case_id)
-    if spec_dict is None:
-        raise HTTPException(404, "case not found (only the fixture cases exist so far)")
+    spec_dict = _resolve_spec(req.case_id)  # fixture cases + case_store + scenario rehydration
     spec = JobSpec.model_validate(spec_dict)
     case_id = spec_dict["case_id"]
     flags = flags_for_spec(spec_dict)
