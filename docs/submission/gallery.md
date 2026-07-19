@@ -12,7 +12,8 @@ v1 committed with v2 pending (wave 3).
 | 3 | Home hero screenshot | `deck/assets/home-hero.png` | Exists | Clean landing shot for the gallery thumbnail and first impression. |
 | 4 | Intake / upload screenshot | `deck/assets/intake.png` | Exists | Shows the entry point: upload a bill, the loop begins. |
 | 5 | Bills / case view screenshot | `deck/assets/bills.png` | Exists | The case file with the parsed bill lines. |
-| 6 | Pitch deck (PDF) | `deck/haggl-pitch.pdf` | Pending (sibling PR) | Full pitch. Export from `deck/haggl-pitch.pptx` if the PDF is not landed yet. Also linked as hagglfor.me/pitch-sf-2026. |
+| 6 | Pitch deck (PDF) | `deck/haggl-pitch.pdf` | Exists | Full pitch. Also linked as hagglfor.me/pitch-sf-2026. |
+| 6b | Judge guide (PDF) | `deck/judge-guide.pdf` | Exists | Screenshot user guide: logins, how to see a live negotiation, run the code, what to watch for. The strongest gallery item for a judge in a hurry. |
 | 7 | Tech tour video | `deck/video/tech-video-v1.mp4` | Exists (v1; v2 pending) | Architecture walkthrough. Use v2 when ready. Convert to H.264 MP4 for upload. Also at hagglfor.me/tech-video. |
 | 8 | Product / UX walkthrough video | `deck/video/uiux-video-v1.mp4` | Exists (v1; v2 pending) | End-to-end product demo. Use v2 when ready. Convert to H.264 MP4 for upload. |
 
