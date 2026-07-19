@@ -122,7 +122,10 @@ NEGOTIATOR_TOOLS = [
             "Report what just happened with the current negotiation step and receive the "
             "REQUIRED next move from the strategy engine. Call after every meaningful "
             "exchange (an ask made, a response heard, a stonewall, an offer). Follow the "
-            "returned next_move; never invent your own escalation."
+            "returned next_move; never invent your own escalation. Report which required "
+            "questions you covered via questions_asked — the engine will not let you leave "
+            "a rung until its questions are in, and returns already_asked when you re-ask "
+            "something already answered."
         ),
         "api_schema": {
             "url": f"{API_BASE}/tools/report_lever_result",
@@ -135,6 +138,17 @@ NEGOTIATOR_TOOLS = [
                     "result": {"type": "string", "description": "accepted | rejected | partial | stonewalled | escalated | hangup"},
                     "offer_amount": {"type": "number", "description": "Dollar amount you are about to offer or settle at, if any"},
                     "quote": {"type": "string", "description": "The counterparty's own words, verbatim, if notable"},
+                    "questions_asked": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": (
+                            "Coverage tags you covered this exchange. Vocabulary — "
+                            "open_and_hold_account: account_hold_requested, itemized_bill_status, rep_name_captured; "
+                            "financial_assistance_screen: fap_exists, pauses_collections_while_pending; "
+                            "diagnostic_questions (collections): interest_accruing, will_sue, credit_bureau_reported, "
+                            "debt_owned_or_bought, predetermined_settlement_floor."
+                        ),
+                    },
                 },
                 "required": ["lever", "result"],
             },
@@ -144,8 +158,16 @@ NEGOTIATOR_TOOLS = [
         "type": "webhook",
         "name": "end_call_summary",
         "description": (
-            "Structured wrap-up before hanging up: the outcome type, final amount if any, "
-            "reference number, rep name, and agreed action. Every call must end with this."
+            "Structured wrap-up before hanging up. Every call must end with this. A win "
+            "(reduction/payment_plan) is banked only WITH reference_number AND rep_name AND "
+            "agreed_action — miss any and it's pushed back once ({received:false, missing, say}); "
+            "send confirm_incomplete:true on the retry to force-accept and flag the gaps. A "
+            "monetary settlement (final_amount) needs written_confirmation:true or it's downgraded "
+            "to a callback to secure the letter (zero balance, paid in full, no collections "
+            "referral) before money moves. Read every reference number/code back to the rep as you "
+            "hear it and log each read-back (log_event, type read_back) — a reference number with "
+            "no read-back comes back flagged reference_number_unverified. documented_decline is "
+            "never blocked."
         ),
         "api_schema": {
             "url": f"{API_BASE}/tools/end_call_summary",
@@ -159,6 +181,8 @@ NEGOTIATOR_TOOLS = [
                     "reference_number": {"type": "string", "description": "Confirmation or reference number the rep gave"},
                     "rep_name": {"type": "string", "description": "The rep's name"},
                     "agreed_action": {"type": "string", "description": "What was agreed and by when"},
+                    "written_confirmation": {"type": "boolean", "description": "True ONLY if you have it in writing that the payment settles the balance in full (zero balance, no collections referral)"},
+                    "confirm_incomplete": {"type": "boolean", "description": "Set true ONLY on a second attempt, to bank an outcome still missing a reference number, rep name, agreed action, or written confirmation"},
                 },
                 "required": ["outcome_type"],
             },

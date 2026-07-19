@@ -26,6 +26,16 @@ state_machine = LadderStateMachine(load_vertical())
 # is how real-call events used to vanish (old default: "live-call").
 LIVE_CALL_ID = "00000000-0000-0000-0000-00000000ca11"
 
+# Outcomes that represent a concrete agreed win — banked only with a reference
+# number, rep name, and agreed action (A4). documented_decline/callback/charity
+# stay ungated: a hangup or a follow-up can't be pushed back. ("settlement" is
+# carried per spec though the current outcomes enum uses reduction/payment_plan.)
+GATED_OUTCOMES = {"reduction", "payment_plan", "settlement"}
+
+
+def _append_note(base: str | None, note: str) -> str:
+    return f"{base}; {note}" if base else note
+
 
 def _ensure_call_row(call_id: str | None) -> dict | None:
     """The calls row for a mid-call tool hit, created on demand (demo case)
@@ -81,6 +91,7 @@ class LeverResult(BaseModel):
     result: str  # accepted | rejected | partial | stonewalled | escalated | hangup
     offer_amount: float | None = None  # what the agent is about to offer/settle at
     quote: str | None = None           # counterparty's words (stonewall phrase detection)
+    questions_asked: list[str] = []    # coverage tags the agent covered this exchange
 
 
 class LogEvent(BaseModel):
@@ -128,12 +139,18 @@ def report_lever_result(body: LeverResult) -> dict:
     resp = state_machine.advance(
         call_id, body.lever, body.result,
         offer_amount=body.offer_amount, quote=body.quote,
+        questions_asked=body.questions_asked,
     )
     # Persist the move for the War Room (no-op without a DB / non-uuid call ids)
     db.insert_event(call_id, "state_change",
                     {"rung": resp["current_rung"], "rung_index": resp["rung_index"]})
     if resp.get("escalation") or resp.get("escalation_required"):
         db.insert_event(call_id, "escalation", {"reason": resp.get("notes", "")})
+    # Coverage gap: the agent walked off a required-questions rung still missing
+    # tags on the second pass — surface it to the War Room (A1).
+    if resp.get("coverage_incomplete"):
+        db.insert_event(call_id, "coverage_gap",
+                        {"rung": resp["current_rung"], "missing": resp["coverage_incomplete"]})
     return resp
 
 
@@ -162,28 +179,80 @@ def log_event(body: LogEvent) -> dict:
 @router.post("/end_call_summary")
 def end_call_summary(body: dict) -> dict:
     """Agent's structured wrap-up before hang-up: ref #, rep name, agreed action.
-    Stages the outcome row; final extraction still happens on the post-call webhook."""
+    Stages the outcome row; final extraction still happens on the post-call webhook.
+
+    Soft-fail gates (never hard-block a hangup):
+      A4 — a gated win missing reference_number/rep_name/agreed_action is pushed
+           back once; a second attempt with confirm_incomplete:true is banked + flagged.
+      A5 — a monetary settlement (final_amount set) without written_confirmation:true
+           is downgraded to a callback to secure the letter first (kept + marked with
+           confirm_incomplete:true).
+      A6 — a reference_number with no read_back event on the call is flagged
+           reference_number_unverified (warning, not a block).
+    """
     call_id = _resolve_call_id(body.get("call_id"))
-    if call_id:
-        _ensure_call_row(call_id)
-        db.insert_event(call_id, "tool_call",
-                        {"name": "end_call_summary",
-                         "result": body.get("agreed_action") or body.get("outcome_type") or "received"})
-        if body.get("outcome_type"):
-            original, final = body.get("original_amount"), body.get("final_amount")
-            reduction_pct = (  # computed by code, never the LLM (contract)
-                round(100 * (1 - float(final) / float(original)), 1)
-                if original and final is not None else None
-            )
-            db.insert_outcome({
-                "call_id": call_id,
-                "outcome_type": body["outcome_type"],
-                "original_amount": original,
-                "final_amount": final,
-                "reduction_pct": reduction_pct,
-                "winning_lever": body.get("winning_lever"),
-                "reference_number": body.get("reference_number"),
-                "rep_name": body.get("rep_name"),
-                "next_action": body.get("agreed_action"),
-            })
-    return {"received": True}
+    _ensure_call_row(call_id)
+    db.insert_event(call_id, "tool_call",
+                    {"name": "end_call_summary",
+                     "result": body.get("agreed_action") or body.get("outcome_type") or "received"})
+
+    outcome_type = body.get("outcome_type")
+    if not outcome_type:
+        return {"received": True}
+
+    confirm_incomplete = bool(body.get("confirm_incomplete"))
+
+    # A4: gated wins need the paper trail before we bank them.
+    missing = [f for f in ("reference_number", "rep_name", "agreed_action")
+               if outcome_type in GATED_OUTCOMES and not body.get(f)]
+    if missing and not confirm_incomplete:
+        return {"received": False, "missing": missing,
+                "say": "get the missing items before hanging up"}
+
+    # A5: money without written confirmation isn't a real win yet.
+    final = body.get("final_amount")
+    next_action = body.get("agreed_action")
+    written_confirmation_pending = False
+    downgraded = False
+    if final is not None and not body.get("written_confirmation"):
+        if confirm_incomplete:
+            written_confirmation_pending = True
+            next_action = _append_note(
+                next_action, "written confirmation still pending — get it in writing first")
+        else:
+            outcome_type = "callback"
+            downgraded = True
+            next_action = ("secure written confirmation (zero balance, paid in full, "
+                           "no collections referral) before money moves")
+
+    if missing:  # accepted-incomplete (A4): record what was still missing
+        next_action = _append_note(next_action, f"missing at hangup: {', '.join(missing)}")
+
+    original = body.get("original_amount")
+    reduction_pct = (  # computed by code, never the LLM (contract)
+        round(100 * (1 - float(final) / float(original)), 1)
+        if original and final is not None else None
+    )
+    db.insert_outcome({
+        "call_id": call_id,
+        "outcome_type": outcome_type,
+        "original_amount": original,
+        "final_amount": final,
+        "reduction_pct": reduction_pct,
+        "winning_lever": body.get("winning_lever"),
+        "reference_number": body.get("reference_number"),
+        "rep_name": body.get("rep_name"),
+        "next_action": next_action,
+    })
+
+    resp: dict = {"received": True}
+    if missing:
+        resp["missing_fields"] = missing
+    if written_confirmation_pending:
+        resp["written_confirmation_pending"] = True
+    if downgraded:
+        resp["outcome_downgraded"] = "callback"
+    # A6: a reference number nobody read back is unverified — flag, don't block.
+    if body.get("reference_number") and not db.has_event(call_id, "read_back"):
+        resp["warnings"] = ["reference_number_unverified"]
+    return resp

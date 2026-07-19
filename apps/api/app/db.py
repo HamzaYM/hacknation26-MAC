@@ -23,7 +23,8 @@ from .fixtures import DEMO_CASE_ID, DEMO_JOB_SPEC
 
 log = logging.getLogger("negotiator.db")
 
-CALL_EVENT_TYPES = {"transcript", "tool_call", "state_change", "quote", "escalation"}
+CALL_EVENT_TYPES = {"transcript", "tool_call", "state_change", "quote", "escalation",
+                    "coverage_gap", "read_back"}
 
 _lock = threading.RLock()
 _conn: Any = None
@@ -287,6 +288,17 @@ def insert_event(call_id: str, type_: str, payload: dict) -> int | None:
         fetch=True,
     )
     return int(rows[0]["id"]) if rows else None
+
+
+def has_event(call_id: str, type_: str) -> bool:
+    """True iff at least one call_events row of this type exists for the call.
+    False when there's no DB / non-uuid id (A6 read-back verification: absence of
+    a confirmed read-back is treated as unverified, never as verified)."""
+    if not _is_uuid(call_id):
+        return False
+    rows = _run("select 1 from call_events where call_id = %s and type = %s limit 1",
+                (call_id, type_), fetch=True)
+    return bool(rows)
 
 
 def get_events_by_ids(event_ids: list[int]) -> list[dict] | None:

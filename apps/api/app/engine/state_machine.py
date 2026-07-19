@@ -33,12 +33,22 @@ class CallState:
     terminal: bool = False
     terminal_outcome: str | None = None
     history: list[dict] = field(default_factory=list)
+    # Question-coverage memory (tag → answer snippet). Populated as the agent
+    # reports questions_asked; the coverage gate reads it before letting the
+    # call walk off a required-questions rung.
+    questions_covered: dict[str, str] = field(default_factory=dict)
+    # The gate only engages once the agent has started reporting questions_asked
+    # (real calls do; legacy callers that never send tags stay ungated).
+    questions_active: bool = False
+    # Rungs already blocked once for coverage — one block max per rung.
+    coverage_blocked: set[str] = field(default_factory=set)
 
 
 class LadderStateMachine:
     def __init__(self, config: dict):
         self._config = config
         self._triggers = [t.casefold() for t in config.get("escalation_triggers", [])]
+        self._required_questions: dict[str, list[str]] = config.get("required_questions", {})
         self._states: dict[str, CallState] = {}  # in-memory; Supabase later
 
     def ensure_call(self, call_id: str, dossier: StrategyDossier) -> CallState:
@@ -65,10 +75,29 @@ class LadderStateMachine:
         result: str,
         offer_amount: float | None = None,
         quote: str | None = None,
+        questions_asked: list[str] | None = None,
     ) -> dict:
         state = self._states[call_id]
-        state.history.append({"lever": lever, "result": result, "offer_amount": offer_amount})
+        qa = list(questions_asked or [])
+        state.history.append({"lever": lever, "result": result,
+                              "offer_amount": offer_amount, "questions_asked": qa})
         dossier = state.dossier
+
+        # Question memory + notifications (A2 already-asked, A3 repeat cap).
+        # already-asked is computed BEFORE we union the current tags in.
+        q_extra: dict = {}
+        already = [t for t in qa if t in state.questions_covered]
+        if already:
+            q_extra["already_asked"] = already
+        for t in qa:
+            state.questions_covered.setdefault(t, quote or "")
+        if qa:
+            state.questions_active = True
+        if qa and len(state.history) >= 3:
+            last3 = state.history[-3:]
+            repeated = [t for t in qa if all(t in h.get("questions_asked", []) for h in last3)]
+            if repeated:
+                q_extra["question_repeat_cap"] = repeated
 
         if state.terminal:
             return self._respond(state, move_allowed=False,
@@ -124,19 +153,45 @@ class LadderStateMachine:
             state.index = min(state.index + 1, len(state.ladder) - 1)
             return self._respond(state, repetition_cap=True,
                                  notes="you have made this point three times — drop it, move to "
-                                       "the next lever, and do not repeat the previous ask")
+                                       "the next lever, and do not repeat the previous ask", **q_extra)
+
+        # Question-coverage gate (A1): don't let the call walk OFF a rung that
+        # has required questions until they're covered. One block max per rung
+        # (never hard-deadlock a live call); on the second pass allow the move
+        # but flag the gap so tools.py can log a coverage_gap event.
+        required = self._required_questions.get(lever, [])
+        if state.questions_active and required:
+            missing = [t for t in required if t not in state.questions_covered]
+            if missing and lever not in state.coverage_blocked:
+                state.coverage_blocked.add(lever)
+                if lever in state.ladder:
+                    state.index = state.ladder.index(lever)  # stay on this rung
+                plain = ", ".join(t.replace("_", " ") for t in missing)
+                return self._respond(state, move_allowed=False,
+                                     notes=f"before moving on, cover: {plain}", **q_extra)
+            if missing:
+                q_extra["coverage_incomplete"] = missing
 
         # linear advance from the reported rung (clamped at the last rung)
         if lever in state.ladder:
             state.index = state.ladder.index(lever)
         state.index = min(state.index + 1, len(state.ladder) - 1)
 
-        notes = "advance"
-        extra: dict = {}
+        note_parts: list[str] = []
+        extra: dict = dict(q_extra)
         if offer_amount is not None and offer_amount > dossier.target:
             extra["escalation_required"] = True
-            notes = (f"above target ${dossier.target:.2f} — settling at ${offer_amount:.2f} "
-                     "requires an escalation flag")
+            note_parts.append(f"above target ${dossier.target:.2f} — settling at "
+                              f"${offer_amount:.2f} requires an escalation flag")
+        if extra.get("coverage_incomplete"):
+            note_parts.append("coverage still incomplete — the gap is logged; "
+                              "don't re-litigate, keep moving")
+        if extra.get("already_asked"):
+            note_parts.append("already asked and answered — reference the earlier "
+                              "answer, don't re-ask")
+        if extra.get("question_repeat_cap"):
+            note_parts.append("you've asked this three times — log it unresolved and move on")
+        notes = " · ".join(note_parts) if note_parts else "advance"
         return self._respond(state, notes=notes, **extra)
 
     def _respond(self, state: CallState, move_allowed: bool = True, escalation: bool = False,
